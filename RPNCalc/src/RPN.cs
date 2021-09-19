@@ -45,15 +45,7 @@ namespace RPNCalc
         public RPN(bool caseSensitiveNames = false)
         {
             CaseSensitiveNames = caseSensitiveNames;
-            functions["+"] = stack => stack.Func((x, y) => y + x);
-            functions["-"] = stack => stack.Func((x, y) => y - x);
-            functions["*"] = stack => stack.Func((x, y) => y * x);
-            functions["/"] = stack => stack.Func((x, y) => y / x);
-            functions["^"] = stack => stack.Func((x, y) => Math.Pow(y, x));
-            functions["sq"] = stack => stack.Func((x) => x * x);
-            functions["sqrt"] = stack => stack.Func((x) => Math.Sqrt(x));
-            functions["drop"] = stack => stack.Drop();
-            functions["dup"] = stack => stack.Dup();
+            LoadDefaultFunctions();
         }
 
         /// <summary>
@@ -96,6 +88,20 @@ namespace RPNCalc
         /// Clear stack memory.
         /// </summary>
         public void Clear() => stack.Clear();
+
+        /// <summary>
+        /// Clear all variables
+        /// </summary>
+        public void ClearVariables() => variables.Clear();
+
+        /// <summary>
+        /// Restore default functions and clear the rest
+        /// </summary>
+        public void ClearFunctions()
+        {
+            functions.Clear();
+            LoadDefaultFunctions();
+        }
 
         /// <summary>
         /// Set custom variable for this calculator instance.
@@ -153,5 +159,18 @@ namespace RPNCalc
 
         private string GetKeyName(string name) => CaseSensitiveNames ? name : name.ToLowerInvariant();
         private bool IsValidName(string name) => !name.Contains(" ");
+
+        private void LoadDefaultFunctions()
+        {
+            functions["+"] = stack => stack.Func((x, y) => y + x);
+            functions["-"] = stack => stack.Func((x, y) => y - x);
+            functions["*"] = stack => stack.Func((x, y) => y * x);
+            functions["/"] = stack => stack.Func((x, y) => y / x);
+            functions["^"] = stack => stack.Func((x, y) => Math.Pow(y, x));
+            functions["sq"] = stack => stack.Func((x) => x * x);
+            functions["sqrt"] = stack => stack.Func((x) => Math.Sqrt(x));
+            functions["drop"] = stack => stack.Drop();
+            functions["dup"] = stack => stack.Dup();
+        }
     }
 }
