@@ -209,5 +209,61 @@ namespace RPNCalc.Tests
             var tokens = RPNTools.Tokenize("10*(((3+5))))^20)))");
             Assert.Throws<ArgumentException>(() => RPNTools.InfixToPostfix(tokens));
         }
+
+        [Test]
+        public void VariableWithUnderscoreMiddle()
+        {
+            var tokens = RPNTools.Tokenize("1+foo_bar");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "foo_bar" }, tokens);
+        }
+
+        [Test]
+        public void VariableWithUnderscoreEnd()
+        {
+            var tokens = RPNTools.Tokenize("1+foobar_");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "foobar_" }, tokens);
+        }
+
+        [Test]
+        public void VariableWithUnderscoreStart()
+        {
+            var tokens = RPNTools.Tokenize("1+_foobar");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "_foobar" }, tokens);
+        }
+
+        [Test]
+        public void VariableWithUnderscoreAll()
+        {
+            var tokens = RPNTools.Tokenize("1+_foo_bar_");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "_foo_bar_" }, tokens);
+        }
+
+        [Test]
+        public void FunctionWithUnderscoreMiddle()
+        {
+            var tokens = RPNTools.Tokenize("1+foo_bar(123)");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "foo_bar" }, tokens);
+        }
+
+        [Test]
+        public void FunctionWithUnderscoreEnd()
+        {
+            var tokens = RPNTools.Tokenize("1+foobar_(123)");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "foobar_" }, tokens);
+        }
+
+        [Test]
+        public void FunctionWithUnderscoreStart()
+        {
+            var tokens = RPNTools.Tokenize("1+_foobar(123)");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "_foobar" }, tokens);
+        }
+
+        [Test]
+        public void FunctionWithUnderscoreAll()
+        {
+            var tokens = RPNTools.Tokenize("1+_foo_bar_(123)");
+            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "_foo_bar_" }, tokens);
+        }
     }
 }
