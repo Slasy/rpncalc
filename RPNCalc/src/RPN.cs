@@ -41,9 +41,9 @@ namespace RPNCalc
         protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
 
         /// <summary>
-        /// RPN calculator, loads default set of functions.
-        /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
+        /// RPN calculator, setup default set of functions.
         /// </summary>
+        /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         public RPN(bool caseSensitiveNames = false)
         {
             CaseSensitiveNames = caseSensitiveNames;
