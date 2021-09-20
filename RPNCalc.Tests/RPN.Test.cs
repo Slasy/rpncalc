@@ -64,11 +64,11 @@ namespace RPNCalc.Tests
         public void SettingVariablesAndFunctions()
         {
             calc.SetVariable("Foo", 123);
-            Assert.IsTrue(calc.Variables.ContainsKey("foo"));
+            Assert.IsTrue(calc.VariablesView.ContainsKey("foo"));
             calc.SetVariable("bAr", 456);
-            Assert.IsTrue(calc.Variables.ContainsKey("bar"));
+            Assert.IsTrue(calc.VariablesView.ContainsKey("bar"));
             calc.SetFunction("PlUs", st => st.Push(st.Pop() + st.Pop()));
-            Assert.IsTrue(calc.Functions.Contains("plus"));
+            Assert.IsTrue(calc.FunctionsView.Contains("plus"));
             Assert.AreEqual(123 + 456, calc.Eval("foO BAR plus"));
         }
 
@@ -78,11 +78,11 @@ namespace RPNCalc.Tests
             calc = new RPN(true);
 
             calc.SetVariable("Foo", 123);
-            Assert.IsTrue(calc.Variables.ContainsKey("Foo"));
+            Assert.IsTrue(calc.VariablesView.ContainsKey("Foo"));
             calc.SetVariable("bAr", 456);
-            Assert.IsTrue(calc.Variables.ContainsKey("bAr"));
+            Assert.IsTrue(calc.VariablesView.ContainsKey("bAr"));
             calc.SetFunction("PlUs", st => st.Push(st.Pop() + st.Pop()));
-            Assert.IsTrue(calc.Functions.Contains("PlUs"));
+            Assert.IsTrue(calc.FunctionsView.Contains("PlUs"));
             Assert.Throws<ArgumentException>(() => calc.Eval("foO BAR plus"));
             Assert.AreEqual(123 + 456, calc.Eval("Foo bAr PlUs"));
         }
@@ -101,14 +101,14 @@ namespace RPNCalc.Tests
         {
             calc.SetVariable("foo", 123);
             calc.SetFunction("bar", _ => { });
-            CollectionAssert.AreEquivalent(new[] { "foo" }, calc.Variables.Keys);
-            CollectionAssert.Contains(calc.Functions, "bar");
+            CollectionAssert.AreEquivalent(new[] { "foo" }, calc.VariablesView.Keys);
+            CollectionAssert.Contains(calc.FunctionsView, "bar");
             calc.SetVariable("foo", null);
-            CollectionAssert.AreEquivalent(Array.Empty<string>(), calc.Variables.Keys);
-            CollectionAssert.Contains(calc.Functions, "bar");
+            CollectionAssert.AreEquivalent(Array.Empty<string>(), calc.VariablesView.Keys);
+            CollectionAssert.Contains(calc.FunctionsView, "bar");
             calc.SetFunction("bar", null);
-            CollectionAssert.AreEquivalent(Array.Empty<string>(), calc.Variables.Keys);
-            CollectionAssert.DoesNotContain(calc.Functions, "bar");
+            CollectionAssert.AreEquivalent(Array.Empty<string>(), calc.VariablesView.Keys);
+            CollectionAssert.DoesNotContain(calc.FunctionsView, "bar");
         }
     }
 }

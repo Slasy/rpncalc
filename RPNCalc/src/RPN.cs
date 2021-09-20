@@ -6,7 +6,7 @@ using RPNCalc.Extensions;
 namespace RPNCalc
 {
     /// <summary>
-    /// RPN calculator
+    /// Extensible RPN calculator
     /// </summary>
     public class RPN
     {
@@ -18,16 +18,22 @@ namespace RPNCalc
         /// <summary>
         /// Collection of variables accessible and usable in this calculator.
         /// </summary>
-        public IReadOnlyDictionary<string, double> Variables => variables;
+        public IReadOnlyDictionary<string, double> VariablesView => variables;
 
         /// <summary>
-        /// <para>Collection of functions available to use in this calculator.</para>
+        /// <para>Read only collection of functions available to use in this calculator.</para>
         /// <para>Also includes all default functions - can be overridden/removed.</para>
         /// </summary>
-        public IReadOnlyCollection<string> Functions => functions.Keys;
+        public IReadOnlyCollection<string> FunctionsView => functions.Keys;
+
+        /// <summary>
+        /// Read only access to current stack.
+        /// </summary>
+        public IReadOnlyCollection<double> StackView => stack;
 
         /// <summary>Automatically clear stack before each <see cref="Eval(string)"/> call.</summary>
         public bool ClearStack { get; set; } = true;
+        /// <summary>Variable and function names are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
         protected Stack<double> stack = new Stack<double>();
@@ -35,12 +41,8 @@ namespace RPNCalc
         protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
 
         /// <summary>
-        /// Read only access to current stack.
-        /// </summary>
-        public IReadOnlyCollection<double> StackView => stack;
-
-        /// <summary>
         /// RPN calculator, loads default set of functions.
+        /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         /// </summary>
         public RPN(bool caseSensitiveNames = false)
         {
@@ -52,7 +54,7 @@ namespace RPNCalc
         /// Evaluates expression(s) and returns top value from stack.
         /// </summary>
         /// <param name="expression">one or more expressions as a single string</param>
-        /// <returns>top value on stack</returns>
+        /// <returns>top value on stack or null if stack is empty</returns>
         /// <exception cref="ArgumentException"/>
         public double? Eval(string expression)
         {
