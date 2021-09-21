@@ -6,163 +6,171 @@ namespace RPNCalc.Tests
 {
     public class RPNToolsTest
     {
+        private RPN calc;
+
         [SetUp]
         public void Setup()
         {
+            calc = new RPN(true);
         }
 
         [Test]
         public void TokenizeSimpleExpression()
         {
-            CollectionAssert.AreEquivalent(new[] { "10", "+", "20", "-", "30", "*", "40", "^", "50" }, RPNTools.Tokenize("10 + 20 - 30 * 40 ^ 50"));
+            CollectionAssert.AreEqual(new[] { "10", "+", "20", "-", "30", "*", "40", "^", "50" }, RPNTools.Tokenize("10 + 20 - 30 * 40 ^ 50"));
         }
 
         [Test]
-        public void PostFixSimpleExpression()
+        public void PostfixSimpleExpression()
         {
-            var tokens = RPNTools.Tokenize("10 + 20 - 30 * 40 ^ 50");
+            double expects = 10 + 20 - 30 * Math.Pow(40, 5);
+            var tokens = RPNTools.Tokenize("10 + 20 - 30 * 40 ^ 5");
+            CollectionAssert.AreEqual(new[] { "10", "+", "20", "-", "30", "*", "40", "^", "5" }, tokens);
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "10", "20", "30", "40", "50", "^", "*", "-", "+" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "20", "+", "30", "40", "5", "^", "*", "-" }, tokens);
+            Assert.AreEqual(expects, calc.Eval(string.Join(" ", tokens)));
         }
 
         [Test]
         public void TokenizeSquashedExpression()
         {
-            CollectionAssert.AreEquivalent(new[] { "10", "+", "20", "-", "30", "*", "40", "^", "50" }, RPNTools.Tokenize("10+20-30*40^50"));
+            CollectionAssert.AreEqual(new[] { "10", "+", "20", "-", "30", "*", "40", "^", "50" }, RPNTools.Tokenize("10+20-30*40^50"));
         }
 
         [Test]
         public void TokenizeFloatingNumbers()
         {
-            CollectionAssert.AreEquivalent(new[] { "0.3", "+", "3.14159", "*", "9.0", "-", "666.666" }, RPNTools.Tokenize("0.3+3.14159*9.0-666.666"));
+            CollectionAssert.AreEqual(new[] { "0.3", "+", "3.14159", "*", "9.0", "-", "666.666" }, RPNTools.Tokenize("0.3+3.14159*9.0-666.666"));
         }
 
         [Test]
         public void TokenizeBrackets()
         {
-            CollectionAssert.AreEquivalent(new[] { "3", "*", "(", "1", "+", "2", ")" }, RPNTools.Tokenize("3*(1+2)"));
+            CollectionAssert.AreEqual(new[] { "3", "*", "(", "1", "+", "2", ")" }, RPNTools.Tokenize("3*(1+2)"));
         }
 
         [Test]
         public void TokenizeMultipleBrackets()
         {
-            CollectionAssert.AreEquivalent(new[] { "3", "*", "(", "1", "+", "2", "-", "(", "10", "+", "20", "^", "2", ")", ")" }, RPNTools.Tokenize("3*(1+2-(10+20^2))"));
+            CollectionAssert.AreEqual(new[] { "3", "*", "(", "1", "+", "2", "-", "(", "10", "+", "20", "^", "2", ")", ")" }, RPNTools.Tokenize("3*(1+2-(10+20^2))"));
         }
 
         [Test]
         public void TokenizeFunctionCall()
         {
-            CollectionAssert.AreEquivalent(new[] { "1", "10", "Random" }, RPNTools.Tokenize("Random(1,10)"));
+            CollectionAssert.AreEqual(new[] { "(", "(", "1", ")", "(", "10", ")", "Random", ")" }, RPNTools.Tokenize("Random(1,10)"));
         }
 
         [Test]
-        public void PostFixFunctionCall1()
+        public void PostfixFunctionCall1()
         {
             var tokens = RPNTools.Tokenize("Random(1,10)");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "1", "10", "Random" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "10", "Random" }, tokens);
         }
 
         [Test]
-        public void PostFixFunctionCall2()
+        public void PostfixFunctionCall2()
         {
             var tokens = RPNTools.Tokenize("Random((1),(10))");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "1", "10", "Random" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "10", "Random" }, tokens);
         }
 
         [Test]
         public void TokenizeFunctionCall2()
         {
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "1", "10", "Random", "*", "3" }, RPNTools.Tokenize("1 + Random(1, 10) * 3"));
+            CollectionAssert.AreEqual(new[] { "1", "+", "(", "(", "1", ")", "(", "10", ")", "Random", ")", "*", "3" }, RPNTools.Tokenize("1 + Random(1, 10) * 3"));
         }
 
         [Test]
-        public void PostFixFunctionCall3()
+        public void PostfixFunctionCall3()
         {
             var tokens = RPNTools.Tokenize("1 + Random(1, 10) * 3");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "1", "1", "10", "Random", "+", "3", "*" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "1", "10", "Random", "3", "*", "+" }, tokens);
         }
 
         [Test]
         public void TokenizeFunctionCallWithInnerFormula()
         {
-            CollectionAssert.AreEquivalent(new[] { "Random", "1", "(", "10", "+", "x", "*", "2", "^", "2", ")" }, RPNTools.Tokenize("Random(1,(10+x*2^2))"));
+            CollectionAssert.AreEqual(
+                new[] { "(", "(", "1", ")", "(", "(", "10", "+", "x", "*", "2", "^", "2", ")", ")", "Random", ")" },
+                RPNTools.Tokenize("Random(1,(10+x*2^2))"));
         }
 
         [Test]
-        public void PostFixFunctionCallWithInnerFormula()
+        public void PostfixFunctionCallWithInnerFormula()
         {
             var tokens = RPNTools.Tokenize("Random(1,(10+x*2^2))");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "1", "10", "x", "2", "2", "^", "*", "+", "Random" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "10", "x", "2", "2", "^", "*", "+", "Random" }, tokens);
         }
 
         [Test]
-        public void PostFixFunctionCallInsideFunctionCall()
+        public void PostfixFunctionCallInsideFunctionCall()
         {
             var tokens = RPNTools.Tokenize("Random(42,Sin(x))");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "42", "x", "Sin", "Random" }, tokens);
+            CollectionAssert.AreEqual(new[] { "42", "x", "Sin", "Random" }, tokens);
         }
 
         [Test]
         public void TokenizeNegativeNumbers1()
         {
-            CollectionAssert.AreEquivalent(new[] { "-1.5", "-", "2", "+", "3" }, RPNTools.Tokenize("(-1.5)-2+3"));
+            CollectionAssert.AreEqual(new[] { "-1.5", "-", "2", "+", "3" }, RPNTools.Tokenize("(-1.5)-2+3"));
         }
 
         [Test]
         public void TokenizeNegativeNumbers2()
         {
-            CollectionAssert.AreEquivalent(new[] { "(", "1", "-", "2", ")", "*", "-1.0", "+", "3" }, RPNTools.Tokenize("(1-2)*(-1.0)+3"));
+            CollectionAssert.AreEqual(new[] { "(", "1", "-", "2", ")", "*", "-1.0", "+", "3" }, RPNTools.Tokenize("(1-2)*(-1.0)+3"));
         }
 
         [Test]
         public void TokenizeNegativeNumbers3()
         {
-            CollectionAssert.AreEquivalent(new[] { "-1", "-", "2", "+", "-3.1415" }, RPNTools.Tokenize("(-1)-2+(-3.1415)"));
+            CollectionAssert.AreEqual(new[] { "-1", "-", "2", "+", "-3.1415" }, RPNTools.Tokenize("(-1)-2+(-3.1415)"));
         }
 
         [Test]
-        public void PostFixNegativeNumbers()
+        public void PostfixNegativeNumbers()
         {
-            var tokens = RPNTools.Tokenize("Random(42,Sin(x))");
+            var tokens = RPNTools.Tokenize("(-1.5)-2+3");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "42", "x", "Sin", "Random" }, tokens);
+            CollectionAssert.AreEqual(new[] { "-1.5", "2", "-", "3", "+" }, tokens);
         }
 
         [Test]
-        public void PostFixPower()
+        public void PostfixPower()
         {
             var tokens = RPNTools.Tokenize("10^20^x");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "10", "20", "x", "^", "^" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "20", "^", "x", "^" }, tokens);
         }
 
         [Test]
-        public void PostFixPower2()
+        public void PostfixPower2()
         {
             var tokens = RPNTools.Tokenize("10^20^x^function()^y");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "10", "20", "x", "function", "y", "^", "^", "^", "^" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "20", "^", "x", "^", "function", "^", "y", "^" }, tokens);
         }
 
         [Test]
-        public void PostFixPower3()
+        public void PostfixPower3()
         {
             var tokens = RPNTools.Tokenize("10^20^x^function(2^2,3^3)^y");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "10", "20", "x", "2", "2", "^", "3", "3", "^", "function", "y", "^", "^", "^", "^" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "20", "^", "x", "^", "2", "2", "^", "3", "3", "^", "function", "^", "y", "^" }, tokens);
         }
 
         [Test]
-        public void PostFixPower4()
+        public void PostfixPower4()
         {
             var tokens = RPNTools.Tokenize("x^(y^z^a^(10^9))");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEquivalent(new[] { "x", "y", "z", "a", "10", "9", "^", "^", "^", "^", "^" }, tokens);
+            CollectionAssert.AreEqual(new[] { "x", "y", "z", "^", "a", "^", "10", "9", "^", "^", "^" }, tokens);
         }
 
         [Test]
@@ -170,7 +178,7 @@ namespace RPNCalc.Tests
         {
             var tokens = RPNTools.Tokenize("10*(3+5)))");
             tokens = RPNTools.InfixToPostfix(tokens, false);
-            CollectionAssert.AreEquivalent(new[] { "10", "3", "5", "+", "*" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "3", "5", "+", "*" }, tokens);
         }
 
         [Test]
@@ -178,7 +186,7 @@ namespace RPNCalc.Tests
         {
             var tokens = RPNTools.Tokenize("10*(3+5)))^20");
             tokens = RPNTools.InfixToPostfix(tokens, false);
-            CollectionAssert.AreEquivalent(new[] { "10", "3", "5", "+", "20", "^", "*" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "3", "5", "+", "20", "^", "*" }, tokens);
         }
 
         [Test]
@@ -200,7 +208,7 @@ namespace RPNCalc.Tests
         {
             var tokens = RPNTools.Tokenize("10*(((3+5)^20");
             tokens = RPNTools.InfixToPostfix(tokens, false);
-            CollectionAssert.AreEquivalent(new[] { "10", "3", "5", "+", "20", "^", "*" }, tokens);
+            CollectionAssert.AreEqual(new[] { "10", "3", "5", "+", "20", "^", "*" }, tokens);
         }
 
         [Test]
@@ -214,56 +222,68 @@ namespace RPNCalc.Tests
         public void VariableWithUnderscoreMiddle()
         {
             var tokens = RPNTools.Tokenize("1+foo_bar");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "foo_bar" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "foo_bar" }, tokens);
         }
 
         [Test]
         public void VariableWithUnderscoreEnd()
         {
             var tokens = RPNTools.Tokenize("1+foobar_");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "foobar_" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "foobar_" }, tokens);
         }
 
         [Test]
         public void VariableWithUnderscoreStart()
         {
             var tokens = RPNTools.Tokenize("1+_foobar");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "_foobar" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "_foobar" }, tokens);
         }
 
         [Test]
         public void VariableWithUnderscoreAll()
         {
             var tokens = RPNTools.Tokenize("1+_foo_bar_");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "_foo_bar_" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "_foo_bar_" }, tokens);
         }
 
         [Test]
         public void FunctionWithUnderscoreMiddle()
         {
             var tokens = RPNTools.Tokenize("1+foo_bar(123)");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "foo_bar" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "(", "(", "123", ")", "foo_bar", ")" }, tokens);
         }
 
         [Test]
         public void FunctionWithUnderscoreEnd()
         {
             var tokens = RPNTools.Tokenize("1+foobar_(123)");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "foobar_" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "(", "(", "123", ")", "foobar_", ")" }, tokens);
         }
 
         [Test]
         public void FunctionWithUnderscoreStart()
         {
             var tokens = RPNTools.Tokenize("1+_foobar(123)");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "_foobar" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "(", "(", "123", ")", "_foobar", ")" }, tokens);
         }
 
         [Test]
         public void FunctionWithUnderscoreAll()
         {
             var tokens = RPNTools.Tokenize("1+_foo_bar_(123)");
-            CollectionAssert.AreEquivalent(new[] { "1", "+", "123", "_foo_bar_" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1", "+", "(", "(", "123", ")", "_foo_bar_", ")" }, tokens);
+        }
+
+        [Test]
+        public void FunctionWith()
+        {
+            var tokens = RPNTools.Tokenize("42^Random(foo, bar, baz, ((lorem+ipsum)*10), 1* 20) ^ 30+(1+2)");
+            CollectionAssert.AreEqual(
+                new[] { "42", "^",
+                    "(", "(", "foo", ")", "(", "bar", ")", "(", "baz", ")",
+                    "(", "(", "(", "lorem", "+", "ipsum", ")", "*", "10", ")", ")", "(", "1", "*", "20", ")", "Random", ")",
+                    "^", "30", "+", "(", "1", "+", "2", ")" },
+                tokens);
         }
     }
 }

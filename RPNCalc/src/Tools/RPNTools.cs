@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace RPNCalc.Tools
@@ -9,8 +10,8 @@ namespace RPNCalc.Tools
         private static readonly Regex number = new Regex(@"^\d+(?:\.\d+)?");
         private static readonly Regex negNumber = new Regex(@"^\((-\d+(?:\.\d+)?)\)");
         private static readonly Regex op = new Regex(@"^[\^\+\-\*\/\(\)]");
-        private static readonly Regex func = new Regex(@"^(\w[\w\d]+?)\((.*?)\)");
-        private static readonly Regex variable = new Regex(@"^\w(?:[\w\d]+)?");
+        private static readonly Regex func = new Regex(@"^(\w+)\(");
+        private static readonly Regex variable = new Regex(@"^\w+");
         private static readonly Regex[] matchers = new[] { negNumber, number, op, func, variable };
 
         /// <summary>
@@ -29,8 +30,14 @@ namespace RPNCalc.Tools
                     {
                         if (regex == func)
                         {
-                            tokens.AddRange(Tokenize(match.Groups[2].Value)); // recursive evaluation of function's arguments
-                            tokens.Add(match.Groups[1].Value);
+                            string name = match.Groups[1].Value;
+                            string arguments = MatchFunctionArguments(name, expression.Substring(name.Length), out int matchLen);
+                            tokens.Add("(");
+                            tokens.AddRange(Tokenize(arguments.Substring(1, arguments.Length - 2)));
+                            tokens.Add(name);
+                            tokens.Add(")");
+                            expression = expression.Substring(name.Length + matchLen);
+                            break;
                         }
                         else if (match.Groups.Count == 2)
                         {
@@ -47,6 +54,32 @@ namespace RPNCalc.Tools
                 if (!match.Success) expression = expression.Substring(1);
             }
             return tokens.ToArray();
+        }
+
+        private static string MatchFunctionArguments(string functionName, string functionExpression, out int matchLength)
+        {
+            int bracketCounter = 0;
+            StringBuilder sb = new StringBuilder(functionExpression.Length + 2);
+            sb.Append('(');
+            for (int i = 0; i < functionExpression.Length; i++)
+            {
+                sb.Append(functionExpression[i]);
+                switch (functionExpression[i])
+                {
+                    case '(': bracketCounter++; break;
+                    case ')': bracketCounter--; break;
+                    case ',':
+                        sb.Append(")(");
+                        break;
+                }
+                if (bracketCounter == 0)
+                {
+                    matchLength = i + 1;
+                    sb.Append(')');
+                    return sb.ToString();
+                }
+            }
+            throw new ArgumentException($"Function is missing ending bracket: {functionName}");
         }
 
         /// <summary>
@@ -126,9 +159,9 @@ namespace RPNCalc.Tools
             switch (c)
             {
                 case "^": return 3;
-                case "*": return 2;
+                case "*":
                 case "/": return 2;
-                case "+": return 1;
+                case "+":
                 case "-": return 1;
                 default: return 0;
             }

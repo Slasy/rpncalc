@@ -18,7 +18,7 @@ namespace RPNCalc.Tests
         public void PushToStack()
         {
             calc.Eval("10 20 30 40 50 1 2 3");
-            CollectionAssert.AreEquivalent(new[] { 10, 20, 30, 40, 50, 1, 2, 3 }, calc.StackView);
+            CollectionAssert.AreEqual(new[] { 3, 2, 1, 50, 40, 30, 20, 10 }, calc.StackView);
         }
 
         [Test]
@@ -101,13 +101,13 @@ namespace RPNCalc.Tests
         {
             calc.SetVariable("foo", 123);
             calc.SetFunction("bar", _ => { });
-            CollectionAssert.AreEquivalent(new[] { "foo" }, calc.VariablesView.Keys);
+            CollectionAssert.AreEqual(new[] { "foo" }, calc.VariablesView.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
             calc.SetVariable("foo", null);
-            CollectionAssert.AreEquivalent(Array.Empty<string>(), calc.VariablesView.Keys);
+            CollectionAssert.AreEqual(Array.Empty<string>(), calc.VariablesView.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
             calc.SetFunction("bar", null);
-            CollectionAssert.AreEquivalent(Array.Empty<string>(), calc.VariablesView.Keys);
+            CollectionAssert.AreEqual(Array.Empty<string>(), calc.VariablesView.Keys);
             CollectionAssert.DoesNotContain(calc.FunctionsView, "bar");
         }
     }
