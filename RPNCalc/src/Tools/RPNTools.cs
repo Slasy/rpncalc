@@ -8,11 +8,11 @@ namespace RPNCalc.Tools
     public static class RPNTools
     {
         private static readonly Regex number = new Regex(@"^\d+(?:\.\d+)?");
-        private static readonly Regex negNumber = new Regex(@"^\((-\d+(?:\.\d+)?)\)");
+        private static readonly Regex negNumberVariable = new Regex(@"^\(((?:\-\d+(?:\.\d+)?)|(?:\-\w+))\)");
         private static readonly Regex op = new Regex(@"^[\^\+\-\*\/\(\)]");
-        private static readonly Regex func = new Regex(@"^(\w+)\(");
+        private static readonly Regex func = new Regex(@"^((?:\w+)|(?:\(\-\w+))\(");
         private static readonly Regex variable = new Regex(@"^\w+");
-        private static readonly Regex[] matchers = new[] { negNumber, number, op, func, variable };
+        private static readonly Regex[] matchers = new[] { negNumberVariable, number, func, op, variable };
 
         /// <summary>
         /// Divide algebraic expression to individual elements.
@@ -34,9 +34,10 @@ namespace RPNCalc.Tools
                             string arguments = MatchFunctionArguments(name, expression.Substring(name.Length), out int matchLen);
                             tokens.Add("(");
                             tokens.AddRange(Tokenize(arguments.Substring(1, arguments.Length - 2)));
-                            tokens.Add(name);
+                            bool isNegative = name.StartsWith("(-");
+                            tokens.Add(isNegative ? name.Substring(1) : name);
                             tokens.Add(")");
-                            expression = expression.Substring(name.Length + matchLen);
+                            expression = expression.Substring(name.Length + matchLen + (isNegative ? 1 : 0));
                             break;
                         }
                         else if (match.Groups.Count == 2)
@@ -79,9 +80,11 @@ namespace RPNCalc.Tools
                     return sb.ToString();
                 }
             }
+            if (functionName.StartsWith("(-")) functionName = functionName.Substring(2);
             throw new ArgumentException($"Function is missing ending bracket: {functionName}");
         }
 
+        // src https://stackoverflow.com/a/1438153
         /// <summary>
         /// Reorder elements in array from infix notation (algebraic) to postfix notation (RPN).
         /// </summary>
@@ -100,7 +103,17 @@ namespace RPNCalc.Tools
             {
                 if (!operators.Contains(tokenArray[i]))
                 {
-                    postfix.Push(tokenArray[i]);
+                    string token = tokenArray[i];
+                    // handle negative numbers/variables/functions
+                    if (token.Length > 1 && token.StartsWith("-"))
+                    {
+                        postfix.Push(token.Substring(1));
+                        postfix.Push("+-");
+                    }
+                    else
+                    {
+                        postfix.Push(token);
+                    }
                 }
                 else if (tokenArray[i] == "(")
                 {

@@ -138,7 +138,7 @@ namespace RPNCalc.Tests
         {
             var tokens = RPNTools.Tokenize("(-1.5)-2+3");
             tokens = RPNTools.InfixToPostfix(tokens);
-            CollectionAssert.AreEqual(new[] { "-1.5", "2", "-", "3", "+" }, tokens);
+            CollectionAssert.AreEqual(new[] { "1.5", "+-", "2", "-", "3", "+" }, tokens);
         }
 
         [Test]
@@ -275,7 +275,7 @@ namespace RPNCalc.Tests
         }
 
         [Test]
-        public void FunctionWith()
+        public void ComplexFunction()
         {
             var tokens = RPNTools.Tokenize("42^Random(foo, bar, baz, ((lorem+ipsum)*10), 1* 20) ^ 30+(1+2)");
             CollectionAssert.AreEqual(
@@ -284,6 +284,49 @@ namespace RPNCalc.Tests
                     "(", "(", "(", "lorem", "+", "ipsum", ")", "*", "10", ")", ")", "(", "1", "*", "20", ")", "Random", ")",
                     "^", "30", "+", "(", "1", "+", "2", ")" },
                 tokens);
+        }
+
+        [Test]
+        public void NegativeVariable1()
+        {
+            var tokens = RPNTools.Tokenize("(-b)");
+            CollectionAssert.AreEqual(new[] { "-b" }, tokens);
+        }
+
+        [Test]
+        public void NegativeVariable2()
+        {
+            var tokens = RPNTools.Tokenize("(-b)+2");
+            CollectionAssert.AreEqual(new[] { "-b", "+", "2" }, tokens);
+        }
+
+        [Test]
+        public void NegativeVariable3()
+        {
+            var tokens = RPNTools.Tokenize("(-2)-b");
+            CollectionAssert.AreEqual(new[] { "-2", "-", "b", }, tokens);
+        }
+
+        [Test]
+        public void NegativeVariable4()
+        {
+            var tokens = RPNTools.Tokenize("((-b)+sqrt(b^2-4*a*c))/2*a");
+            CollectionAssert.AreEqual(new[] { "(", "-b", "+", "(", "(", "b", "^", "2", "-", "4", "*", "a", "*", "c", ")", "sqrt", ")", ")", "/", "2", "*", "a" }, tokens);
+        }
+
+        [Test]
+        public void NegativeFunction()
+        {
+            var tokens = RPNTools.Tokenize("2*(-function())");
+            CollectionAssert.AreEqual(new[] { "2", "*", "(", "(", ")", "-function", ")" }, tokens);
+        }
+
+        [Test]
+        public void NegativeFunctionToPostfix()
+        {
+            var tokens = RPNTools.Tokenize("2*(-function())");
+            tokens = RPNTools.InfixToPostfix(tokens);
+            CollectionAssert.AreEqual(new[] { "2", "function", "+-", "*" }, tokens);
         }
     }
 }
