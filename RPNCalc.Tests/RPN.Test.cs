@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using RPNCalc.Extensions;
 
 namespace RPNCalc.Tests
 {
@@ -11,13 +12,13 @@ namespace RPNCalc.Tests
         [SetUp]
         public void Setup()
         {
-            calc = new RPN { ClearStack = false };
+            calc = new RPN { AlwaysClearStack = false };
         }
 
         [Test]
         public void PushToStack()
         {
-            calc.Eval("10 20 30 40 50 1 2 3");
+            Assert.AreEqual(3, calc.Eval("10 20 30 40 50 1 2 3"));
             CollectionAssert.AreEqual(new[] { 3, 2, 1, 50, 40, 30, 20, 10 }, calc.StackView);
         }
 
@@ -61,8 +62,10 @@ namespace RPNCalc.Tests
         }
 
         [Test]
-        public void SettingVariablesAndFunctions()
+        public void SettingNotCaseSensitiveVariablesAndFunctions()
         {
+            calc = new RPN(false);
+
             calc.SetVariable("Foo", 123);
             Assert.IsTrue(calc.VariablesView.ContainsKey("foo"));
             calc.SetVariable("bAr", 456);
@@ -104,11 +107,42 @@ namespace RPNCalc.Tests
             CollectionAssert.AreEqual(new[] { "foo" }, calc.VariablesView.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
             calc.SetVariable("foo", null);
-            CollectionAssert.AreEqual(Array.Empty<string>(), calc.VariablesView.Keys);
+            CollectionAssert.IsEmpty(calc.VariablesView.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
             calc.SetFunction("bar", null);
-            CollectionAssert.AreEqual(Array.Empty<string>(), calc.VariablesView.Keys);
+            CollectionAssert.IsEmpty(calc.VariablesView.Keys);
             CollectionAssert.DoesNotContain(calc.FunctionsView, "bar");
+        }
+
+        [Test]
+        public void Pythagoras()
+        {
+            // a^2 + b^2 = c^2
+            calc.SetVariable("a", 3);
+            calc.SetVariable("b", 4);
+            calc.SetVariable("c", 5);
+            calc.SetFunction("=", st =>
+            {
+                var (x, y) = st.Pop2();
+                st.Push(y);
+                st.Push(x);
+                st.Push(x == y ? 1 : 0);
+            });
+            Assert.AreEqual(1, calc.Eval("a sq b sq + sqrt c sq sqrt ="));
+            CollectionAssert.AreEqual(new[] { 1, 5, 5 }, calc.StackView);
+        }
+
+        [Test]
+        public void Quadratic()
+        {
+            // 2x^2 - 5x - 3 = 0
+            calc.SetVariable("a", 2);
+            calc.SetVariable("b", -5);
+            calc.SetVariable("c", -3);
+            double root1 = calc.Eval("b +- b sq 4 a c * * - sqrt + 2 a * /").Value;
+            double root2 = calc.Eval("b +- b sq 4 a c * * - sqrt - 2 a * /").Value;
+            Assert.AreEqual(3, root1);
+            Assert.AreEqual(-0.5, root2);
         }
     }
 }

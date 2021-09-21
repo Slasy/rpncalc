@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using RPNCalc.Extensions;
 
 namespace RPNCalc
@@ -32,16 +33,22 @@ namespace RPNCalc
         public IReadOnlyCollection<double> StackView => stack;
 
         /// <summary>Automatically clear stack before each <see cref="Eval(string)"/> call.</summary>
-        public bool ClearStack { get; set; } = true;
+        public bool AlwaysClearStack { get; set; } = true;
         /// <summary>Variable and function names are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
         protected Stack<double> stack = new Stack<double>();
+        private readonly StringBuilder buffer = new StringBuilder();
         protected readonly Dictionary<string, double> variables = new Dictionary<string, double>();
         protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
 
         /// <summary>
-        /// RPN calculator, setup default set of functions.
+        /// <para>RPN calculator, setup default set of functions:</para>
+        /// <para>+ - * / addition, subtraction, multiplication, division</para>
+        /// <para>^ : exponentiation</para>
+        /// <para>+- : change sign</para>
+        /// <para>sq, sqrt : square, square root</para>
+        /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         public RPN(bool caseSensitiveNames = false)
@@ -58,30 +65,32 @@ namespace RPNCalc
         /// <exception cref="ArgumentException"/>
         public double? Eval(string expression)
         {
-            if (ClearStack) Clear();
-            string buffer = string.Empty;
+            buffer.Clear();
+            if (AlwaysClearStack) ClearStack();
             foreach (char ch in expression)
             {
                 if (ch == ' ')
                 {
                     if (buffer.Length == 0) continue;
                     processBufferContent();
-                    buffer = string.Empty;
+                    buffer.Clear();
                 }
                 else
                 {
-                    buffer += ch;
+                    buffer.Append(ch);
                 }
             }
             processBufferContent();
+            buffer.Clear();
             if (stack.Count == 0) return null;
             return stack.Peek();
 
             void processBufferContent()
             {
-                if (TryGetBufferValue(buffer, out var number))
+                string bufferValue = buffer.ToString().Trim();
+                if (TryGetBufferValue(bufferValue, out var number))
                     stack.Push(number);
-                else if (!TryRunFunction(buffer))
+                else if (!TryRunFunction(bufferValue))
                     throw new ArgumentException($"Unknown variable/function name: {buffer}");
             }
         }
@@ -89,7 +98,7 @@ namespace RPNCalc
         /// <summary>
         /// Clear stack memory.
         /// </summary>
-        public void Clear() => stack.Clear();
+        public void ClearStack() => stack.Clear();
 
         /// <summary>
         /// Clear all variables
@@ -141,7 +150,6 @@ namespace RPNCalc
         {
             number = 0;
             if (value is null) return false;
-            value = value.Trim();
             if (double.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
                 return true;
             else if (variables.TryGetValue(GetKeyName(value), out number))
@@ -153,7 +161,7 @@ namespace RPNCalc
         private bool TryRunFunction(string name)
         {
             if (name is null) return false;
-            name = GetKeyName(name.Trim());
+            name = GetKeyName(name);
             if (!functions.TryGetValue(name, out Function function)) return false;
             function(stack);
             return true;
@@ -169,10 +177,12 @@ namespace RPNCalc
             functions["*"] = stack => stack.Func((x, y) => y * x);
             functions["/"] = stack => stack.Func((x, y) => y / x);
             functions["^"] = stack => stack.Func((x, y) => Math.Pow(y, x));
-            functions["sq"] = stack => stack.Func((x) => x * x);
-            functions["sqrt"] = stack => stack.Func((x) => Math.Sqrt(x));
-            functions["drop"] = stack => stack.Drop();
-            functions["dup"] = stack => stack.Dup();
+            functions["+-"] = stack => stack.Func(x => -x);
+            functions["sq"] = stack => stack.Func(x => x * x);
+            functions["sqrt"] = stack => stack.Func(x => Math.Sqrt(x));
+            functions["drop"] = StackExtensions.Drop;
+            functions["dup"] = StackExtensions.Dup;
+            functions["swap"] = StackExtensions.Swap;
         }
     }
 }

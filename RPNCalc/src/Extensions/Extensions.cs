@@ -29,7 +29,7 @@ namespace RPNCalc.Extensions
             return (stack.Pop(), stack.Pop(), stack.Pop());
         }
 
-        /// <summary>Swap position of top two values in stack</summary>
+        /// <summary>Swap position of top two values on stack</summary>
         /// <exception cref="ArgumentOutOfRangeException"/>
         public static void Swap(this Stack<double> stack)
         {
