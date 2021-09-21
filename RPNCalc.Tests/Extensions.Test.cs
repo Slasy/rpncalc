@@ -70,7 +70,7 @@ namespace RPNCalc.Tests
             stack.Push(20);
             stack.Push(55);
             stack.Swap();
-            CollectionAssert.AreEquivalent(new[] { 20, 55, 10 }, stack);
+            CollectionAssert.AreEqual(new[] { 20, 55, 10 }, stack);
         }
 
         [Test]
