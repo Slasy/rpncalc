@@ -5,7 +5,7 @@ using RPNCalc.Extensions;
 
 namespace RPNCalc.Tests
 {
-    public class ExtensionsTest
+    public class StackExtensionsTest
     {
         private Stack<double> stack;
 
