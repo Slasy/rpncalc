@@ -29,6 +29,25 @@ namespace RPNCalc.Extensions
             return (stack.Pop(), stack.Pop(), stack.Pop());
         }
 
+        /// <summary>
+        /// Push two values to stack in order Y, X
+        /// </summary>
+        public static void Push(this Stack<double> stack, double y, double x)
+        {
+            stack.Push(y);
+            stack.Push(x);
+        }
+
+        /// <summary>
+        /// Push three values to stack in order Z, Y, X
+        /// </summary>
+        public static void Push(this Stack<double> stack, double z, double y, double x)
+        {
+            stack.Push(z);
+            stack.Push(y);
+            stack.Push(x);
+        }
+
         /// <summary>Swap position of top two values on stack</summary>
         /// <exception cref="ArgumentOutOfRangeException"/>
         public static void Swap(this Stack<double> stack)
