@@ -45,8 +45,8 @@ namespace RPNCalc
         /// <summary>
         /// <para>RPN calculator, setup default set of functions:</para>
         /// <para>+ - * / addition, subtraction, multiplication, division</para>
-        /// <para>^ : exponentiation</para>
-        /// <para>+- : change sign</para>
+        /// <para>^ exponentiation</para>
+        /// <para>+- change sign</para>
         /// <para>sq, sqrt : square, square root</para>
         /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
         /// </summary>
@@ -150,7 +150,7 @@ namespace RPNCalc
         {
             number = 0;
             if (value is null) return false;
-            if (double.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out number))
                 return true;
             else if (variables.TryGetValue(GetKeyName(value), out number))
                 return true;

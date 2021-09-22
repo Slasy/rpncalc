@@ -144,5 +144,19 @@ namespace RPNCalc.Tests
             Assert.AreEqual(3, root1);
             Assert.AreEqual(-0.5, root2);
         }
+
+        [Test]
+        public void LoadFloatingPointNumbers()
+        {
+            calc.Eval("1.1 100.001 3.1415 -0.69 3.33 +-");
+            CollectionAssert.AreEqual(new[] { -3.33, -0.69, 3.1415, 100.001, 1.1 }, calc.StackView);
+        }
+
+        [Test]
+        public void LoadExponentNumbers()
+        {
+            calc.Eval("1.1e3 -1.1e3 -1.1e-3 1.1e-3");
+            CollectionAssert.AreEqual(new[] { 0.0011, -0.0011, -1100, 1100 }, calc.StackView);
+        }
     }
 }
