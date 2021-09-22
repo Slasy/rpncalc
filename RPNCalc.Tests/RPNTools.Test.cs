@@ -328,5 +328,20 @@ namespace RPNCalc.Tests
             tokens = RPNTools.InfixToPostfix(tokens);
             CollectionAssert.AreEqual(new[] { "2", "function", "+-", "*" }, tokens);
         }
+
+        [Test]
+        public void TokenizeNumberWithExponent()
+        {
+            var tokens = RPNTools.Tokenize("1.4e3 + 23e-3 + (-1e2) + (-2.2e-2)");
+            CollectionAssert.AreEqual(new[] { "1.4e3", "+", "23e-3", "+", "-1e2", "+", "-2.2e-2" }, tokens);
+        }
+
+        [Test]
+        public void NumberWithExponentToPostfix()
+        {
+            var tokens = RPNTools.Tokenize("1.4e3 + 23e-3 + (-1e2) + (-2.2e-2)");
+            tokens = RPNTools.InfixToPostfix(tokens);
+            CollectionAssert.AreEqual(new[] { "1.4e3", "23e-3", "+", "1e2", "+-", "+", "2.2e-2", "+-", "+" }, tokens);
+        }
     }
 }

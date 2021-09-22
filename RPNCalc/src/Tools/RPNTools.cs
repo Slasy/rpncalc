@@ -7,8 +7,8 @@ namespace RPNCalc.Tools
 {
     public static class RPNTools
     {
-        private static readonly Regex number = new Regex(@"^\d+(?:\.\d+)?");
-        private static readonly Regex negNumberVariable = new Regex(@"^\(((?:\-\d+(?:\.\d+)?)|(?:\-\w+))\)");
+        private static readonly Regex number = new Regex(@"^\d+(?:\.\d+)?(?:e\-?\d+)?");
+        private static readonly Regex negNumberVariable = new Regex(@"^\(((?:\-\d+(?:\.\d+)?(?:e\-?\d+)?)|(?:\-\w+))\)");
         private static readonly Regex op = new Regex(@"^[\^\+\-\*\/\(\)]");
         private static readonly Regex func = new Regex(@"^((?:\w+)|(?:\(\-\w+))\(");
         private static readonly Regex variable = new Regex(@"^\w+");
