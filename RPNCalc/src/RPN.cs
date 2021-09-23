@@ -14,7 +14,7 @@ namespace RPNCalc
         /// <summary>
         /// Delegate for all RPN functions/operations, expects to directly operates on stack.
         /// </summary>
-        public delegate void Function(Stack<double> stack);
+        public delegate void Function(RPNStack<double> stack);
 
         /// <summary>
         /// Collection of variables accessible and usable in this calculator.
@@ -37,8 +37,8 @@ namespace RPNCalc
         /// <summary>Variable and function names are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
-        protected Stack<double> stack = new Stack<double>();
-        private readonly StringBuilder buffer = new StringBuilder();
+        protected RPNStack<double> stack = new RPNStack<double>();
+        protected readonly StringBuilder buffer = new StringBuilder();
         protected readonly Dictionary<string, double> variables = new Dictionary<string, double>();
         protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
 
@@ -221,7 +221,7 @@ namespace RPNCalc
             functions["sqrt"] = stack => stack.Func(x => Math.Sqrt(x));
             functions["drop"] = StackExtensions.Drop;
             functions["dup"] = StackExtensions.Dup;
-            functions["swap"] = StackExtensions.Swap;
+            functions["swap"] = stack => stack.Swap();
             functions["depth"] = stack => stack.Push(stack.Count);
         }
     }

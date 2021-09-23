@@ -7,25 +7,25 @@ namespace RPNCalc.Tests
 {
     public class StackExtensionsTest
     {
-        private Stack<double> stack;
+        private RPNStack<double> stack;
 
         [SetUp]
         public void Setup()
         {
-            stack = new Stack<double>();
+            stack = new RPNStack<double>();
         }
 
         [Test]
         public void Pop1Value()
         {
             stack.Push(10);
-            Assert.AreEqual(10, stack.Pop1());
+            Assert.AreEqual(10, stack.Pop());
         }
 
         [Test]
         public void FailPop1Value()
         {
-            Assert.Throws<RPNEmptyStackException>(() => stack.Pop1());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop());
         }
 
         [Test]
@@ -79,6 +79,43 @@ namespace RPNCalc.Tests
             Assert.Throws<RPNEmptyStackException>(() => stack.Swap());
             stack.Push(123);
             Assert.Throws<RPNEmptyStackException>(() => stack.Swap());
+        }
+
+        [Test]
+        public void RollStack()
+        {
+            stack.Push(10, 20, 30);
+            CollectionAssert.AreEqual(new[] { 30, 20, 10 }, stack);
+            stack.RollDown();
+            CollectionAssert.AreEqual(new[] { 20, 10, 30 }, stack);
+            stack.RollDown();
+            CollectionAssert.AreEqual(new[] { 10, 30, 20 }, stack);
+            stack.Roll(-2); // back to top
+            CollectionAssert.AreEqual(new[] { 30, 20, 10 }, stack);
+        }
+
+        [Test]
+        public void RotateTop3()
+        {
+            stack.Push(30, 20, 10);
+            stack.Push(999);
+            CollectionAssert.AreEqual(new[] { 999, 10, 20, 30 }, stack);
+            stack.Rotate();
+            CollectionAssert.AreEqual(new[] { 10, 20, 999, 30 }, stack);
+            stack.Rotate();
+            CollectionAssert.AreEqual(new[] { 20, 999, 10, 30 }, stack);
+        }
+
+        [Test]
+        public void RotateTop3OtherWay()
+        {
+            stack.Push(30, 20, 10);
+            stack.Push(999);
+            CollectionAssert.AreEqual(new[] { 999, 10, 20, 30 }, stack);
+            stack.Rotate(-3);
+            CollectionAssert.AreEqual(new[] { 20, 999, 10, 30 }, stack);
+            stack.Rotate(-3);
+            CollectionAssert.AreEqual(new[] { 10, 20, 999, 30 }, stack);
         }
     }
 }

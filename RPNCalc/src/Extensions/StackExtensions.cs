@@ -5,34 +5,12 @@ namespace RPNCalc.Extensions
 {
     public static class StackExtensions
     {
-        /// <summary>Pops only one value from stack</summary>
-        /// <exception cref="RPNEmptyStackException"/>
-        public static double Pop1(this Stack<double> stack)
-        {
-            CheckStackSize(stack, 1);
-            return stack.Pop();
-        }
 
-        /// <summary>Pops last two values from stack</summary>
-        /// <exception cref="RPNEmptyStackException"/>
-        public static (double x, double y) Pop2(this Stack<double> stack)
-        {
-            CheckStackSize(stack, 2);
-            return (stack.Pop(), stack.Pop());
-        }
-
-        /// <summary>Pops last two values from stack</summary>
-        /// <exception cref="RPNEmptyStackException"/>
-        public static (double x, double y, double z) Pop3(this Stack<double> stack)
-        {
-            CheckStackSize(stack, 3);
-            return (stack.Pop(), stack.Pop(), stack.Pop());
-        }
 
         /// <summary>
         /// Push two values to stack in order Y, X
         /// </summary>
-        public static void Push(this Stack<double> stack, double y, double x)
+        public static void Push<T>(this RPNStack<T> stack, T y, T x)
         {
             stack.Push(y);
             stack.Push(x);
@@ -41,44 +19,35 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// Push three values to stack in order Z, Y, X
         /// </summary>
-        public static void Push(this Stack<double> stack, double z, double y, double x)
+        public static void Push<T>(this RPNStack<T> stack, T z, T y, T x)
         {
             stack.Push(z);
             stack.Push(y);
             stack.Push(x);
         }
 
-        /// <summary>Swap position of top two values on stack</summary>
-        /// <exception cref="RPNEmptyStackException"/>
-        public static void Swap(this Stack<double> stack)
-        {
-            var (x, y) = stack.Pop2();
-            stack.Push(x);
-            stack.Push(y);
-        }
-
         /// <summary>Duplicate last value on stack</summary>
         /// <exception cref="RPNEmptyStackException"/>
-        public static void Dup(this Stack<double> stack)
+        public static void Dup<T>(this RPNStack<T> stack)
         {
-            CheckStackSize(stack, 1);
+            stack.ThrowIfTooSmall(1);
             stack.Push(stack.Peek());
         }
 
         /// <summary>Drop last value on stack</summary>
         /// <exception cref="RPNEmptyStackException"/>
-        public static void Drop(this Stack<double> stack)
+        public static void Drop<T>(this RPNStack<T> stack)
         {
-            CheckStackSize(stack, 1);
+            stack.ThrowIfTooSmall(1);
             stack.Pop();
         }
 
         /// <summary>no pops, 1x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T> func)
         {
-            double result;
+            T result;
             try
             {
                 result = func();
@@ -93,10 +62,10 @@ namespace RPNCalc.Extensions
         /// <summary>1x pop, 1x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double, double> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T, T> func)
         {
-            double value = stack.Pop1();
-            double result;
+            T value = stack.Pop();
+            T result;
             try
             {
                 result = func(value);
@@ -111,10 +80,10 @@ namespace RPNCalc.Extensions
         /// <summary>2x pop, 1x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double, double, double> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T, T, T> func)
         {
             var (x, y) = stack.Pop2();
-            double result;
+            T result;
             try
             {
                 result = func(x, y);
@@ -129,10 +98,10 @@ namespace RPNCalc.Extensions
         /// <summary>3x pop, 1x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double, double, double, double> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T, T, T, T> func)
         {
             var (x, y, z) = stack.Pop3();
-            double result;
+            T result;
             try
             {
                 result = func(x, y, z);
@@ -147,9 +116,9 @@ namespace RPNCalc.Extensions
         /// <summary>no pops, 2x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<(double, double)> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<(T, T)> func)
         {
-            double x, y;
+            T x, y;
             try
             {
                 (y, x) = func();
@@ -165,10 +134,10 @@ namespace RPNCalc.Extensions
         /// <summary>1x pop, 2x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double, (double, double)> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T, (T, T)> func)
         {
-            double value = stack.Pop1();
-            double x, y;
+            T value = stack.Pop();
+            T x, y;
             try
             {
                 (y, x) = func(value);
@@ -184,7 +153,7 @@ namespace RPNCalc.Extensions
         /// <summary>2x pop, 2x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double, double, (double, double)> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T, T, (T, T)> func)
         {
             var (x, y) = stack.Pop2();
             try
@@ -202,7 +171,7 @@ namespace RPNCalc.Extensions
         /// <summary>3x pop, 2x push</summary>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public static void Func(this Stack<double> stack, Func<double, double, double, (double, double)> func)
+        public static void Func<T>(this RPNStack<T> stack, Func<T, T, T, (T, T)> func)
         {
             var (x, y, z) = stack.Pop3();
             try
@@ -217,9 +186,14 @@ namespace RPNCalc.Extensions
             stack.Push(x);
         }
 
-        private static void CheckStackSize(Stack<double> stack, int minSize)
-        {
-            if (stack.Count < minSize) throw new RPNEmptyStackException("Too few arguments");
-        }
+        /// <summary>
+        /// Moves top of the stack to bottom.
+        /// </summary>
+        public static void RollDown<T>(this RPNStack<T> stack) => stack.Roll(1);
+
+        /// <summary>
+        /// Moves bottom of the stack to top.
+        /// </summary>
+        public static void RotateUp<T>(this RPNStack<T> stack) => stack.Roll(-1);
     }
 }

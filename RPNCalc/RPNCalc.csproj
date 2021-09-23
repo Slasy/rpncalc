@@ -5,6 +5,7 @@
     <Configuration>Release</Configuration>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591</NoWarn>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
@@ -14,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--<PackageReference Include="Nito.Collections.Deque" Version="1.1.0" />-->
   </ItemGroup>
 
 </Project>
