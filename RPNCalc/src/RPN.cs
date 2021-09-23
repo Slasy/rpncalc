@@ -63,12 +63,19 @@ namespace RPNCalc
         /// <param name="expression">one or more expressions as a single string</param>
         /// <returns>top value on stack or null if stack is empty</returns>
         /// <exception cref="ArgumentException"/>
+        /// <exception cref="ArgumentNullException"/>
+        /// <exception cref="RPNUndefinedNameException"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public double? Eval(string expression)
         {
+            if (expression is null) throw new ArgumentNullException(nameof(expression), "RPN expression is null");
             buffer.Clear();
             if (AlwaysClearStack) ClearStack();
-            foreach (char ch in expression)
+            int i;
+            for (i = 0; i < expression.Length; i++)
             {
+                char ch = expression[i];
                 if (ch == ' ')
                 {
                     if (buffer.Length == 0) continue;
@@ -88,10 +95,11 @@ namespace RPNCalc
             void processBufferContent()
             {
                 string bufferValue = buffer.ToString().Trim();
+                if (string.IsNullOrEmpty(bufferValue)) return;
                 if (TryGetBufferValue(bufferValue, out var number))
                     stack.Push(number);
-                else if (!TryRunFunction(bufferValue))
-                    throw new ArgumentException($"Unknown variable/function name: {buffer}");
+                else if (!TryRunFunction(bufferValue, i))
+                    throw new RPNUndefinedNameException($"Unknown variable/function on position {i - buffer.Length}: {buffer}");
             }
         }
 
@@ -158,12 +166,19 @@ namespace RPNCalc
                 return false;
         }
 
-        private bool TryRunFunction(string name)
+        private bool TryRunFunction(string name, int expressionIndex)
         {
             if (name is null) return false;
             name = GetKeyName(name);
             if (!functions.TryGetValue(name, out Function function)) return false;
-            function(stack);
+            try
+            {
+                function(stack);
+            }
+            catch (RPNException e)
+            {
+                throw new RPNFunctionException($"Function error on position {expressionIndex - name.Length}: {name}: {e.Message}", e);
+            }
             return true;
         }
 

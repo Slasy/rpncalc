@@ -6,7 +6,7 @@ namespace RPNCalc.Extensions
     public static class StackExtensions
     {
         /// <summary>Pops only one value from stack</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="RPNEmptyStackException"/>
         public static double Pop1(this Stack<double> stack)
         {
             CheckStackSize(stack, 1);
@@ -14,7 +14,7 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>Pops last two values from stack</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="RPNEmptyStackException"/>
         public static (double x, double y) Pop2(this Stack<double> stack)
         {
             CheckStackSize(stack, 2);
@@ -22,7 +22,7 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>Pops last two values from stack</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="RPNEmptyStackException"/>
         public static (double x, double y, double z) Pop3(this Stack<double> stack)
         {
             CheckStackSize(stack, 3);
@@ -49,7 +49,7 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>Swap position of top two values on stack</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="RPNEmptyStackException"/>
         public static void Swap(this Stack<double> stack)
         {
             var (x, y) = stack.Pop2();
@@ -58,7 +58,7 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>Duplicate last value on stack</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="RPNEmptyStackException"/>
         public static void Dup(this Stack<double> stack)
         {
             CheckStackSize(stack, 1);
@@ -66,7 +66,7 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>Drop last value on stack</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="RPNEmptyStackException"/>
         public static void Drop(this Stack<double> stack)
         {
             CheckStackSize(stack, 1);
@@ -74,90 +74,152 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>no pops, 1x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double> func)
         {
-            double result = func();
+            double result;
+            try
+            {
+                result = func();
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException("No input arguments", e);
+            }
             stack.Push(result);
         }
 
         /// <summary>1x pop, 1x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double, double> func)
         {
             double value = stack.Pop1();
-            double result = func(value);
+            double result;
+            try
+            {
+                result = func(value);
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException($"Input arguments: {value}", e);
+            }
             stack.Push(result);
         }
 
         /// <summary>2x pop, 1x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double, double, double> func)
         {
             var (x, y) = stack.Pop2();
-            double result = func(x, y);
+            double result;
+            try
+            {
+                result = func(x, y);
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException($"Input arguments: {x}, {y}", e);
+            }
             stack.Push(result);
         }
 
         /// <summary>3x pop, 1x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double, double, double, double> func)
         {
             var (x, y, z) = stack.Pop3();
-            double result = func(x, y, z);
+            double result;
+            try
+            {
+                result = func(x, y, z);
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException($"Input arguments: {x} {y} {z}", e);
+            }
             stack.Push(result);
         }
 
         /// <summary>no pops, 2x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<(double, double)> func)
         {
-            var (y, x) = func();
+            double x, y;
+            try
+            {
+                (y, x) = func();
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException("No input arguments", e);
+            }
             stack.Push(y);
             stack.Push(x);
         }
 
         /// <summary>1x pop, 2x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double, (double, double)> func)
         {
             double value = stack.Pop1();
-            var (y, x) = func(value);
+            double x, y;
+            try
+            {
+                (y, x) = func(value);
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException($"Input arguments: {value}", e);
+            }
             stack.Push(y);
             stack.Push(x);
         }
 
         /// <summary>2x pop, 2x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double, double, (double, double)> func)
         {
             var (x, y) = stack.Pop2();
-            (y, x) = func(x, y);
+            try
+            {
+                (y, x) = func(x, y);
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException($"Input arguments: {x}, {y}", e);
+            }
             stack.Push(y);
             stack.Push(x);
         }
 
         /// <summary>3x pop, 2x push</summary>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="Exception"/>
+        /// <exception cref="RPNEmptyStackException"/>
+        /// <exception cref="RPNFunctionException"/>
         public static void Func(this Stack<double> stack, Func<double, double, double, (double, double)> func)
         {
             var (x, y, z) = stack.Pop3();
-            (y, x) = func(x, y, z);
+            try
+            {
+                (y, x) = func(x, y, z);
+            }
+            catch (Exception e)
+            {
+                throw new RPNFunctionException($"Input arguments: {x} {y} {z}", e);
+            }
             stack.Push(y);
             stack.Push(x);
         }
 
         private static void CheckStackSize(Stack<double> stack, int minSize)
         {
-            if (stack.Count < minSize) throw new ArgumentOutOfRangeException(nameof(stack), "Too few arguments");
+            if (stack.Count < minSize) throw new RPNEmptyStackException("Too few arguments");
         }
     }
 }

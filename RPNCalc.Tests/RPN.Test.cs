@@ -86,7 +86,7 @@ namespace RPNCalc.Tests
             Assert.IsTrue(calc.VariablesView.ContainsKey("bAr"));
             calc.SetFunction("PlUs", st => st.Push(st.Pop() + st.Pop()));
             Assert.IsTrue(calc.FunctionsView.Contains("PlUs"));
-            Assert.Throws<ArgumentException>(() => calc.Eval("foO BAR plus"));
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("foO BAR plus"));
             Assert.AreEqual(123 + 456, calc.Eval("Foo bAr PlUs"));
         }
 

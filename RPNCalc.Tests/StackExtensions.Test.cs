@@ -25,7 +25,7 @@ namespace RPNCalc.Tests
         [Test]
         public void FailPop1Value()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pop1());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop1());
         }
 
         [Test]
@@ -39,9 +39,9 @@ namespace RPNCalc.Tests
         [Test]
         public void FailPop2Values()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pop2());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop2());
             stack.Push(123);
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pop2());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop2());
         }
 
         [Test]
@@ -56,11 +56,11 @@ namespace RPNCalc.Tests
         [Test]
         public void FailPop3Values()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pop3());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop3());
             stack.Push(123);
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pop3());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop3());
             stack.Push(321);
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pop3());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Pop3());
         }
 
         [Test]
@@ -76,9 +76,9 @@ namespace RPNCalc.Tests
         [Test]
         public void FailSwapValues()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Swap());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Swap());
             stack.Push(123);
-            Assert.Throws<ArgumentOutOfRangeException>(() => stack.Swap());
+            Assert.Throws<RPNEmptyStackException>(() => stack.Swap());
         }
     }
 }
