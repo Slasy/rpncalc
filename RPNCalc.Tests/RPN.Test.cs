@@ -177,5 +177,17 @@ namespace RPNCalc.Tests
             calc.Eval("10 20 foo");
             CollectionAssert.AreEqual(new[] { 410 }, calc.StackView);
         }
+
+        [Test]
+        public void RotRollOver()
+        {
+            calc.SetFunction("eq", st => { var (x, y) = st.Peek2(); st.Push(x == y ? 1 : 0); });
+            calc.Eval("5 20 over / 4 eq roll drop drop +");
+            CollectionAssert.AreEqual(new[] { 6 }, calc.StackView);
+            calc.Eval("1 2 3 clear 10 20 30 rot + eq");
+            CollectionAssert.AreEqual(new[] { 1, 30, 30 }, calc.StackView);
+            calc.Eval("clear 1 2 3 10 20 30 rot over 2 * eq swap drop");
+            CollectionAssert.AreEqual(new[] { 1, 20, 10, 30, 3, 2, 1 }, calc.StackView);
+        }
     }
 }

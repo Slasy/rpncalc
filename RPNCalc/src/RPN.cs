@@ -49,6 +49,7 @@ namespace RPNCalc
         /// <para>+- change sign</para>
         /// <para>sq, sqrt : square, square root</para>
         /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
+        /// <para>rot, roll, clear : rottate top 3 values, roll/rotate whole stack, clear stack</para>
         /// <para>depth : number of values on stack</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
@@ -223,6 +224,10 @@ namespace RPNCalc
             functions["dup"] = StackExtensions.Dup;
             functions["swap"] = stack => stack.Swap();
             functions["depth"] = stack => stack.Push(stack.Count);
+            functions["rot"] = stack => stack.Rotate(3);
+            functions["roll"] = stack => stack.Roll(1);
+            functions["over"] = StackExtensions.Over;
+            functions["clear"] = stack => stack.Clear();
         }
     }
 }

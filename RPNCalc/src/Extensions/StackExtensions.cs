@@ -34,6 +34,13 @@ namespace RPNCalc.Extensions
             stack.Push(stack.Peek());
         }
 
+        public static void Over<T>(this RPNStack<T> stack)
+        {
+            stack.ThrowIfTooSmall(2);
+            var (_, y) = stack.Peek2();
+            stack.Push(y);
+        }
+
         /// <summary>Drop last value on stack</summary>
         /// <exception cref="RPNEmptyStackException"/>
         public static void Drop<T>(this RPNStack<T> stack)
