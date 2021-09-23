@@ -12,7 +12,7 @@ namespace RPNCalc.Tests
         [SetUp]
         public void Setup()
         {
-            calc = new RPN { AlwaysClearStack = false };
+            calc = new RPN(alwaysClearStack: false);
         }
 
         [Test]
@@ -106,10 +106,10 @@ namespace RPNCalc.Tests
             calc.SetFunction("bar", _ => { });
             CollectionAssert.AreEqual(new[] { "foo" }, calc.VariablesView.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
-            calc.SetVariable("foo", null);
+            calc.RemoveVariable("foo");
             CollectionAssert.IsEmpty(calc.VariablesView.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
-            calc.SetFunction("bar", null);
+            calc.RemoveFunction("bar");
             CollectionAssert.IsEmpty(calc.VariablesView.Keys);
             CollectionAssert.DoesNotContain(calc.FunctionsView, "bar");
         }
@@ -157,6 +157,25 @@ namespace RPNCalc.Tests
         {
             calc.Eval("1.1e3 -1.1e3 -1.1e-3 1.1e-3");
             CollectionAssert.AreEqual(new[] { 0.0011, -0.0011, -1100, 1100 }, calc.StackView);
+        }
+
+        [Test]
+        public void SetMacro()
+        {
+            calc.SetFunction("macro", "1 2 + dup 2 / swap");
+            CollectionAssert.Contains(calc.FunctionsView, "macro");
+            calc.Eval("10 20 macro");
+            CollectionAssert.AreEqual(new[] { 3, 1.5, 20, 10 }, calc.StackView);
+        }
+
+        [Test]
+        public void KeepStackInMacro()
+        {
+            calc = new RPN(true, true);
+            calc.Eval("1 2");
+            calc.SetFunction("foo", "dup * +");
+            calc.Eval("10 20 foo");
+            CollectionAssert.AreEqual(new[] { 410 }, calc.StackView);
         }
     }
 }

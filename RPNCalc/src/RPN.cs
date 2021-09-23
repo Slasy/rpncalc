@@ -49,11 +49,14 @@ namespace RPNCalc
         /// <para>+- change sign</para>
         /// <para>sq, sqrt : square, square root</para>
         /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
+        /// <para>depth : number of values on stack</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
-        public RPN(bool caseSensitiveNames = false)
+        /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(string)"/> call.</param>
+        public RPN(bool caseSensitiveNames = false, bool alwaysClearStack = true)
         {
             CaseSensitiveNames = caseSensitiveNames;
+            AlwaysClearStack = alwaysClearStack;
             LoadDefaultFunctions();
         }
 
@@ -69,9 +72,14 @@ namespace RPNCalc
         /// <exception cref="RPNFunctionException"/>
         public double? Eval(string expression)
         {
+            return InternalEval(expression, false);
+        }
+
+        protected double? InternalEval(string expression, bool forceKeepStack)
+        {
             if (expression is null) throw new ArgumentNullException(nameof(expression), "RPN expression is null");
             buffer.Clear();
-            if (AlwaysClearStack) ClearStack();
+            if (AlwaysClearStack && !forceKeepStack) ClearStack();
             int i;
             for (i = 0; i < expression.Length; i++)
             {
@@ -139,7 +147,7 @@ namespace RPNCalc
         }
 
         /// <summary>
-        /// Set custom function for this calculator instance.
+        /// Set custom C# function for this calculator instance.
         /// </summary>
         /// <param name="name">function name</param>
         /// <param name="function">function or null to remove function</param>
@@ -153,6 +161,22 @@ namespace RPNCalc
             if (function is null) functions.Remove(name);
             else functions[GetKeyName(name)] = function;
         }
+
+        /// <summary>
+        /// Set custom macro as function for this calculator instance.
+        /// </summary>
+        /// <param name="name">function name</param>
+        /// <param name="macroExpression">macro expression or null to remove function</param>
+        /// <exception cref="ArgumentException"/>
+        /// <exception cref="ArgumentNullException"/>
+        public void SetFunction(string name, string macroExpression)
+        {
+            if (macroExpression is null) SetFunction(name, (Function)null);
+            else SetFunction(name, _ => InternalEval(macroExpression, true));
+        }
+
+        public void RemoveVariable(string name) => variables.Remove(name);
+        public void RemoveFunction(string name) => functions.Remove(name);
 
         private bool TryGetBufferValue(string value, out double number)
         {
@@ -198,6 +222,7 @@ namespace RPNCalc
             functions["drop"] = StackExtensions.Drop;
             functions["dup"] = StackExtensions.Dup;
             functions["swap"] = StackExtensions.Swap;
+            functions["depth"] = stack => stack.Push(stack.Count);
         }
     }
 }
