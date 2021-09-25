@@ -2,20 +2,12 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <Configuration>Release</Configuration>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591</NoWarn>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>false</Deterministic>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-  </ItemGroup>
 
   <ItemGroup>
     <!--<PackageReference Include="Nito.Collections.Deque" Version="1.1.0" />-->

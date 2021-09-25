@@ -94,8 +94,8 @@ namespace RPNCalc.Tools
         public static string[] InfixToPostfix(string[] tokenArray, bool strictMode = true)
         {
             const string operators = "()*/+-^";
-            var stack = new Stack<string>();
-            var postfix = new Stack<string>();
+            var stack = new System.Collections.Generic.Stack<string>();
+            var postfix = new System.Collections.Generic.Stack<string>();
             int bracketCounter = 0;
 
             string st;

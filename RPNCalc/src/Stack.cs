@@ -5,16 +5,16 @@ using Nito.Collections;
 
 namespace RPNCalc
 {
-    public class RPNStack<T> : IReadOnlyCollection<T>
+    public class Stack<T> : IReadOnlyCollection<T>
     {
         private readonly Deque<T> queue;
 
-        public RPNStack()
+        public Stack()
         {
             queue = new Deque<T>();
         }
 
-        public RPNStack(int capacity)
+        public Stack(int capacity)
         {
             queue = new Deque<T>(capacity);
         }

@@ -14,7 +14,7 @@ namespace RPNCalc
         /// <summary>
         /// Delegate for all RPN functions/operations, expects to directly operates on stack.
         /// </summary>
-        public delegate void Function(RPNStack<double> stack);
+        public delegate void Function(Stack<AStackItem> stack);
 
         /// <summary>
         /// Collection of variables accessible and usable in this calculator.
@@ -30,14 +30,14 @@ namespace RPNCalc
         /// <summary>
         /// Read only access to current stack.
         /// </summary>
-        public IReadOnlyCollection<double> StackView => stack;
+        public IReadOnlyCollection<AStackItem> StackView => stack;
 
         /// <summary>Automatically clear stack before each <see cref="Eval(string)"/> call.</summary>
         public bool AlwaysClearStack { get; set; } = true;
         /// <summary>Variable and function names are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
-        protected RPNStack<double> stack = new RPNStack<double>();
+        protected Stack<AStackItem> stack = new Stack<AStackItem>();
         protected readonly StringBuilder buffer = new StringBuilder();
         protected readonly Dictionary<string, double> variables = new Dictionary<string, double>();
         protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
@@ -71,12 +71,13 @@ namespace RPNCalc
         /// <exception cref="RPNUndefinedNameException"/>
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
-        public double? Eval(string expression)
+        /// <exception cref="RPNArgumentException"/>
+        public AStackItem Eval(string expression)
         {
             return InternalEval(expression, false);
         }
 
-        protected double? InternalEval(string expression, bool forceKeepStack)
+        protected AStackItem InternalEval(string expression, bool forceKeepStack)
         {
             if (expression is null) throw new ArgumentNullException(nameof(expression), "RPN expression is null");
             buffer.Clear();
@@ -106,7 +107,7 @@ namespace RPNCalc
                 string bufferValue = buffer.ToString().Trim();
                 if (string.IsNullOrEmpty(bufferValue)) return;
                 if (TryGetBufferValue(bufferValue, out var number))
-                    stack.Push(number);
+                    stack.Push(new StackNumber(number));
                 else if (!TryRunFunction(bufferValue, i))
                     throw new RPNUndefinedNameException($"Unknown variable/function on position {i - buffer.Length}: {buffer}");
             }
@@ -212,13 +213,13 @@ namespace RPNCalc
 
         private void LoadDefaultFunctions()
         {
-            functions["+"] = stack => stack.Func((x, y) => y + x);
-            functions["-"] = stack => stack.Func((x, y) => y - x);
-            functions["*"] = stack => stack.Func((x, y) => y * x);
-            functions["/"] = stack => stack.Func((x, y) => y / x);
+            functions["+"] = stack => stack.Func((x, y) => y.AsNumber() + x);
+            functions["-"] = stack => stack.Func((x, y) => y.AsNumber() - x);
+            functions["*"] = stack => stack.Func((x, y) => y.AsNumber() * x);
+            functions["/"] = stack => stack.Func((x, y) => y.AsNumber() / x);
             functions["^"] = stack => stack.Func((x, y) => Math.Pow(y, x));
-            functions["+-"] = stack => stack.Func(x => -x);
-            functions["sq"] = stack => stack.Func(x => x * x);
+            functions["+-"] = stack => stack.Func(x => -x.AsNumber());
+            functions["sq"] = stack => stack.Func(x => x.AsNumber() * x);
             functions["sqrt"] = stack => stack.Func(x => Math.Sqrt(x));
             functions["drop"] = StackExtensions.Drop;
             functions["dup"] = StackExtensions.Dup;

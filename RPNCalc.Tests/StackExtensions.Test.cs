@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using RPNCalc.Extensions;
 
@@ -7,12 +5,12 @@ namespace RPNCalc.Tests
 {
     public class StackExtensionsTest
     {
-        private RPNStack<double> stack;
+        private Stack<double> stack;
 
         [SetUp]
         public void Setup()
         {
-            stack = new RPNStack<double>();
+            stack = new Stack<double>();
         }
 
         [Test]

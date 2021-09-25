@@ -70,7 +70,7 @@ namespace RPNCalc.Tests
             Assert.IsTrue(calc.VariablesView.ContainsKey("foo"));
             calc.SetVariable("bAr", 456);
             Assert.IsTrue(calc.VariablesView.ContainsKey("bar"));
-            calc.SetFunction("PlUs", st => st.Push(st.Pop() + st.Pop()));
+            calc.SetFunction("PlUs", st => st.Push((double)st.Pop() + st.Pop()));
             Assert.IsTrue(calc.FunctionsView.Contains("plus"));
             Assert.AreEqual(123 + 456, calc.Eval("foO BAR plus"));
         }
@@ -84,7 +84,7 @@ namespace RPNCalc.Tests
             Assert.IsTrue(calc.VariablesView.ContainsKey("Foo"));
             calc.SetVariable("bAr", 456);
             Assert.IsTrue(calc.VariablesView.ContainsKey("bAr"));
-            calc.SetFunction("PlUs", st => st.Push(st.Pop() + st.Pop()));
+            calc.SetFunction("PlUs", st => st.Push((double)st.Pop() + st.Pop()));
             Assert.IsTrue(calc.FunctionsView.Contains("PlUs"));
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("foO BAR plus"));
             Assert.AreEqual(123 + 456, calc.Eval("Foo bAr PlUs"));
@@ -139,8 +139,8 @@ namespace RPNCalc.Tests
             calc.SetVariable("a", 2);
             calc.SetVariable("b", -5);
             calc.SetVariable("c", -3);
-            double root1 = calc.Eval("b +- b sq 4 a c * * - sqrt + 2 a * /").Value;
-            double root2 = calc.Eval("b +- b sq 4 a c * * - sqrt - 2 a * /").Value;
+            double root1 = calc.Eval("b +- b sq 4 a c * * - sqrt + 2 a * /");
+            double root2 = calc.Eval("b +- b sq 4 a c * * - sqrt - 2 a * /");
             Assert.AreEqual(3, root1);
             Assert.AreEqual(-0.5, root2);
         }

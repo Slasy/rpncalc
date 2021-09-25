@@ -50,4 +50,16 @@ namespace RPNCalc
         public RPNFunctionException(string message, Exception inner) : base(message, inner) { }
         protected RPNFunctionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
+
+    /// <summary>
+    /// When function argument has unexpected type.
+    /// </summary>
+    [Serializable]
+    public class RPNArgumentException : RPNException
+    {
+        public RPNArgumentException() { }
+        public RPNArgumentException(string message) : base(message) { }
+        public RPNArgumentException(string message, Exception inner) : base(message, inner) { }
+        protected RPNArgumentException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    }
 }
