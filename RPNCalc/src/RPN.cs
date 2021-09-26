@@ -328,7 +328,7 @@ namespace RPNCalc
         private void STO(Stack<AStackItem> stack)
         {
             string name = stack.Pop().AsString();
-            var value = stack.Peek();
+            var value = stack.Pop();
             SetVariable(name, value);
         }
 
