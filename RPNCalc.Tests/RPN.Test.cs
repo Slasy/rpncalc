@@ -163,7 +163,7 @@ namespace RPNCalc.Tests
         {
             calc = new RPN(true, true);
             calc.Eval("1 2");
-            calc.SetFunction("foo", "dup * +");
+            calc.SetFunction("foo", "DUP * +");
             calc.Eval("10 20 foo");
             CollectionAssert.AreEqual(new[] { 410 }, calc.StackView);
         }

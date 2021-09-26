@@ -53,12 +53,12 @@ namespace RPNCalc
         /// <para>RPN calculator, setup default set of functions:</para>
         /// <para>+ - * / ^ addition, subtraction, multiplication, division, exponentiation</para>
         /// <para>+- ++ -- change sign, +1 to variable, -1 from variable</para>
-        /// <para>sq, sqrt : square, square root</para>
-        /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
-        /// <para>rot, roll : rottate top 3 values, roll/rotate whole stack</para>
-        /// <para>depth, clv, clst : number of values on stack, clear variable, clear stack</para>
-        /// <para>sto, rcl, eval : store variable, recall variable, evaluate/execute program on stack</para>
-        /// <para>ift, ifte, while : if then, if then else, while loop</para>
+        /// <para>SQ, SQRT : square, square root</para>
+        /// <para>DROP, DUP, SWAP : drop, duplicate, swap values on stack</para>
+        /// <para>ROT, ROLL : rottate top 3 values, roll/rotate whole stack</para>
+        /// <para>DEPTH, CLV, CLST : number of values on stack, clear variable, clear stack</para>
+        /// <para>STO, RCL, EVAL : store variable, recall variable, evaluate/execute program on stack</para>
+        /// <para>IFT, IFTE, WHILE : if then, if then else, while loop</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(string)"/> call.</param>
@@ -310,23 +310,23 @@ namespace RPNCalc
             SetFunction("/", stack => stack.Func((x, y) => y.AsNumber() / x));
             SetFunction("^", stack => stack.Func((x, y) => Math.Pow(y, x)));
             SetFunction("+-", stack => stack.Func(x => -x.AsNumber()));
-            SetFunction("sq", stack => stack.Func(x => x.AsNumber() * x));
-            SetFunction("sqrt", stack => stack.Func(x => Math.Sqrt(x)));
-            SetFunction("drop", StackExtensions.Drop);
-            SetFunction("dup", StackExtensions.Dup);
-            SetFunction("swap", stack => stack.Swap());
-            SetFunction("depth", stack => stack.Push(stack.Count));
-            SetFunction("rot", stack => stack.Rotate(3));
-            SetFunction("roll", stack => stack.Roll(1));
-            SetFunction("over", StackExtensions.Over);
-            SetFunction("clst", CLEAR_STACK);
-            SetFunction("eval", stack => InternalEval(stack.Pop().AsProgram(), true));
-            SetFunction("sto", STO);
-            SetFunction("rcl", RCL);
-            SetFunction("clv", CLEAR_VAR);
-            SetFunction("ift", IFT);
-            SetFunction("ifte", IFTE);
-            SetFunction("while", WHILE);
+            SetFunction("SQ", stack => stack.Func(x => x.AsNumber() * x));
+            SetFunction("SQRT", stack => stack.Func(x => Math.Sqrt(x)));
+            SetFunction("DROP", StackExtensions.Drop);
+            SetFunction("DUP", StackExtensions.Dup);
+            SetFunction("SWAP", stack => stack.Swap());
+            SetFunction("DEPTH", stack => stack.Push(stack.Count));
+            SetFunction("ROT", stack => stack.Rotate(3));
+            SetFunction("ROLL", stack => stack.Roll(1));
+            SetFunction("OVER", StackExtensions.Over);
+            SetFunction("CLST", CLEAR_STACK);
+            SetFunction("CLV", CLEAR_VAR);
+            SetFunction("EVAL", stack => InternalEval(stack.Pop().AsProgram(), true));
+            SetFunction("STO", STO);
+            SetFunction("RCL", RCL);
+            SetFunction("IFT", IFT);
+            SetFunction("IFTE", IFTE);
+            SetFunction("WHILE", WHILE);
             SetFunction("==", stack => stack.Func((x, y) => y == x));
             SetFunction("!=", stack => stack.Func((x, y) => y != x));
             SetFunction("++", stack => AddToVar(stack, 1));
