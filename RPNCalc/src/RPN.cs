@@ -304,33 +304,33 @@ namespace RPNCalc
 
         private void LoadDefaultFunctions()
         {
-            functions["+"] = PLUS;
-            functions["-"] = stack => stack.Func((x, y) => y.AsNumber() - x);
-            functions["*"] = stack => stack.Func((x, y) => y.AsNumber() * x);
-            functions["/"] = stack => stack.Func((x, y) => y.AsNumber() / x);
-            functions["^"] = stack => stack.Func((x, y) => Math.Pow(y, x));
-            functions["+-"] = stack => stack.Func(x => -x.AsNumber());
-            functions["sq"] = stack => stack.Func(x => x.AsNumber() * x);
-            functions["sqrt"] = stack => stack.Func(x => Math.Sqrt(x));
-            functions["drop"] = StackExtensions.Drop;
-            functions["dup"] = StackExtensions.Dup;
-            functions["swap"] = stack => stack.Swap();
-            functions["depth"] = stack => stack.Push(stack.Count);
-            functions["rot"] = stack => stack.Rotate(3);
-            functions["roll"] = stack => stack.Roll(1);
-            functions["over"] = StackExtensions.Over;
-            functions["clst"] = CLEAR_STACK;
-            functions["eval"] = stack => InternalEval(stack.Pop().AsProgram(), true);
-            functions["sto"] = STO;
-            functions["rcl"] = RCL;
-            functions["clv"] = CLEAR_VAR;
-            functions["ift"] = IFT;
-            functions["ifte"] = IFTE;
-            functions["while"] = WHILE;
-            functions["=="] = stack => stack.Func((x, y) => y == x);
-            functions["!="] = stack => stack.Func((x, y) => y != x);
-            functions["++"] = stack => AddToVar(stack, 1);
-            functions["--"] = stack => AddToVar(stack, -1);
+            SetFunction("+", PLUS);
+            SetFunction("-", stack => stack.Func((x, y) => y.AsNumber() - x));
+            SetFunction("*", stack => stack.Func((x, y) => y.AsNumber() * x));
+            SetFunction("/", stack => stack.Func((x, y) => y.AsNumber() / x));
+            SetFunction("^", stack => stack.Func((x, y) => Math.Pow(y, x)));
+            SetFunction("+-", stack => stack.Func(x => -x.AsNumber()));
+            SetFunction("sq", stack => stack.Func(x => x.AsNumber() * x));
+            SetFunction("sqrt", stack => stack.Func(x => Math.Sqrt(x)));
+            SetFunction("drop", StackExtensions.Drop);
+            SetFunction("dup", StackExtensions.Dup);
+            SetFunction("swap", stack => stack.Swap());
+            SetFunction("depth", stack => stack.Push(stack.Count));
+            SetFunction("rot", stack => stack.Rotate(3));
+            SetFunction("roll", stack => stack.Roll(1));
+            SetFunction("over", StackExtensions.Over);
+            SetFunction("clst", CLEAR_STACK);
+            SetFunction("eval", stack => InternalEval(stack.Pop().AsProgram(), true));
+            SetFunction("sto", STO);
+            SetFunction("rcl", RCL);
+            SetFunction("clv", CLEAR_VAR);
+            SetFunction("ift", IFT);
+            SetFunction("ifte", IFTE);
+            SetFunction("while", WHILE);
+            SetFunction("==", stack => stack.Func((x, y) => y == x));
+            SetFunction("!=", stack => stack.Func((x, y) => y != x));
+            SetFunction("++", stack => AddToVar(stack, 1));
+            SetFunction("--", stack => AddToVar(stack, -1));
         }
 
         private void PLUS(Stack<AStackItem> stack)
