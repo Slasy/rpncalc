@@ -26,7 +26,7 @@ namespace RPNCalc
         /// <summary>
         /// Collection of variables accessible and usable in this calculator.
         /// </summary>
-        public IReadOnlyDictionary<string, double> VariablesView => variables;
+        public IReadOnlyDictionary<string, AStackItem> VariablesView => variables;
 
         /// <summary>
         /// <para>Read only collection of functions available to use in this calculator.</para>
@@ -46,19 +46,18 @@ namespace RPNCalc
 
         protected Stack<AStackItem> stack = new Stack<AStackItem>();
         protected readonly StringBuilder buffer = new StringBuilder();
-        protected readonly Dictionary<string, double> variables = new Dictionary<string, double>();
+        protected readonly Dictionary<string, AStackItem> variables = new Dictionary<string, AStackItem>();
         protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
 
         /// <summary>
         /// <para>RPN calculator, setup default set of functions:</para>
-        /// <para>+ - * / addition, subtraction, multiplication, division</para>
-        /// <para>^ exponentiation</para>
+        /// <para>+ - * / ^ addition, subtraction, multiplication, division, exponentiation</para>
         /// <para>+- change sign</para>
         /// <para>sq, sqrt : square, square root</para>
         /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
-        /// <para>rot, roll, clear : rottate top 3 values, roll/rotate whole stack, clear stack</para>
-        /// <para>depth : number of values on stack</para>
-        /// <para>eval : evaluate/execute program on stack</para>
+        /// <para>rot, roll : rottate top 3 values, roll/rotate whole stack</para>
+        /// <para>depth, clv, clst : number of values on stack, clear variable, clear stack</para>
+        /// <para>sto, rcl, eval : store variable, recall variable, evaluate/execute program on stack</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(string)"/> call.</param>
@@ -144,7 +143,7 @@ namespace RPNCalc
                 if (string.IsNullOrEmpty(bufferValue)) return;
                 if (currentState == State.Normal)
                 {
-                    if (TryGetBufferAsNumber(bufferValue, out var number))
+                    if (TryGetBufferAsNumberOrVariable(bufferValue, out var number))
                         stack.Push(number);
                     else if (!TryRunFunction(bufferValue, i))
                         throw new RPNUndefinedNameException($"Unknown variable/function on position {i - buffer.Length}: {buffer}");
@@ -188,16 +187,16 @@ namespace RPNCalc
         /// Set custom variable for this calculator instance.
         /// </summary>
         /// <param name="name">variable name</param>
-        /// <param name="value">number or null to remove variable</param>
+        /// <param name="value">value or null to remove variable</param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
-        public void SetVariable(string name, double? value)
+        public void SetVariable(string name, AStackItem value)
         {
             if (name is null) throw new ArgumentNullException(nameof(name), "Variable name is null");
-            if (!IsValidName(name)) throw new ArgumentException(nameof(name), "Invalid variable name");
-            if (functions.ContainsKey(GetKeyName(name))) throw new ArgumentException(nameof(name), "Name is already used for a function");
-            if (!value.HasValue) variables.Remove(name);
-            else variables[GetKeyName(name)] = value.Value;
+            if (!IsValidName(name)) throw new ArgumentException(nameof(name), $"Invalid variable name {name}");
+            if (functions.ContainsKey(GetKeyName(name))) throw new ArgumentException(nameof(name), $"Name is already used for a function {name}");
+            if (value is null) variables.Remove(name);
+            else variables[GetKeyName(name)] = value;
         }
 
         /// <summary>
@@ -210,8 +209,8 @@ namespace RPNCalc
         public void SetFunction(string name, Function function)
         {
             if (name is null) throw new ArgumentNullException(nameof(name), "Function name is null");
-            if (!IsValidName(name)) throw new ArgumentException(nameof(name), "Invalid function name");
-            if (variables.ContainsKey(GetKeyName(name))) throw new ArgumentException(nameof(name), "Name is already used for a variable");
+            if (!IsValidName(name)) throw new ArgumentException(nameof(name), $"Invalid function name {name}");
+            if (variables.ContainsKey(GetKeyName(name))) throw new ArgumentException(nameof(name), $"Name is already used for a variable {name}");
             if (function is null) functions.Remove(name);
             else functions[GetKeyName(name)] = function;
         }
@@ -232,18 +231,17 @@ namespace RPNCalc
         public void RemoveVariable(string name) => variables.Remove(name);
         public void RemoveFunction(string name) => functions.Remove(name);
 
-        private bool TryGetBufferAsNumber(string value, out StackNumber number)
+        private bool TryGetBufferAsNumberOrVariable(string value, out AStackItem item)
         {
-            number = null;
+            item = null;
             if (value is null) return false;
             if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double _number))
             {
-                number = new StackNumber(_number);
+                item = new StackNumber(_number);
                 return true;
             }
-            else if (variables.TryGetValue(GetKeyName(value), out _number))
+            else if (variables.TryGetValue(GetKeyName(value), out item))
             {
-                number = new StackNumber(_number);
                 return true;
             }
             else
@@ -315,8 +313,34 @@ namespace RPNCalc
             functions["rot"] = stack => stack.Rotate(3);
             functions["roll"] = stack => stack.Roll(1);
             functions["over"] = StackExtensions.Over;
-            functions["clear"] = stack => stack.Clear();
+            functions["clst"] = CLEAR_STACK;
             functions["eval"] = stack => Eval(stack.Pop().AsProgram());
+            functions["sto"] = STO;
+            functions["rcl"] = RCL;
+            functions["clv"] = CLEAR_VAR;
+        }
+
+        private void STO(Stack<AStackItem> stack)
+        {
+            string name = stack.Pop().AsString();
+            var value = stack.Peek();
+            SetVariable(name, value);
+        }
+
+        private void RCL(Stack<AStackItem> stack)
+        {
+            var name = stack.Pop().AsString();
+            if (!TryGetBufferAsNumberOrVariable(name, out var item)) throw new RPNUndefinedNameException($"Unknown variable name {name}");
+            stack.Push(item);
+        }
+
+        private void CLEAR_STACK(Stack<AStackItem> stack) => stack.Clear();
+
+        private void CLEAR_VAR(Stack<AStackItem> stack)
+        {
+            var name = stack.Pop().AsString();
+            if (!IsValidName(name)) throw new RPNArgumentException($"Invalid variable name {name}");
+            RemoveVariable(name);
         }
     }
 }

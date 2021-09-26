@@ -174,9 +174,9 @@ namespace RPNCalc.Tests
             calc.SetFunction("eq", st => { var (x, y) = st.Peek2(); st.Push(x == y ? 1 : 0); });
             calc.Eval("5 20 over / 4 eq roll drop drop +");
             CollectionAssert.AreEqual(new[] { 6 }, calc.StackView);
-            calc.Eval("1 2 3 clear 10 20 30 rot + eq");
+            calc.Eval("1 2 3 clst 10 20 30 rot + eq");
             CollectionAssert.AreEqual(new[] { 1, 30, 30 }, calc.StackView);
-            calc.Eval("clear 1 2 3 10 20 30 rot over 2 * eq swap drop");
+            calc.Eval("clst 1 2 3 10 20 30 rot over 2 * eq swap drop");
             CollectionAssert.AreEqual(new[] { 1, 20, 10, 30, 3, 2, 1 }, calc.StackView);
         }
 
@@ -262,6 +262,99 @@ namespace RPNCalc.Tests
         {
             Assert.Throws<RPNFunctionException>(() => calc.Eval("42 eval"));
             Assert.Throws<RPNFunctionException>(() => calc.Eval("-42.1337e2 eval"));
+        }
+
+        [Test]
+        public void SetStringVariable()
+        {
+            calc.SetVariable("foo", "foobar");
+            string s = calc.Eval("foo").AsString();
+            Assert.AreEqual("foobar", s);
+        }
+
+        [Test]
+        public void SetProgramVariable()
+        {
+            calc.SetVariable("foo", new StackProgram("dup * +"));
+            double n = calc.Eval("10 20 foo eval").AsNumber();
+            Assert.AreEqual(410, n);
+        }
+
+        [Test]
+        public void StoNumber()
+        {
+            calc.Eval("123 'foo' sto");
+            CollectionAssert.AreEqual(new[] { 123 }, calc.StackView);
+            CollectionAssert.Contains(calc.VariablesView.Keys, "foo");
+            Assert.AreEqual(123, calc.VariablesView["foo"]);
+        }
+
+        [Test]
+        public void StoString()
+        {
+            calc.Eval("'foobar' 'foo' sto");
+            CollectionAssert.AreEqual(new[] { "foobar" }, calc.StackView);
+            CollectionAssert.Contains(calc.VariablesView.Keys, "foo");
+            Assert.AreEqual("foobar", calc.VariablesView["foo"]);
+        }
+
+        [Test]
+        public void StoProgram()
+        {
+            calc.Eval("{dummy program} 'foo' sto");
+            CollectionAssert.AreEqual(new[] { new StackProgram("dummy program") }, calc.StackView);
+            CollectionAssert.Contains(calc.VariablesView.Keys, "foo");
+            Assert.AreEqual("dummy program", calc.VariablesView["foo"].AsProgram());
+        }
+
+        [Test]
+        public void RclNumber()
+        {
+            calc.SetVariable("foo", 1234);
+            double n = calc.Eval("'foo' rcl").AsNumber();
+            Assert.AreEqual(1234, n);
+            CollectionAssert.AreEqual(new[] { 1234 }, calc.StackView);
+        }
+
+        [Test]
+        public void RclString()
+        {
+            calc.SetVariable("foo", "foobar");
+            string s = calc.Eval("'foo' rcl").AsString();
+            Assert.AreEqual("foobar", s);
+            CollectionAssert.AreEqual(new[] { "foobar" }, calc.StackView);
+        }
+
+        [Test]
+        public void RclProgram()
+        {
+            calc.SetVariable("foo", new StackProgram("dup +"));
+            string s = calc.Eval("'foo' rcl").AsProgram();
+            Assert.AreEqual("dup +", s);
+            CollectionAssert.AreEqual(new[] { new StackProgram("dup +") }, calc.StackView);
+        }
+
+        [Test]
+        public void RclSto()
+        {
+            calc.SetVariable("foo", "foobar");
+            string s = calc.Eval("'foo' rcl dup sto").AsString();
+            Assert.AreEqual("foobar", s);
+            CollectionAssert.AreEquivalent(new[] { "foo", "foobar" }, calc.VariablesView.Keys);
+            Assert.AreEqual("foobar", calc.VariablesView["foo"]);
+            Assert.AreEqual("foobar", calc.VariablesView["foobar"]);
+        }
+
+        [Test]
+        public void ClearVariable()
+        {
+            calc = new RPN(alwaysClearStack: false);
+            calc.SetVariable("foo", "foobar");
+            CollectionAssert.IsNotEmpty(calc.VariablesView);
+            Assert.AreEqual("foobar", calc.VariablesView["foo"]);
+            Assert.DoesNotThrow(() => calc.Eval("foo 'foo' clv"));
+            CollectionAssert.IsEmpty(calc.VariablesView);
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("foo"));
         }
     }
 }
