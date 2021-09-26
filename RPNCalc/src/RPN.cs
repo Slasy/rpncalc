@@ -11,6 +11,13 @@ namespace RPNCalc
     /// </summary>
     public class RPN
     {
+        protected enum State
+        {
+            Normal,
+            ReadingString,
+            ReadingProgram,
+        }
+
         /// <summary>
         /// Delegate for all RPN functions/operations, expects to directly operates on stack.
         /// </summary>
@@ -51,6 +58,7 @@ namespace RPNCalc
         /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
         /// <para>rot, roll, clear : rottate top 3 values, roll/rotate whole stack, clear stack</para>
         /// <para>depth : number of values on stack</para>
+        /// <para>eval : evaluate/execute program on stack</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(string)"/> call.</param>
@@ -82,23 +90,51 @@ namespace RPNCalc
             if (expression is null) throw new ArgumentNullException(nameof(expression), "RPN expression is null");
             buffer.Clear();
             if (AlwaysClearStack && !forceKeepStack) ClearStack();
+            State currentState = State.Normal;
+            int programDepth = 0;
             int i;
             for (i = 0; i < expression.Length; i++)
             {
                 char ch = expression[i];
-                if (ch == ' ')
+                if (ch == ' ' && currentState == State.Normal)
                 {
                     if (buffer.Length == 0) continue;
                     processBufferContent();
-                    buffer.Clear();
+                }
+                else if (ch == '\'' && currentState != State.ReadingProgram)
+                {
+                    if (currentState != State.ReadingString)
+                    {
+                        currentState = State.ReadingString;
+                        buffer.Append(ch);
+                    }
+                    else
+                    {
+                        buffer.Append(ch);
+                        processBufferContent();
+                        currentState = State.Normal;
+                    }
+                }
+                else if (ch == '{' && currentState != State.ReadingString)
+                {
+                    currentState = State.ReadingProgram;
+                    programDepth++;
+                    buffer.Append(ch);
+                }
+                else if (ch == '}' && currentState == State.ReadingProgram && --programDepth == 0)
+                {
+                    buffer.Append(ch);
+                    processBufferContent();
+                    currentState = State.Normal;
                 }
                 else
                 {
                     buffer.Append(ch);
                 }
             }
+            if (currentState == State.ReadingString) throw new RPNArgumentException("Unclosed string quote");
+            if (currentState == State.ReadingProgram) throw new RPNArgumentException("Unclosed program bracket");
             processBufferContent();
-            buffer.Clear();
             if (stack.Count == 0) return null;
             return stack.Peek();
 
@@ -106,10 +142,26 @@ namespace RPNCalc
             {
                 string bufferValue = buffer.ToString().Trim();
                 if (string.IsNullOrEmpty(bufferValue)) return;
-                if (TryGetBufferValue(bufferValue, out var number))
-                    stack.Push(new StackNumber(number));
-                else if (!TryRunFunction(bufferValue, i))
-                    throw new RPNUndefinedNameException($"Unknown variable/function on position {i - buffer.Length}: {buffer}");
+                if (currentState == State.Normal)
+                {
+                    if (TryGetBufferAsNumber(bufferValue, out var number))
+                        stack.Push(number);
+                    else if (!TryRunFunction(bufferValue, i))
+                        throw new RPNUndefinedNameException($"Unknown variable/function on position {i - buffer.Length}: {buffer}");
+                }
+                else if (currentState == State.ReadingString)
+                {
+                    if (TryGetBufferAsString(bufferValue, out var str))
+                        stack.Push(str);
+                    else throw new RPNArgumentException("Invalid string");
+                }
+                else if (currentState == State.ReadingProgram)
+                {
+                    if (TryGetBufferAsProgram(bufferValue, out var prog))
+                        stack.Push(prog);
+                    else throw new RPNArgumentException("Invalid program");
+                }
+                buffer.Clear();
             }
         }
 
@@ -180,16 +232,44 @@ namespace RPNCalc
         public void RemoveVariable(string name) => variables.Remove(name);
         public void RemoveFunction(string name) => functions.Remove(name);
 
-        private bool TryGetBufferValue(string value, out double number)
+        private bool TryGetBufferAsNumber(string value, out StackNumber number)
         {
-            number = 0;
+            number = null;
             if (value is null) return false;
-            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out number))
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double _number))
+            {
+                number = new StackNumber(_number);
                 return true;
-            else if (variables.TryGetValue(GetKeyName(value), out number))
+            }
+            else if (variables.TryGetValue(GetKeyName(value), out _number))
+            {
+                number = new StackNumber(_number);
                 return true;
+            }
             else
+            {
                 return false;
+            }
+        }
+
+        private bool TryGetBufferAsString(string value, out StackString str)
+        {
+            str = null;
+            if (value is null) return false;
+            if (value.Length < 2) return false;
+            if (value[0] != '\'' || value[value.Length - 1] != '\'') return false;
+            str = new StackString(value.Substring(1, value.Length - 2));
+            return true;
+        }
+
+        private bool TryGetBufferAsProgram(string value, out StackProgram program)
+        {
+            program = null;
+            if (value is null) return false;
+            if (value.Length < 2) return false;
+            if (value[0] != '{' || value[value.Length - 1] != '}') return false;
+            program = new StackProgram(value.Substring(1, value.Length - 2));
+            return true;
         }
 
         private bool TryRunFunction(string name, int expressionIndex)
@@ -209,7 +289,14 @@ namespace RPNCalc
         }
 
         private string GetKeyName(string name) => CaseSensitiveNames ? name : name.ToLowerInvariant();
-        private bool IsValidName(string name) => !name.Contains(" ");
+        private bool IsValidName(string name)
+        {
+            foreach (char ch in name)
+            {
+                if (ch == ' ' || ch == '\'' || ch == '{' || ch == '}') return false;
+            }
+            return true;
+        }
 
         private void LoadDefaultFunctions()
         {
@@ -229,6 +316,7 @@ namespace RPNCalc
             functions["roll"] = stack => stack.Roll(1);
             functions["over"] = StackExtensions.Over;
             functions["clear"] = stack => stack.Clear();
+            functions["eval"] = stack => Eval(stack.Pop().AsProgram());
         }
     }
 }

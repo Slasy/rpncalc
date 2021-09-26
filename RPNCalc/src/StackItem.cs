@@ -17,7 +17,7 @@ namespace RPNCalc
         }
 
         public readonly Type type;
-        public readonly object value;
+        public virtual object value { get; protected set; }
 
         protected AStackItem(Type type)
         {
@@ -44,13 +44,13 @@ namespace RPNCalc
 
         public override bool Equals(object obj)
         {
-            if (!(obj is AStackItem item)) return false;
+            if (obj is not AStackItem item) return false;
             return Equals(item);
         }
 
         public override int GetHashCode() => value.GetHashCode();
         public override string ToString() => value.ToString();
-        public virtual bool Equals(AStackItem other) => value.Equals(other.value);
+        public virtual bool Equals(AStackItem other) => other is not null && value.Equals(other.value);
     }
 
     /// <summary>
@@ -58,7 +58,16 @@ namespace RPNCalc
     /// </summary>
     public abstract class AStackItem<T> : AStackItem, IEquatable<AStackItem<T>> where T : notnull
     {
-        public new readonly T value;
+        protected T _value;
+        public new T value
+        {
+            get => _value;
+            protected set
+            {
+                _value = value;
+                base.value = value;
+            }
+        }
 
         protected AStackItem(Type type, T value) : base(type) => this.value = value;
 
@@ -136,9 +145,11 @@ namespace RPNCalc
         public override string ToString() => $"'{value}'";
     }
 
-    public class StackProgram : AStackItem<string>
+    public class StackProgram : AStackItem<string>, IEquatable<string>
     {
         public StackProgram(string program) : base(Type.Program, program) { }
+
+        public bool Equals(string other) => value == other;
 
         public override string ToString() => $"{{{value}}}";
     }

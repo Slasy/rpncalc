@@ -51,16 +51,6 @@ namespace RPNCalc.Tests
             Assert.AreEqual(30, calc.Eval("+"));
         }
 
-        [Ignore("There is no support for this (yet?)")]
-        [Test]
-        public void EvaluateWithImperfectSpaces()
-        {
-            Assert.AreEqual(30, calc.Eval("10 20+"));
-            calc.SetVariable("x", 20);
-            Assert.AreEqual(30, calc.Eval("10 x+ "));
-            Assert.AreEqual(30, calc.Eval("  10  20+ "));
-        }
-
         [Test]
         public void SettingNotCaseSensitiveVariablesAndFunctions()
         {
@@ -188,6 +178,90 @@ namespace RPNCalc.Tests
             CollectionAssert.AreEqual(new[] { 1, 30, 30 }, calc.StackView);
             calc.Eval("clear 1 2 3 10 20 30 rot over 2 * eq swap drop");
             CollectionAssert.AreEqual(new[] { 1, 20, 10, 30, 3, 2, 1 }, calc.StackView);
+        }
+
+        [Test]
+        public void PushAStringsToStack()
+        {
+            calc.SetVariable("foo", 1234);
+            string top = null;
+            Assert.DoesNotThrow(() => top = calc.Eval("foo 'foo'"));
+            Assert.AreEqual("foo", top);
+            CollectionAssert.AreEqual(new AStackItem[] { "foo", 1234 }, calc.StackView);
+        }
+
+        [Test]
+        public void StringWithSpace()
+        {
+            Assert.DoesNotThrow(() => calc.Eval("'foo bar'"));
+            CollectionAssert.AreEqual(new[] { "foo bar" }, calc.StackView);
+        }
+
+        [Test]
+        public void FailOnIncompleteString()
+        {
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("12 'foo bar 10"));
+        }
+
+        [Test]
+        public void PushProgramToStack()
+        {
+            AStackItem top = null;
+            Assert.DoesNotThrow(() => top = calc.Eval("1 2 3 {10 20 dup + *}"));
+            Assert.AreEqual(AStackItem.Type.Program, top.type);
+            Assert.AreEqual("10 20 dup + *", top.value);
+        }
+
+        [Test]
+        public void ProgramInsideProgram()
+        {
+            AStackItem p = calc.Eval("{{1 2 +} 3 *}");
+            Assert.AreEqual("{1 2 +} 3 *", p.value);
+        }
+
+        [Test]
+        public void EvalSimpleProgram()
+        {
+            Assert.DoesNotThrow(() => calc.Eval("{1 2 +} eval"));
+            CollectionAssert.AreEqual(new[] { 3 }, calc.StackView);
+        }
+
+        [Test]
+        public void EvalProgramInsideProgram()
+        {
+            Assert.DoesNotThrow(() => calc.Eval("{ { 1 2 + } eval 7 + } eval"));
+            CollectionAssert.AreEqual(new[] { 10 }, calc.StackView);
+        }
+
+        [Test]
+        public void ProgramInsideString()
+        {
+            calc.Eval("'{10 20 *} eval'");
+            CollectionAssert.AreEqual(new[] { "{10 20 *} eval" }, calc.StackView);
+        }
+
+        [Test]
+        public void StringsInsideProgram()
+        {
+            calc.Eval("{'foo' 'bar'}");
+            CollectionAssert.AreEqual(new[] { new StackProgram("'foo' 'bar'") }, calc.StackView);
+            calc.Eval("eval");
+            CollectionAssert.AreEqual(new[] { "bar", "foo" }, calc.StackView);
+        }
+
+        [Test]
+        public void FailEvalString()
+        {
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'foo' eval"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'{foo}' eval"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'{10}' eval"));
+        }
+
+        [Test]
+        public void FailEvalNumber()
+        {
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("42 eval"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("-42.1337e2 eval"));
         }
     }
 }
