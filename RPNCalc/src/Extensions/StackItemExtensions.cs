@@ -1,6 +1,6 @@
 namespace RPNCalc.Extensions
 {
-    public static class StackElementExtensions
+    public static class StackItemExtensions
     {
         public static double AsNumber(this AStackItem item)
         {

@@ -19,6 +19,12 @@ namespace RPNCalc
             queue = new Deque<T>(capacity);
         }
 
+        public T this[int index]
+        {
+            get => queue[index];
+            set => queue[index] = value;
+        }
+
         public int Count => queue.Count;
 
         public void Clear() => queue.Clear();

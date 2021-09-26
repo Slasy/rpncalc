@@ -69,6 +69,7 @@ namespace RPNCalc
             }
         }
 
+        protected AStackItem(Type type) : base(type) { }
         protected AStackItem(Type type, T value) : base(type) => this.value = value;
 
         public override bool Equals(object obj)

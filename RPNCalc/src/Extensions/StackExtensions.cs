@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace RPNCalc.Extensions
 {
@@ -199,5 +200,18 @@ namespace RPNCalc.Extensions
         /// Moves bottom of the stack to top.
         /// </summary>
         public static void RotateUp<T>(this Stack<T> stack) => stack.Roll(-1);
+
+        /// <summary>
+        /// Returns stack as formated string for easy view of stack content.
+        /// </summary>
+        public static string DumpStack<T>(this Stack<T> stack)
+        {
+            var sb = new StringBuilder();
+            for (int i = stack.Count - 1; i >= 0; i--)
+            {
+                sb.AppendFormat("{0:000}", i + 1).Append(": ").Append(stack[i].ToString()).Append('\n');
+            }
+            return sb.ToString();
+        }
     }
 }

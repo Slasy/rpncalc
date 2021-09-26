@@ -115,5 +115,13 @@ namespace RPNCalc.Tests
             stack.Rotate(-3);
             CollectionAssert.AreEqual(new[] { 10, 20, 999, 30 }, stack);
         }
+
+        [Test]
+        public void DumpStack()
+        {
+            stack.Push(10, 20, 30);
+            string dump = stack.DumpStack();
+            Assert.AreEqual("003: 10\n002: 20\n001: 30\n", dump);
+        }
     }
 }
