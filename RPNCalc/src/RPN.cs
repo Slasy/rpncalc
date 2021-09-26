@@ -165,6 +165,11 @@ namespace RPNCalc
         }
 
         /// <summary>
+        /// Returns stack as formated string for easy view of stack content.
+        /// </summary>
+        public string DumpStack() => stack.DumpStack();
+
+        /// <summary>
         /// Clear stack memory.
         /// </summary>
         public void ClearStack() => stack.Clear();
