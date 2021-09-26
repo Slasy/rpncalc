@@ -44,12 +44,20 @@ namespace RPNCalc
             return (queue.RemoveFromFront(), queue.RemoveFromFront());
         }
 
-        /// <summary>Pops last two values from stack.</summary>
+        /// <summary>Pops last three values from stack.</summary>
         /// <exception cref="RPNEmptyStackException"/>
         public (T x, T y, T z) Pop3()
         {
             ThrowIfTooSmall(3);
             return (queue.RemoveFromFront(), queue.RemoveFromFront(), queue.RemoveFromFront());
+        }
+
+        /// <summary>Pops last four values from stack.</summary>
+        /// <exception cref="RPNEmptyStackException"/>
+        public (T x, T y, T z, T t) Pop4()
+        {
+            ThrowIfTooSmall(4);
+            return (queue.RemoveFromFront(), queue.RemoveFromFront(), queue.RemoveFromFront(), queue.RemoveFromFront());
         }
 
         public void Push(T x) => queue.AddToFront(x);

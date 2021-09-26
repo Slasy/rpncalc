@@ -382,5 +382,50 @@ namespace RPNCalc.Tests
             Assert.Throws<RPNFunctionException>(() => calc.Eval("12356 'var' +"));
             Assert.Throws<RPNFunctionException>(() => calc.Eval("'var' 98765 +"));
         }
+
+        [Test]
+        public void IfThen()
+        {
+            calc = new RPN(alwaysClearStack: true);
+            string result = calc.Eval("10 10 == { 'yes 10 == 10' } ift");
+            Assert.AreEqual("yes 10 == 10", result);
+            var emptyResult = calc.Eval(" 10 10 != { 'yes 10 != 10' } ift");
+            Assert.IsNull(emptyResult);
+        }
+
+        [Test]
+        public void IfThenElse()
+        {
+            calc = new RPN(alwaysClearStack: true);
+            string result = calc.Eval("10 10 == { 'yes 10 == 10' } {'nope 10 != 10'} ifte");
+            Assert.AreEqual("yes 10 == 10", result);
+            var emptyResult = calc.Eval("10 10 != { 'yes 10 != 10' } {'nope 10 == 10'} ifte");
+            Assert.AreEqual("nope 10 == 10", emptyResult);
+        }
+
+        [Test]
+        public void While()
+        {
+            calc.Eval("1 0 'i' sto { 10 i != } { 2 * 'i' ++ } while");
+            CollectionAssert.AreEqual(new[] { Math.Pow(2, 10) }, calc.StackView);
+        }
+
+        [Test]
+        public void PlusPlus()
+        {
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'unknown_var' ++"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'123' ++"));
+            Assert.DoesNotThrow(() => calc.Eval("0 '123' sto '123' ++"));
+            Assert.AreEqual(1, calc.VariablesView["123"]);
+        }
+
+        [Test]
+        public void MinusMinus()
+        {
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'unknown_var' --"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'123' --"));
+            Assert.DoesNotThrow(() => calc.Eval("0 '123' sto '123' --"));
+            Assert.AreEqual(-1, calc.VariablesView["123"]);
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using RPNCalc.Extensions;
 
 namespace RPNCalc
@@ -41,6 +40,8 @@ namespace RPNCalc
         public static implicit operator long(AStackItem item) => (long)item.AsNumber();
         public static implicit operator ulong(AStackItem item) => (ulong)item.AsNumber();
         public static implicit operator string(AStackItem item) => item.AsString();
+        public static implicit operator bool(AStackItem item) => item.AsBool();
+        public static implicit operator AStackItem(bool condition) => new StackNumber(condition ? 1 : 0);
 
         public override bool Equals(object obj)
         {
@@ -74,7 +75,7 @@ namespace RPNCalc
 
         public override bool Equals(object obj)
         {
-            if (!(obj is AStackItem item)) return false;
+            if (obj is not AStackItem item) return false;
             return Equals(item);
         }
 
@@ -111,18 +112,19 @@ namespace RPNCalc
         public static bool operator >=(StackNumber left, StackNumber right) => left.value >= right.value;
         public static bool operator <=(StackNumber left, StackNumber right) => left.value <= right.value;
 
-        public static implicit operator StackNumber(double number) => new StackNumber(number);
-        public static implicit operator StackNumber(float number) => new StackNumber(number);
-        public static implicit operator StackNumber(int number) => new StackNumber(number);
-        public static implicit operator StackNumber(uint number) => new StackNumber(number);
-        public static implicit operator StackNumber(long number) => new StackNumber(number);
-        public static implicit operator StackNumber(ulong number) => new StackNumber(number);
+        public static implicit operator StackNumber(double number) => new(number);
+        public static implicit operator StackNumber(float number) => new(number);
+        public static implicit operator StackNumber(int number) => new(number);
+        public static implicit operator StackNumber(uint number) => new(number);
+        public static implicit operator StackNumber(long number) => new(number);
+        public static implicit operator StackNumber(ulong number) => new(number);
         public static implicit operator double(StackNumber number) => number.value;
         public static implicit operator float(StackNumber number) => (float)number.value;
         public static implicit operator int(StackNumber number) => (int)number.value;
         public static implicit operator uint(StackNumber number) => (uint)number.value;
         public static implicit operator long(StackNumber number) => (long)number.value;
         public static implicit operator ulong(StackNumber number) => (ulong)number.value;
+        public static implicit operator bool(StackNumber number) => number.AsBool();
 
         public bool Equals(double other) => value == other;
         public bool Equals(float other) => value == other;
@@ -138,7 +140,7 @@ namespace RPNCalc
     {
         public StackString(string str) : base(Type.String, str) { }
 
-        public static implicit operator StackString(string str) => new StackString(str);
+        public static implicit operator StackString(string str) => new(str);
         public static implicit operator string(StackString str) => str.value;
 
         public bool Equals(string other) => value == other;

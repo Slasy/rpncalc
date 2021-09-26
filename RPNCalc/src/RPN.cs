@@ -44,20 +44,21 @@ namespace RPNCalc
         /// <summary>Variable and function names are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
-        protected Stack<AStackItem> stack = new Stack<AStackItem>();
-        protected readonly StringBuilder buffer = new StringBuilder();
-        protected readonly Dictionary<string, AStackItem> variables = new Dictionary<string, AStackItem>();
-        protected readonly Dictionary<string, Function> functions = new Dictionary<string, Function>();
+        protected Stack<AStackItem> stack = new();
+        protected readonly StringBuilder buffer = new();
+        protected readonly Dictionary<string, AStackItem> variables = new();
+        protected readonly Dictionary<string, Function> functions = new();
 
         /// <summary>
         /// <para>RPN calculator, setup default set of functions:</para>
         /// <para>+ - * / ^ addition, subtraction, multiplication, division, exponentiation</para>
-        /// <para>+- change sign</para>
+        /// <para>+- ++ -- change sign, +1 to variable, -1 from variable</para>
         /// <para>sq, sqrt : square, square root</para>
         /// <para>drop, dup, swap : drop, duplicate, swap values on stack</para>
         /// <para>rot, roll : rottate top 3 values, roll/rotate whole stack</para>
         /// <para>depth, clv, clst : number of values on stack, clear variable, clear stack</para>
         /// <para>sto, rcl, eval : store variable, recall variable, evaluate/execute program on stack</para>
+        /// <para>ift, ifte, while : if then, if then else, while loop</para>
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(string)"/> call.</param>
@@ -236,11 +237,11 @@ namespace RPNCalc
         public void RemoveVariable(string name) => variables.Remove(name);
         public void RemoveFunction(string name) => functions.Remove(name);
 
-        private bool TryGetBufferAsNumberOrVariable(string value, out AStackItem item)
+        private bool TryGetBufferAsNumberOrVariable(string value, out AStackItem item, bool forceVariableOnly = false)
         {
             item = null;
             if (value is null) return false;
-            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double _number))
+            if (!forceVariableOnly && double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double _number))
             {
                 item = new StackNumber(_number);
                 return true;
@@ -319,10 +320,17 @@ namespace RPNCalc
             functions["roll"] = stack => stack.Roll(1);
             functions["over"] = StackExtensions.Over;
             functions["clst"] = CLEAR_STACK;
-            functions["eval"] = stack => Eval(stack.Pop().AsProgram());
+            functions["eval"] = stack => InternalEval(stack.Pop().AsProgram(), true);
             functions["sto"] = STO;
             functions["rcl"] = RCL;
             functions["clv"] = CLEAR_VAR;
+            functions["ift"] = IFT;
+            functions["ifte"] = IFTE;
+            functions["while"] = WHILE;
+            functions["=="] = stack => stack.Func((x, y) => y == x);
+            functions["!="] = stack => stack.Func((x, y) => y != x);
+            functions["++"] = stack => AddToVar(stack, 1);
+            functions["--"] = stack => AddToVar(stack, -1);
         }
 
         private void PLUS(Stack<AStackItem> stack)
@@ -363,6 +371,61 @@ namespace RPNCalc
             var name = stack.Pop().AsString();
             if (!IsValidName(name)) throw new RPNArgumentException($"Invalid variable name {name}");
             RemoveVariable(name);
+        }
+
+        private void IFT(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            bool predicate = y;
+            string branch = x.AsProgram();
+            if (predicate) InternalEval(branch, true);
+        }
+
+        private void IFTE(Stack<AStackItem> stack)
+        {
+            var (x, y, z) = stack.Pop3();
+            bool condition = z;
+            string trueBranch = y.AsProgram();
+            string falseBranch = x.AsProgram();
+            if (condition) InternalEval(trueBranch, true);
+            else InternalEval(falseBranch, true);
+        }
+
+        private void WHILE(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            string program = x.AsProgram();
+            string condition = y.AsProgram();
+            while (evalCondition())
+            {
+                InternalEval(program, true);
+            }
+
+            bool evalCondition()
+            {
+                InternalEval(condition, true);
+                return stack.Pop();
+            }
+        }
+
+        /* private void FOR(Stack<AStackItem> stack)
+        {
+            var (prog, @var, stop, start) = stack.Pop4();
+            string program = prog.AsProgram();
+            string varName = @var;
+            double startValue = start;
+            double endValue;
+            string stopProgram;
+            if (stop.type == AStackItem.Type.Number) endValue = stop;
+            else stopProgram = stop.AsProgram();
+        } */
+
+        private void AddToVar(Stack<AStackItem> stack, double valueToAdd)
+        {
+            string varName = stack.Pop().AsString();
+            if (!TryGetBufferAsNumberOrVariable(varName, out var item, true)) throw new RPNArgumentException($"Unknown variable name {varName}");
+            double number = item;
+            SetVariable(varName, number + valueToAdd);
         }
     }
 }

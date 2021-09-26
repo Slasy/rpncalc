@@ -1,3 +1,5 @@
+using System;
+
 namespace RPNCalc.Extensions
 {
     public static class StackItemExtensions
@@ -20,13 +22,21 @@ namespace RPNCalc.Extensions
             return program.value;
         }
 
+        public static bool AsBool(this AStackItem item)
+        {
+            EnsureType<StackNumber>(item, out var number);
+            return number > double.Epsilon || number < -double.Epsilon;
+        }
+
         private static void EnsureType(AStackItem item, AStackItem.Type type)
         {
+            if (item is null) throw new ArgumentNullException(nameof(item), "Missing stack item");
             if (item.type != type) throw new RPNArgumentException("Bad argument type");
         }
 
         private static void EnsureType<T>(AStackItem item, out T typedItem) where T : AStackItem
         {
+            if (item is null) throw new ArgumentNullException(nameof(item), "Missing stack item");
             if (item is T realType) typedItem = realType;
             else throw new RPNArgumentException("Bad argument type");
         }
