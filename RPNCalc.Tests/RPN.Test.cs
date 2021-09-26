@@ -365,5 +365,22 @@ namespace RPNCalc.Tests
             int value = calc.Eval("{a b +} 12 'a' sto 8 'b' sto eval");
             Assert.AreEqual(12 + 8, value);
         }
+
+        [Test]
+        public void ConnectStrings()
+        {
+            string value = calc.Eval("'foo' 'bar' +");
+            Assert.AreEqual("foobar", value);
+        }
+
+        [Test]
+        public void FailSummingIncompatibleTypes()
+        {
+            calc = new RPN(alwaysClearStack: true);
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("{dup} {sto} +"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("{dup} 'var' +"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("12356 'var' +"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("'var' 98765 +"));
+        }
     }
 }

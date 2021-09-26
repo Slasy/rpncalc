@@ -303,7 +303,7 @@ namespace RPNCalc
 
         private void LoadDefaultFunctions()
         {
-            functions["+"] = stack => stack.Func((x, y) => y.AsNumber() + x);
+            functions["+"] = PLUS;
             functions["-"] = stack => stack.Func((x, y) => y.AsNumber() - x);
             functions["*"] = stack => stack.Func((x, y) => y.AsNumber() * x);
             functions["/"] = stack => stack.Func((x, y) => y.AsNumber() / x);
@@ -323,6 +323,23 @@ namespace RPNCalc
             functions["sto"] = STO;
             functions["rcl"] = RCL;
             functions["clv"] = CLEAR_VAR;
+        }
+
+        private void PLUS(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            if (x is StackNumber numX)
+            {
+                stack.Push(y.AsNumber() + numX);
+            }
+            else if (x is StackString strX)
+            {
+                stack.Push(y.AsString() + strX);
+            }
+            else
+            {
+                throw new RPNArgumentException("Undefined result");
+            }
         }
 
         private void STO(Stack<AStackItem> stack)
