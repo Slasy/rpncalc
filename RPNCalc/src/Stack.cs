@@ -9,15 +9,8 @@ namespace RPNCalc
     {
         private readonly Deque<T> queue;
 
-        public Stack()
-        {
-            queue = new Deque<T>();
-        }
-
-        public Stack(int capacity)
-        {
-            queue = new Deque<T>(capacity);
-        }
+        public Stack() => queue = new Deque<T>();
+        public Stack(int capacity) => queue = new Deque<T>(capacity);
 
         public T this[int index]
         {
@@ -62,18 +55,30 @@ namespace RPNCalc
 
         public void Push(T x) => queue.AddToFront(x);
 
+        /// <summary>
+        /// Return last value from stack without poping it.
+        /// </summary>
+        /// <exception cref="RPNEmptyStackException"/>
         public T Peek()
         {
             ThrowIfTooSmall(1);
             return queue[0];
         }
 
+        /// <summary>
+        /// Return last two values from stack without poping them.
+        /// </summary>
+        /// <exception cref="RPNEmptyStackException"/>
         public (T x, T y) Peek2()
         {
             ThrowIfTooSmall(2);
             return (queue[0], queue[1]);
         }
 
+        /// <summary>
+        /// Return last three values from stack without poping them.
+        /// </summary>
+        /// <exception cref="RPNEmptyStackException"/>
         public (T x, T y, T z) Peek3()
         {
             ThrowIfTooSmall(3);
@@ -155,7 +160,7 @@ namespace RPNCalc
         IEnumerator IEnumerable.GetEnumerator() => queue.GetEnumerator();
 
         /// <summary>
-        /// Check stack size
+        /// Check stack size and throw exception if doesn't contain enough items.
         /// </summary>
         /// <exception cref="RPNEmptyStackException"/>
         public void ThrowIfTooSmall(int minSize)

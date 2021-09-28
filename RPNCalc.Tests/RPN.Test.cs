@@ -13,6 +13,7 @@ namespace RPNCalc.Tests
         public void Setup()
         {
             calc = new RPN(alwaysClearStack: false);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
         }
 
         [Test]
@@ -55,6 +56,7 @@ namespace RPNCalc.Tests
         public void SettingNotCaseSensitiveVariablesAndFunctions()
         {
             calc = new RPN(false);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
 
             calc.SetVariable("Foo", 123);
             Assert.IsTrue(calc.VariablesView.ContainsKey("foo"));
@@ -162,6 +164,7 @@ namespace RPNCalc.Tests
         public void KeepStackInMacro()
         {
             calc = new RPN(true, true);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
             calc.Eval("1 2");
             calc.SetFunction("foo", "DUP * +");
             calc.Eval("10 20 foo");
@@ -350,6 +353,7 @@ namespace RPNCalc.Tests
         public void ClearVariable()
         {
             calc = new RPN(alwaysClearStack: false);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
             calc.SetVariable("foo", "foobar");
             CollectionAssert.IsNotEmpty(calc.VariablesView);
             Assert.AreEqual("foobar", calc.VariablesView["foo"]);
@@ -377,6 +381,7 @@ namespace RPNCalc.Tests
         public void FailSummingIncompatibleTypes()
         {
             calc = new RPN(alwaysClearStack: true);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
             Assert.Throws<RPNFunctionException>(() => calc.Eval("{dup} {sto} +"));
             Assert.Throws<RPNFunctionException>(() => calc.Eval("{dup} 'var' +"));
             Assert.Throws<RPNFunctionException>(() => calc.Eval("12356 'var' +"));
@@ -387,6 +392,7 @@ namespace RPNCalc.Tests
         public void IfThen()
         {
             calc = new RPN(alwaysClearStack: true);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
             string result = calc.Eval("10 10 == { 'yes 10 == 10' } ift");
             Assert.AreEqual("yes 10 == 10", result);
             var emptyResult = calc.Eval(" 10 10 != { 'yes 10 != 10' } ift");
@@ -397,6 +403,7 @@ namespace RPNCalc.Tests
         public void IfThenElse()
         {
             calc = new RPN(alwaysClearStack: true);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
             string result = calc.Eval("10 10 == { 'yes 10 == 10' } {'nope 10 != 10'} ifte");
             Assert.AreEqual("yes 10 == 10", result);
             var emptyResult = calc.Eval("10 10 != { 'yes 10 != 10' } {'nope 10 == 10'} ifte");
@@ -426,6 +433,85 @@ namespace RPNCalc.Tests
             Assert.Throws<RPNFunctionException>(() => calc.Eval("'123' --"));
             Assert.DoesNotThrow(() => calc.Eval("0 '123' sto '123' --"));
             Assert.AreEqual(-1, calc.VariablesView["123"]);
+        }
+
+        [Test]
+        public void ForLoop()
+        {
+            Assert.True(calc.Eval("0 0 'i' sto 'i' {i 10 <} {1} {1 +} for 10 =="));
+            CollectionAssert.AreEqual(new[] { 1 }, calc.StackView);
+        }
+
+        [Test]
+        public void ForLoopInvalidVariable()
+        {
+            ThrowsInnerMessage<RPNFunctionException, RPNUndefinedNameException>(
+                "'i' {} {} {} for",
+                "Unknown variable name i");
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "'foo' 'i' sto 'i' {} {} {} for",
+                "Bad argument type");
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "{} 'i' sto 'i' {} {} {} for",
+                "Bad argument type");
+        }
+
+        [Test]
+        public void ForLoopInvalidCondition()
+        {
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "0 'i' sto 'i' { 1 2 3 } {} {} for",
+                "Unexpected behavior of condition program");
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "0 'i' sto 'i' { } {} {} for",
+                "Unexpected behavior of condition program");
+        }
+
+        [Test]
+        public void ForLoopInvalidStep()
+        {
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "0 'i' sto 'i' { i 10 < } { 1 2 3 } {} for",
+                "Unexpected behavior of step program");
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "0 'i' sto 'i' { i 10 < } { } {} for",
+                "Unexpected behavior of step program");
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "0 'i' sto 'i' { i 10 < } { 'foo' } {} for",
+                "Unexpected type of return value of step program");
+            ThrowsInnerMessage<RPNFunctionException, RPNArgumentException>(
+                "0 'i' sto 'i' { i 10 < } { {} } {} for",
+                "Unexpected type of return value of step program");
+        }
+
+        [Test]
+        public void Loop()
+        {
+            calc = new RPN(alwaysClearStack: true);
+            calc.StepProcessed += () => TestContext.WriteLine(calc.DumpStack());
+            Assert.True(calc.Eval("10 'i' sto 'i' 20 1 { i } loop dup 20 =="));
+            CollectionAssert.AreEqual(new[] { 1, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10 }, calc.StackView);
+            Assert.True(calc.Eval("10 'i' sto 'i' 5 -1 { i } loop dup 5 =="));
+            CollectionAssert.AreEqual(new[] { 1, 5, 6, 7, 8, 9, 10 }, calc.StackView);
+            Assert.True(calc.Eval("-10 'i' sto 'i' -5 1 { i } loop dup -5 =="));
+            CollectionAssert.AreEqual(new[] { 1, -5, -6, -7, -8, -9, -10 }, calc.StackView);
+            Assert.True(calc.Eval("-5 'i' sto 'i' -10 -1 { i } loop dup -10 =="));
+            CollectionAssert.AreEqual(new[] { 1, -10, -9, -8, -7, -6, -5 }, calc.StackView);
+        }
+
+        private void ThrowsInnerMessage<E, InnerE>(string program, string expectedMessage) where E : Exception where InnerE : Exception
+        {
+            var e = Assert.Throws<E>(() => calc.Eval(program));
+            Assert.IsInstanceOf<InnerE>(e.InnerException);
+            Assert.IsNotNull(e.InnerException.Message);
+            Assert.AreEqual(expectedMessage, e.InnerException.Message);
+        }
+
+        [Test]
+        public void OneOverX()
+        {
+            Assert.True(calc.Eval("3.1415 1/x 1 3.1415 / =="));
+            CollectionAssert.AreEqual(new[] { 1 }, calc.StackView);
         }
     }
 }
