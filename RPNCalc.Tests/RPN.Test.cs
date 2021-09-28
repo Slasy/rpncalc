@@ -513,5 +513,17 @@ namespace RPNCalc.Tests
             Assert.True(calc.Eval("3.1415 1/x 1 3.1415 / =="));
             CollectionAssert.AreEqual(new[] { 1 }, calc.StackView);
         }
+
+        [Ignore("Not implemented yet")]
+        [Test]
+        public void Array()
+        {
+            calc.Eval("[ 10 20 ]");
+            calc.Eval("[10 20]");
+            calc.Eval("[");
+            calc.Eval("10 20");
+            calc.Eval("]");
+            calc.DumpStack();
+        }
     }
 }

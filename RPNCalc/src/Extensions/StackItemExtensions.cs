@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace RPNCalc.Extensions
 {
@@ -26,6 +27,12 @@ namespace RPNCalc.Extensions
         {
             EnsureType<StackNumber>(item, out var number);
             return number > double.Epsilon || number < -double.Epsilon;
+        }
+
+        public static AStackItem[] AsArray(this AStackItem item)
+        {
+            EnsureType<StackList>(item, out var list);
+            return list.value;
         }
 
         private static void EnsureType(AStackItem item, AStackItem.Type type)

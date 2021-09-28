@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using RPNCalc.Extensions;
 
@@ -52,8 +54,8 @@ namespace RPNCalc.Tests
             StackString s1 = "foo";
             StackString s2 = "bar";
             StackString s3 = "foo";
-            StackProgram p1 = new StackProgram("foo");
-            StackProgram p2 = new StackProgram("foo");
+            StackProgram p1 = new("foo");
+            StackProgram p2 = new("foo");
             Assert.True(n1 != n2);
             Assert.False(n1 == n2);
             Assert.True(n1 == n3);
@@ -71,6 +73,17 @@ namespace RPNCalc.Tests
             Assert.False(s1 == p1);
             Assert.AreNotEqual(s1, p1);
             Assert.AreEqual(p1, p2);
+        }
+
+        [Test]
+        public void ImplicitListConverts()
+        {
+            Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, 30 }));
+            Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, "foo bar", "foo", true, false, new StackProgram("foo dup +") }));
+            Assert.AreEqual(2, stack.Count);
+            Assert.AreEqual(30, (stack[1] as StackList).value[2]);
+            Assert.AreEqual("foo bar", (stack[0] as StackList).value[2]);
+            Assert.AreEqual(false, (bool)(stack[0] as StackList).value[5]);
         }
     }
 }

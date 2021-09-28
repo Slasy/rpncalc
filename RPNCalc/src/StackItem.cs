@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Text;
 using RPNCalc.Extensions;
 
 namespace RPNCalc
@@ -13,6 +15,7 @@ namespace RPNCalc
             Number,
             String,
             Program,
+            Array,
         }
 
         public readonly Type type;
@@ -41,7 +44,9 @@ namespace RPNCalc
         public static implicit operator ulong(AStackItem item) => (ulong)item.AsNumber();
         public static implicit operator string(AStackItem item) => item.AsString();
         public static implicit operator bool(AStackItem item) => item.AsBool();
-        public static implicit operator AStackItem(bool condition) => new StackNumber(condition ? 1 : 0);
+        public static implicit operator AStackItem(bool condition) => (StackNumber)condition;
+        public static implicit operator AStackItem[](AStackItem item) => item.AsArray();
+        public static implicit operator AStackItem(AStackItem[] list) => new StackList(list);
 
         public override bool Equals(object obj)
         {
@@ -85,6 +90,7 @@ namespace RPNCalc
             if (this is StackNumber selfNumber && other is StackNumber otherNumber) return selfNumber.value == otherNumber.value;
             if (this is StackString selfString && other is StackString otherString) return selfString.value == otherString.value;
             if (this is StackProgram selfProgram && other is StackProgram otherProgram) return selfProgram.value == otherProgram.value;
+            if (this is StackList selfList && other is StackList otherList) return selfList.value.SequenceEqual(otherList.value);
             return false;
         }
 
@@ -118,6 +124,7 @@ namespace RPNCalc
         public static implicit operator StackNumber(uint number) => new(number);
         public static implicit operator StackNumber(long number) => new(number);
         public static implicit operator StackNumber(ulong number) => new(number);
+        public static implicit operator StackNumber(bool boolean) => new(boolean ? 1 : 0);
         public static implicit operator double(StackNumber number) => number.value;
         public static implicit operator float(StackNumber number) => (float)number.value;
         public static implicit operator int(StackNumber number) => (int)number.value;
@@ -150,10 +157,45 @@ namespace RPNCalc
 
     public class StackProgram : AStackItem<string>, IEquatable<string>
     {
-        public StackProgram(string program) : base(Type.Program, program) { }
+        public StackProgram(string program) : base(Type.Program, program.Trim()) { }
 
         public bool Equals(string other) => value == other;
 
-        public override string ToString() => $"{{{value}}}";
+        public override string ToString() => $"{{ {value} }}";
+    }
+
+    public class StackList : AStackItem<AStackItem[]>, IEquatable<AStackItem[]>
+    {
+        public StackList() : base(Type.Array) { }
+        public StackList(AStackItem[] value) : base(Type.Array, value) { }
+
+        public static StackList operator +(StackList list, AStackItem item)
+        {
+            AStackItem[] newArray = new AStackItem[list.value.Length + 1];
+            Array.Copy(list.value, newArray, list.value.Length);
+            newArray[list.value.Length] = item;
+            return new StackList(newArray);
+        }
+
+        public static implicit operator StackList(AStackItem[] array) => new(array);
+        public static implicit operator AStackItem[](StackList item) => item.value;
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("[ ");
+            foreach (var item in value)
+            {
+                sb.Append(item.ToString());
+                sb.Append(' ');
+            }
+            sb.Append(']');
+            return sb.ToString();
+        }
+
+        public bool Equals(AStackItem[] other)
+        {
+            return value.SequenceEqual(other);
+        }
     }
 }
