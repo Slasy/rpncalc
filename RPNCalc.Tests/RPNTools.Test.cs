@@ -343,5 +343,30 @@ namespace RPNCalc.Tests
             tokens = RPNTools.InfixToPostfix(tokens);
             CollectionAssert.AreEqual(new[] { "1.4e3", "23e-3", "+", "1e2", "+-", "+", "2.2e-2", "+-", "+" }, tokens);
         }
+
+        [Test]
+        public void TokenizeEqualsSigns()
+        {
+            var tokens = RPNTools.Tokenize("(10 == 20) * (10 != 20) + (1 = 2) ^ (1 >= 0) / ( 2 <  3e-10)");
+            CollectionAssert.AreEqual(new[] {
+                "(", "10", "==", "20", ")", "*", "(", "10", "!=", "20", ")", "+",
+                "(", "1", "=", "2", ")", "^", "(", "1", ">=", "0", ")", "/",
+                "(", "2", "<", "3e-10", ")" }, tokens);
+        }
+
+        [Test]
+        public void EqualsSignsToPostfix()
+        {
+            var tokens = RPNTools.Tokenize("(10 == 20) * (10 != 20) + (1 = 2) ^ (1 >= 0) / ( 2 <  3e-10)");
+            tokens = RPNTools.InfixToPostfix(tokens);
+            CollectionAssert.AreEqual(new[] { "10", "20", "==", "10", "20", "!=", "*", "1", "2", "=", "1", "0", ">=", "^", "2", "3e-10", "<", "/", "+" }, tokens);
+        }
+
+        [Test]
+        public void TokenizeTextStrings()
+        {
+            var tokens = RPNTools.Tokenize("function('foo','bar',42) +'text'^2");
+            CollectionAssert.AreEqual(new[] { "(", "(", "'foo'", ")", "(", "'bar'", ")", "(", "42", ")", "function", ")", "+", "'text'", "^", "2" }, tokens);
+        }
     }
 }

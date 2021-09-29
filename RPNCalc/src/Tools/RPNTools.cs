@@ -9,10 +9,12 @@ namespace RPNCalc.Tools
     {
         private static readonly Regex number = new Regex(@"^\d+(?:\.\d+)?(?:e\-?\d+)?");
         private static readonly Regex negNumberVariable = new Regex(@"^\(((?:\-\d+(?:\.\d+)?(?:e\-?\d+)?)|(?:\-\w+))\)");
-        private static readonly Regex op = new Regex(@"^[\^\+\-\*\/\(\)]");
+        private static readonly Regex op = new Regex(@"^(?:\^|\+|\-|\*|\/|\(|\)|!=|==|=|>=|<=|>|<)");
         private static readonly Regex func = new Regex(@"^((?:\w+)|(?:\(\-\w+))\(");
         private static readonly Regex variable = new Regex(@"^\w+");
-        private static readonly Regex[] matchers = new[] { negNumberVariable, number, func, op, variable };
+        private static readonly Regex text = new Regex(@"^'\w+'");
+        private static readonly Regex[] matchers = new[] { negNumberVariable, number, func, op, variable, text };
+        private static readonly HashSet<string> operators = new(new[] { "(", ")", "*", "/", "+", "-", "^", "==", "!=", "=", ">=", "<=", ">", "<" });
 
         /// <summary>
         /// Divide algebraic expression to individual elements.
@@ -93,7 +95,6 @@ namespace RPNCalc.Tools
         /// <exception cref="ArgumentException"/>
         public static string[] InfixToPostfix(string[] tokenArray, bool strictMode = true)
         {
-            const string operators = "()*/+-^";
             var stack = new System.Collections.Generic.Stack<string>();
             var postfix = new System.Collections.Generic.Stack<string>();
             int bracketCounter = 0;
@@ -171,11 +172,18 @@ namespace RPNCalc.Tools
         {
             switch (c)
             {
-                case "^": return 3;
+                case "^": return 4;
                 case "*":
-                case "/": return 2;
+                case "/": return 3;
                 case "+":
-                case "-": return 1;
+                case "-": return 2;
+                case "=":
+                case "==":
+                case "!=":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=": return 1;
                 default: return 0;
             }
         }
