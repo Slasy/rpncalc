@@ -637,5 +637,35 @@ namespace RPNCalc.Tests
             var result = calc.Eval(RPNTools.TokensToItems("10", "20", "+", "3", "^"));
             Assert.AreEqual(Math.Pow(10 + 20, 3), result);
         }
+
+        [Test]
+        public void SqueakyCleanCalc()
+        {
+            calc = new RPN(false, false, false);
+            calc.Eval("10 20 3.14");
+            CollectionAssert.AreEqual(new[] { 3.14, 20, 10 }, calc.StackView);
+            calc.Eval("'foo bar'");
+            CollectionAssert.AreEqual(new AStackItem[] { "foo bar", 3.14, 20, 10 }, calc.StackView);
+            Assert.AreEqual("Unknown name {", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("{ 1 2 }")).Message);
+            Assert.AreEqual("Unknown name [", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("[ 1 2 ]")).Message);
+            Assert.AreEqual("Unknown name +", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("1 2 +")).Message);
+            Assert.AreEqual("Unknown name ^", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("1 2 ^")).Message);
+            Assert.AreEqual("Unknown name sto", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("1 2 sto")).Message);
+            Assert.AreEqual("Unknown name ift", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("1 2 ift")).Message);
+            Assert.AreEqual("Unknown name while", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("1 2 while")).Message);
+            Assert.AreEqual("Unknown name clst", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("clst")).Message);
+            CollectionAssert.IsEmpty(calc.Names);
+        }
+
+        [Test]
+        public void MinimalCalc()
+        {
+            calc = new RPN(false, false, false);
+            calc.SetName("add2numbers", st => { var (x, y) = st.Pop2(); st.Push(x.AsNumber() + y); });
+            calc.SetName("giv4pls", st => st.Push(4)); // https://xkcd.com/221/
+            calc.EvalAlgebraic("add2numbers(giv4pls(),giv4pls())");
+            CollectionAssert.AreEqual(new[] { 8 }, calc.StackView);
+            Assert.AreEqual("Unknown name +", Assert.Throws<RPNUndefinedNameException>(() => calc.EvalAlgebraic("giv4pls() + giv4pls()")).Message);
+        }
     }
 }

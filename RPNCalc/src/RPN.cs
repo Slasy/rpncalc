@@ -65,12 +65,13 @@ namespace RPNCalc
         /// </summary>
         /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
         /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(AStackItem[])"/> call.</param>
-        public RPN(bool caseSensitiveNames = false, bool alwaysClearStack = true)
+        /// <param name="loadDefaultFunctions">Calculator knows very little without any functions.</param>
+        public RPN(bool caseSensitiveNames = false, bool alwaysClearStack = true, bool loadDefaultFunctions = true)
         {
             CaseSensitiveNames = caseSensitiveNames;
             AlwaysClearStack = alwaysClearStack;
             currentStackInUse = mainStack;
-            this.LoadDefaultFunctions();
+            if (loadDefaultFunctions) this.LoadDefaultFunctions();
         }
 
         /// <summary>
@@ -93,6 +94,11 @@ namespace RPNCalc
             return top;
         }
 
+        /// <summary>
+        /// Primary use is for writing new functions.
+        /// </summary>
+        /// <param name="items">Set of instructions/items for evaluation</param>
+        /// <param name="evalPrograms">Set to false to just push a program or name to stack without evaluating</param>
         public AStackItem EvalItems(AStackItem[] items, bool evalPrograms)
         {
             foreach (AStackItem item in items)
@@ -103,6 +109,11 @@ namespace RPNCalc
             return mainStack.Peek();
         }
 
+        /// <summary>
+        /// Primary use is for writing new functions.
+        /// </summary>
+        /// <param name="item">One instruction/item for evaluation</param>
+        /// <param name="evalPrograms">Set to false to just push a program or name to stack without evaluating</param>
         public void EvalItem(AStackItem item, bool evalPrograms)
         {
             switch (item)
