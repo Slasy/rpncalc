@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RPNCalc.Extensions
 {
@@ -212,6 +213,16 @@ namespace RPNCalc.Extensions
                 sb.AppendFormat("{0:000}", i + 1).Append(": ").Append(stack[i].ToString()).Append('\n');
             }
             return sb.ToString();
+        }
+
+        public static T[] ToReverseArray<T>(this Stack<T> stack)
+        {
+            T[] array = new T[stack.Count];
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = stack[array.Length - 1 - i];
+            }
+            return array;
         }
     }
 }

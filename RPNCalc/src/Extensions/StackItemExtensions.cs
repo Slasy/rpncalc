@@ -17,7 +17,7 @@ namespace RPNCalc.Extensions
             return str.value;
         }
 
-        public static string AsProgram(this AStackItem item)
+        public static AStackItem[] AsProgramInstructions(this AStackItem item)
         {
             EnsureType<StackProgram>(item, out var program);
             return program.value;

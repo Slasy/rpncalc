@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Reflection;
 using NUnit.Framework;
-using RPNCalc.Extensions;
 
 namespace RPNCalc.Tests
 {
@@ -24,8 +21,8 @@ namespace RPNCalc.Tests
             AStackItem s1 = "foo";
             AStackItem s2 = "bar";
             AStackItem s3 = "foo";
-            AStackItem p1 = new StackProgram("foo");
-            AStackItem p2 = new StackProgram("foo");
+            AStackItem p1 = StackProgram.From(new StackName("foo"));
+            AStackItem p2 = StackProgram.From(new StackName("foo"));
             Assert.True(n1 != n2);
             Assert.False(n1 == n2);
             Assert.True(n1 == n3);
@@ -54,8 +51,8 @@ namespace RPNCalc.Tests
             StackString s1 = "foo";
             StackString s2 = "bar";
             StackString s3 = "foo";
-            StackProgram p1 = new("foo");
-            StackProgram p2 = new("foo");
+            StackProgram p1 = StackProgram.From(new StackName("foo"));
+            StackProgram p2 = StackProgram.From(new StackName("foo"));
             Assert.True(n1 != n2);
             Assert.False(n1 == n2);
             Assert.True(n1 == n3);
@@ -79,11 +76,19 @@ namespace RPNCalc.Tests
         public void ImplicitListConverts()
         {
             Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, 30 }));
-            Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, "foo bar", "foo", true, false, new StackProgram("foo dup +") }));
+            Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, "foo bar", "foo", true, false, StackProgram.From(new StackName("foo"), new StackName("dup"), new StackName("+")) }));
             Assert.AreEqual(2, stack.Count);
             Assert.AreEqual(30, (stack[1] as StackList).value[2]);
             Assert.AreEqual("foo bar", (stack[0] as StackList).value[2]);
             Assert.AreEqual(false, (bool)(stack[0] as StackList).value[5]);
+        }
+
+        [Test]
+        public void EqualityOfVariables()
+        {
+            Assert.AreEqual(new StackName("foobar"), new StackName("foobar"));
+            Assert.AreNotEqual(new StackName("foobar"), new StackString("foobar"));
+            Assert.AreNotEqual(new StackString("foobar"), new StackName("foobar"));
         }
     }
 }

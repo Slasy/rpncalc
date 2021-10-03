@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
@@ -8,18 +9,23 @@ namespace RPNCalc
     /// <summary>
     /// Base item class.
     /// </summary>
-    public abstract class AStackItem : IEquatable<AStackItem>
+    public abstract class AStackItem
     {
         public enum Type
         {
+            /// <summary>Real number, internally type double</summary>
             Number,
+            /// <summary>Simple text string, can be used pass reference on variable/function</summary>
             String,
+            /// <summary>An expression object, contains data and/or functions and/or other programs</summary>
             Program,
-            Array,
+            Function,
+            /// <summary>A reference to any item</summary>
+            Name,
+            List,
         }
 
         public readonly Type type;
-        public virtual object value { get; protected set; }
 
         protected AStackItem(Type type)
         {
@@ -45,35 +51,19 @@ namespace RPNCalc
         public static implicit operator string(AStackItem item) => item.AsString();
         public static implicit operator bool(AStackItem item) => item.AsBool();
         public static implicit operator AStackItem(bool condition) => (StackNumber)condition;
-        public static implicit operator AStackItem[](AStackItem item) => item.AsArray();
+        //public static implicit operator AStackItem[](AStackItem item) => item.AsArray();
         public static implicit operator AStackItem(AStackItem[] list) => new StackList(list);
 
-        public override bool Equals(object obj)
-        {
-            if (obj is not AStackItem item) return false;
-            return Equals(item);
-        }
-
-        public override int GetHashCode() => value.GetHashCode();
-        public override string ToString() => value.ToString();
-        public virtual bool Equals(AStackItem other) => other is not null && value.Equals(other.value);
+        public override bool Equals(object obj) => throw new InvalidOperationException($"Use generic {nameof(AStackItem)}");
+        public override int GetHashCode() => throw new InvalidOperationException($"Use generic {nameof(AStackItem)}");
     }
 
     /// <summary>
     /// Base class containing a strongly typed value.
     /// </summary>
-    public abstract class AStackItem<T> : AStackItem, IEquatable<AStackItem<T>> where T : notnull
+    public abstract class AStackItem<T> : AStackItem, IEquatable<AStackItem> where T : notnull
     {
-        protected T _value;
-        public new T value
-        {
-            get => _value;
-            protected set
-            {
-                _value = value;
-                base.value = value;
-            }
-        }
+        public T value;
 
         protected AStackItem(Type type) : base(type) { }
         protected AStackItem(Type type, T value) : base(type) => this.value = value;
@@ -84,25 +74,22 @@ namespace RPNCalc
             return Equals(item);
         }
 
-        public override bool Equals(AStackItem other)
+        public bool Equals(AStackItem other)
         {
             if (type != other.type) return false;
             if (this is StackNumber selfNumber && other is StackNumber otherNumber) return selfNumber.value == otherNumber.value;
             if (this is StackString selfString && other is StackString otherString) return selfString.value == otherString.value;
-            if (this is StackProgram selfProgram && other is StackProgram otherProgram) return selfProgram.value == otherProgram.value;
+            if (this is StackProgram selfProgram && other is StackProgram otherProgram) return selfProgram.value.SequenceEqual(otherProgram.value);
             if (this is StackList selfList && other is StackList otherList) return selfList.value.SequenceEqual(otherList.value);
+            if (this is StackFunction selfFunction && other is StackFunction otherFunction) return selfFunction.name == otherFunction.name && selfFunction.value.Equals(otherFunction.value);
+            if (this is StackName selfVariable && other is StackName otherVariable) return selfVariable.value == otherVariable.value;
             return false;
         }
 
         public override int GetHashCode() => value.GetHashCode();
-
-        public bool Equals(AStackItem<T> other)
-        {
-            if (type != other.type) return false;
-            return value.Equals(other.value);
-        }
     }
 
+    [DebuggerDisplay("Number({value})")]
     public class StackNumber : AStackItem<double>,
         IEquatable<double>,
         IEquatable<float>,
@@ -143,6 +130,7 @@ namespace RPNCalc
         public override string ToString() => value.ToString();
     }
 
+    [DebuggerDisplay("String({ToString()})")]
     public class StackString : AStackItem<string>, IEquatable<string>
     {
         public StackString(string str) : base(Type.String, str) { }
@@ -155,19 +143,36 @@ namespace RPNCalc
         public override string ToString() => $"'{value}'";
     }
 
-    public class StackProgram : AStackItem<string>, IEquatable<string>
+    [DebuggerDisplay("Program({ToString()})")]
+    public class StackProgram : AStackItem<AStackItem[]>
     {
-        public StackProgram(string program) : base(Type.Program, program.Trim()) { }
+        public StackProgram(AStackItem[] array) : base(Type.Program, array) { }
+        public StackProgram(Stack<AStackItem> stack) : base(Type.Program, stack.ToReverseArray()) { }
 
-        public bool Equals(string other) => value == other;
+        public static StackProgram From(params AStackItem[] array) => new(array);
 
-        public override string ToString() => $"{{ {value} }}";
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("{ ");
+            foreach (var item in value)
+            {
+                sb.Append(item.ToString());
+                sb.Append(' ');
+            }
+            sb.Append('}');
+            return sb.ToString();
+        }
     }
 
-    public class StackList : AStackItem<AStackItem[]>, IEquatable<AStackItem[]>
+    [DebuggerDisplay("List({ToString()})")]
+    public class StackList : AStackItem<AStackItem[]>
     {
-        public StackList() : base(Type.Array) { }
-        public StackList(AStackItem[] value) : base(Type.Array, value) { }
+        /// <summary>Empty list.</summary>
+        public StackList() : base(Type.List, Array.Empty<AStackItem>()) { }
+        public StackList(AStackItem[] array) : base(Type.List, array) { }
+        /// <summary>Items in list will be in revers order - bottom/last item in stack will be first.</summary>
+        public StackList(Stack<AStackItem> stack) : base(Type.List, stack.ToReverseArray()) { }
 
         public static StackList operator +(StackList list, AStackItem item)
         {
@@ -179,6 +184,8 @@ namespace RPNCalc
 
         public static implicit operator StackList(AStackItem[] array) => new(array);
         public static implicit operator AStackItem[](StackList item) => item.value;
+
+        public static StackList From(params AStackItem[] array) => new(array);
 
         public override string ToString()
         {
@@ -193,9 +200,23 @@ namespace RPNCalc
             return sb.ToString();
         }
 
-        public bool Equals(AStackItem[] other)
-        {
-            return value.SequenceEqual(other);
-        }
+        public bool Equals(AStackItem[] other) => value.SequenceEqual(other);
+    }
+
+    [DebuggerDisplay("Function({name})")]
+    public class StackFunction : AStackItem<RPN.Function>
+    {
+        public readonly string name;
+        public StackFunction(string name, RPN.Function function) : base(Type.Function, function) => this.name = name;
+
+        public override string ToString() => name;
+    }
+
+    [DebuggerDisplay("Name({value})")]
+    public class StackName : AStackItem<string>
+    {
+        public StackName(string referenceName) : base(Type.Name, referenceName) { }
+
+        public override string ToString() => value;
     }
 }

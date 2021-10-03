@@ -21,6 +21,7 @@ namespace RPNCalc
         public int Count => queue.Count;
 
         public void Clear() => queue.Clear();
+
         /// <summary>Pops only one value from stack.</summary>
         /// <exception cref="RPNEmptyStackException"/>
         public T Pop()
@@ -53,7 +54,11 @@ namespace RPNCalc
             return (queue.RemoveFromFront(), queue.RemoveFromFront(), queue.RemoveFromFront(), queue.RemoveFromFront());
         }
 
-        public void Push(T x) => queue.AddToFront(x);
+        public void Push(T x)
+        {
+            if (x is null) throw new ArgumentNullException(nameof(x), "Pushing null to stack is not allowed");
+            queue.AddToFront(x);
+        }
 
         /// <summary>
         /// Return last value from stack without poping it.
