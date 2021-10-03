@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RPNCalc.Extensions
 {
@@ -205,15 +205,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// Returns stack as formated string for easy view of stack content.
         /// </summary>
-        public static string DumpStack<T>(this Stack<T> stack)
-        {
-            var sb = new StringBuilder();
-            for (int i = stack.Count - 1; i >= 0; i--)
-            {
-                sb.AppendFormat("{0:000}", i + 1).Append(": ").Append(stack[i].ToString()).Append('\n');
-            }
-            return sb.ToString();
-        }
+        public static string DumpStack<T>(this Stack<T> stack) => DumpStack(stack as IReadOnlyList<T>);
 
         public static T[] ToReverseArray<T>(this Stack<T> stack)
         {
@@ -223,6 +215,16 @@ namespace RPNCalc.Extensions
                 array[i] = stack[array.Length - 1 - i];
             }
             return array;
+        }
+
+        internal static string DumpStack<T>(this IReadOnlyList<T> stackCollection)
+        {
+            var sb = new StringBuilder();
+            for (int i = stackCollection.Count - 1; i >= 0; i--)
+            {
+                sb.AppendFormat("{0:000}", i + 1).Append(": ").Append(stackCollection[i].ToString()).Append('\n');
+            }
+            return sb.ToString();
         }
     }
 }

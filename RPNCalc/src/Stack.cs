@@ -5,7 +5,7 @@ using Nito.Collections;
 
 namespace RPNCalc
 {
-    public class Stack<T> : IReadOnlyCollection<T>
+    public class Stack<T> : IReadOnlyList<T>
     {
         private readonly Deque<T> queue;
 

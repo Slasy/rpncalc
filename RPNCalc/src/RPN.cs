@@ -33,7 +33,7 @@ namespace RPNCalc
         /// <summary>
         /// Read only access to current stack. On index 0 is top of the stack.
         /// </summary>
-        public IReadOnlyCollection<AStackItem> StackView => mainStack;
+        public IReadOnlyList<AStackItem> StackView => mainStack;
 
         /// <summary>Automatically clear stack before each <see cref="Eval(AStackItem[])"/> call.</summary>
         public bool AlwaysClearStack { get; set; } = true;
@@ -127,11 +127,6 @@ namespace RPNCalc
                     break;
             }
         }
-
-        /// <summary>
-        /// Returns stack as formated string for easy view of stack content.
-        /// </summary>
-        public string DumpStack() => mainStack.DumpStack();
 
         /// <summary>
         /// Clear stack memory.

@@ -43,5 +43,10 @@ namespace RPNCalc.Extensions
             AStackItem[] instructions = RPNTools.TokensToItems(tokens);
             return calc.Eval(instructions);
         }
+
+        /// <summary>
+        /// Returns stack as formated string for easy view of stack content.
+        /// </summary>
+        public static string DumpStack(this RPN calc) => calc.StackView.DumpStack();
     }
 }
