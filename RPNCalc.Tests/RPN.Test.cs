@@ -634,7 +634,7 @@ namespace RPNCalc.Tests
         [Test]
         public void RunStringTokens()
         {
-            var result = calc.Eval(RPNTools.ConvertTokens("10", "20", "+", "3", "^"));
+            var result = calc.Eval(RPNTools.TokensToItems("10", "20", "+", "3", "^"));
             Assert.AreEqual(Math.Pow(10 + 20, 3), result);
         }
     }

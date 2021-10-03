@@ -20,7 +20,7 @@ namespace RPNCalc.Extensions
         public static AStackItem Eval(this RPN calc, string rpnExpression)
         {
             string[] tokens = RPNTools.GetTokens(rpnExpression);
-            AStackItem[] instructions = RPNTools.ConvertTokens(tokens);
+            AStackItem[] instructions = RPNTools.TokensToItems(tokens);
             return calc.Eval(instructions);
         }
 
@@ -38,9 +38,9 @@ namespace RPNCalc.Extensions
         /// <exception cref="RPNArgumentException"/>
         public static AStackItem EvalAlgebraic(this RPN calc, string algebraicExpression)
         {
-            string[] tokens = AlgebraicTools.AlgebraicTokenizer(algebraicExpression);
+            string[] tokens = AlgebraicTools.GetTokens(algebraicExpression);
             tokens = AlgebraicTools.InfixToPostfix(tokens);
-            AStackItem[] instructions = RPNTools.ConvertTokens(tokens);
+            AStackItem[] instructions = RPNTools.TokensToItems(tokens);
             return calc.Eval(instructions);
         }
     }

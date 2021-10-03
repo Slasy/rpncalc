@@ -17,7 +17,11 @@ namespace RPNCalc.Tools
         /// </summary>
         public static string[] GetTokens(string rpnExpression)
         {
-            int count = rpnExpression.Length - rpnExpression.Replace("'","").Length;
+            int count = 0;
+            for (int i = 0; i < rpnExpression.Length; i++)
+            {
+                if (rpnExpression[i] == '\'') count++;
+            }
             if (count % 2 == 1) throw new RPNArgumentException("Uneven ' string symbols");
             MatchCollection matches = expressionSplit.Matches(rpnExpression);
             string[] tokens = new string[matches.Count];
@@ -33,7 +37,7 @@ namespace RPNCalc.Tools
         /// <para>Expects RPN expression.</para>
         /// </summary>
         /// <param name="postfixTokens">Can be output of <see cref="AlgebraicTools.InfixToPostfix(string[], bool)"/> method</param>
-        public static AStackItem[] ConvertTokens(params string[] postfixTokens)
+        public static AStackItem[] TokensToItems(params string[] postfixTokens)
         {
             AStackItem[] items = new AStackItem[postfixTokens.Length];
             for (int i = 0; i < postfixTokens.Length; i++)

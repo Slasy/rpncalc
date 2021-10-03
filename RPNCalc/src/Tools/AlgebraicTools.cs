@@ -19,7 +19,7 @@ namespace RPNCalc.Tools
         /// <summary>
         /// Divide algebraic expression to individual elements.
         /// </summary>
-        public static string[] AlgebraicTokenizer(string expression)
+        public static string[] GetTokens(string expression)
         {
             var tokens = new List<string>();
             while (expression.Length > 0)
@@ -35,7 +35,7 @@ namespace RPNCalc.Tools
                             string name = match.Groups[1].Value;
                             string arguments = MatchFunctionArguments(name, expression.Substring(name.Length), out int matchLen);
                             tokens.Add("(");
-                            tokens.AddRange(AlgebraicTokenizer(arguments.Substring(1, arguments.Length - 2)));
+                            tokens.AddRange(GetTokens(arguments.Substring(1, arguments.Length - 2)));
                             bool isNegative = name.StartsWith("(-");
                             tokens.Add(isNegative ? name.Substring(1) : name);
                             tokens.Add(")");
