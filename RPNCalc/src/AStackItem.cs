@@ -13,6 +13,7 @@ namespace RPNCalc
         {
             /// <summary>Real number, internally type double</summary>
             Number,
+            ComplexNumber,
             /// <summary>Simple text string, can be used pass reference on variable/function</summary>
             String,
             /// <summary>An expression object, contains data and/or functions and/or other programs</summary>
