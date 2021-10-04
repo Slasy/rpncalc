@@ -250,18 +250,6 @@ namespace RPNCalc.Tests
         }
 
         [Test]
-        public void DoNothingEvalString()
-        {
-            AStackItem result = null;
-            Assert.DoesNotThrow(() => result = calc.Eval("'foo' eval"));
-            Assert.AreEqual("foo", result.AsString());
-            Assert.DoesNotThrow(() => result = calc.Eval("'{ foo }' eval"));
-            Assert.AreEqual("{ foo }", result.AsString());
-            Assert.DoesNotThrow(() => result = calc.Eval("'{ 10 }' eval"));
-            Assert.AreEqual("{ 10 }", result.AsString());
-        }
-
-        [Test]
         public void DoNothingEvalNumber()
         {
             AStackItem result = null;
@@ -677,6 +665,33 @@ namespace RPNCalc.Tests
             calc.SetName("tan", st => st.Push(Math.Tan(st.Pop())));
             var result = calc.EvalAlgebraic("sin(cos(tan(3)+2)*5)/3");
             Assert.AreEqual(-.329230492289, result, 0.0001);
+        }
+
+        [Test]
+        public void EvalStringAsAlgExpression()
+        {
+            calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
+            calc.SetName("pi", Math.PI);
+            var result = calc.Eval("'sin(pi/2)' eval");
+            Assert.IsInstanceOf<StackNumber>(result);
+            Assert.AreEqual(1d, result);
+        }
+
+        [Test]
+        public void ExceptionOnUnknownNameInAlgString()
+        {
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'sin(pi)' eval"));
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'foo' eval"));
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'random()' eval"));
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'random(1,10)' eval"));
+        }
+
+        [Test]
+        public void DefineProgramAndEvalInAlgebraicString()
+        {
+            var result = calc.Eval("{ dup dup * * } 'cube' sto 'cube(4)*(2+8)' eval");
+            Assert.IsInstanceOf<StackNumber>(result);
+            Assert.AreEqual(640d, result);
         }
     }
 }

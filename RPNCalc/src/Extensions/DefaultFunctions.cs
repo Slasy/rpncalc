@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using RPNCalc.Tools;
 
 namespace RPNCalc.Extensions
 {
@@ -51,7 +52,25 @@ namespace RPNCalc.Extensions
         private static void EVAL(RPN calc, Stack<AStackItem> stack)
         {
             AStackItem item = stack.Pop();
-            calc.EvalItem(item, true);
+            if (item is StackString expression)
+            {
+                var tokens = AlgebraicTools.GetTokens(expression.value);
+                tokens = AlgebraicTools.InfixToPostfix(tokens);
+                var items = RPNTools.TokensToItems(tokens);
+                foreach (var _item in items)
+                {
+                    if (_item is StackName name)
+                    {
+                        // to try if name exists in memory or throw exception early before running evaluating
+                        calc.GetNameValue(name.value);
+                    }
+                }
+                calc.EvalItems(items, false);
+            }
+            else
+            {
+                calc.EvalItem(item, true);
+            }
         }
 
         private static void PLUS(Stack<AStackItem> stack)
