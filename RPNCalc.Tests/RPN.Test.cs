@@ -667,5 +667,16 @@ namespace RPNCalc.Tests
             CollectionAssert.AreEqual(new[] { 8 }, calc.StackView);
             Assert.AreEqual("Unknown name +", Assert.Throws<RPNUndefinedNameException>(() => calc.EvalAlgebraic("giv4pls() + giv4pls()")).Message);
         }
+
+        [Test]
+        public void MoreComplexAlgExpression()
+        {
+            calc = new RPN(false, false);
+            calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
+            calc.SetName("cos", st => st.Push(Math.Cos(st.Pop())));
+            calc.SetName("tan", st => st.Push(Math.Tan(st.Pop())));
+            var result = calc.EvalAlgebraic("sin(cos(tan(3)+2)*5)/3");
+            Assert.AreEqual(-.329230492289, result, 0.0001);
+        }
     }
 }

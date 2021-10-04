@@ -35,8 +35,8 @@ namespace RPNCalc.Tools
                             string name = match.Groups[1].Value;
                             string arguments = MatchFunctionArguments(name, expression.Substring(name.Length), out int matchLen);
                             tokens.Add("(");
-                            tokens.AddRange(GetTokens(arguments.Substring(1, arguments.Length - 2)));
                             bool isNegative = name.StartsWith("(-");
+                            tokens.AddRange(GetTokens(arguments.Substring(1, arguments.Length - 2)));
                             tokens.Add(isNegative ? name.Substring(1) : name);
                             tokens.Add(")");
                             expression = expression.Substring(name.Length + matchLen + (isNegative ? 1 : 0));

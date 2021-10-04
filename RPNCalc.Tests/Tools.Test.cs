@@ -414,5 +414,38 @@ namespace RPNCalc.Tests
                     new StackName("~!>>")
                 }, tokens);
         }
+
+        [Test]
+        public void InnerAlgebraicFunctions()
+        {
+            var tokens = AlgebraicTools.GetTokens("sin(cos(tan(10)))");
+            TestContext.WriteLine(string.Join(' ', tokens));
+            CollectionAssert.AreEqual(new[] { "(", "(", "(", "(", "(", "(", "10", ")", "tan", ")", ")", "cos", ")", ")", "sin", ")" }, tokens);
+            tokens = AlgebraicTools.InfixToPostfix(tokens);
+            TestContext.WriteLine(string.Join(' ', tokens));
+            CollectionAssert.AreEqual(new[] { "10", "tan", "cos", "sin" }, tokens);
+        }
+
+        [Test]
+        public void MoreComplexInnerAlgebraicFunctions1()
+        {
+            var tokens = AlgebraicTools.GetTokens("sin(2+cos(tan(10)*3))^2");
+            CollectionAssert.AreEqual(new[] { "(", "(", "2", "+", "(", "(", "(", "(", "10", ")", "tan", ")", "*", "3", ")", "cos", ")", ")", "sin", ")", "^", "2" }, tokens);
+            tokens = AlgebraicTools.InfixToPostfix(tokens);
+            TestContext.WriteLine(string.Join(' ', tokens));
+            //CollectionAssert.AreEqual(new[] { "10", "tan", "3", "*", "cos", "2", "+", "sin", "2", "^" }, tokens);
+            CollectionAssert.AreEqual(new[] { "2", "10", "tan", "3", "*", "cos", "+", "sin", "2", "^" }, tokens);
+        }
+
+        [Test]
+        public void MoreComplexInnerAlgebraicFunctions2()
+        {
+            var tokens = AlgebraicTools.GetTokens("sin(cos(10+tan(10))*3)");
+            TestContext.WriteLine(string.Join(" ", tokens));
+            var expected = "( ( ( ( 10 + ( ( 10 ) tan ) ) cos ) * 3 ) sin )".Split(' ');
+            CollectionAssert.AreEqual(expected, tokens);
+            tokens = AlgebraicTools.InfixToPostfix(tokens);
+            TestContext.WriteLine(string.Join(" ", tokens));
+        }
     }
 }
