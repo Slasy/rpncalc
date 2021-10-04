@@ -28,6 +28,10 @@ namespace RPNCalc
 
         public static StackList From(params AStackItem[] array) => new(array);
 
+        public bool Equals(AStackItem[] other) => value.SequenceEqual(other);
+
+        public override bool Equals(AStackItem other) => other is StackList list && value.SequenceEqual(list.value);
+
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -40,7 +44,5 @@ namespace RPNCalc
             sb.Append(']');
             return sb.ToString();
         }
-
-        public bool Equals(AStackItem[] other) => value.SequenceEqual(other);
     }
 }

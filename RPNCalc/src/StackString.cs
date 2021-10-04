@@ -14,5 +14,7 @@ namespace RPNCalc
         public bool Equals(string other) => value == other;
 
         public override string ToString() => $"'{value}'";
+
+        public override bool Equals(AStackItem other) => other is StackString str && value == str.value;
     }
 }

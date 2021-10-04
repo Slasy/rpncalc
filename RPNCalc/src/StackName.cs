@@ -7,6 +7,8 @@ namespace RPNCalc
     {
         public StackName(string referenceName) : base(Type.Name, referenceName) { }
 
+        public override bool Equals(AStackItem other) => other is StackName name && value == name.value;
+
         public override string ToString() => value;
     }
 }

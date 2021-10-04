@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Numerics;
 
 namespace RPNCalc.Extensions
 {
@@ -33,6 +33,12 @@ namespace RPNCalc.Extensions
         {
             EnsureType<StackList>(item, out var list);
             return list.value;
+        }
+
+        public static Complex AsComplex(this AStackItem item)
+        {
+            EnsureType<StackComplex>(item, out var complex);
+            return complex.value;
         }
 
         private static void EnsureType(AStackItem item, AStackItem.Type type)

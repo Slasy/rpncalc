@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using RPNCalc.Extensions;
 
 namespace RPNCalc
@@ -41,6 +42,8 @@ namespace RPNCalc
         public bool Equals(ulong other) => value == other;
         public bool Equals(int other) => value == other;
         public bool Equals(uint other) => value == other;
+
+        public override bool Equals(AStackItem other) => (other is StackNumber number && number.value == value) || (other is StackComplex complex && complex.value == value);
 
         public override string ToString() => value.ToString();
     }
