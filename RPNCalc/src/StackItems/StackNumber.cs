@@ -1,9 +1,8 @@
 using System;
 using System.Diagnostics;
-using System.Numerics;
 using RPNCalc.Extensions;
 
-namespace RPNCalc
+namespace RPNCalc.StackItems
 {
     [DebuggerDisplay("Number({value})")]
     public class StackNumber : AStackItem<double>,
@@ -14,7 +13,7 @@ namespace RPNCalc
         IEquatable<int>,
         IEquatable<uint>
     {
-        public StackNumber(double value) : base(Type.Number, value) { }
+        public StackNumber(double value) : base(Type.RealNumber, value) { }
 
         public static bool operator >(StackNumber left, StackNumber right) => left.value > right.value;
         public static bool operator <(StackNumber left, StackNumber right) => left.value < right.value;
@@ -34,7 +33,7 @@ namespace RPNCalc
         public static implicit operator uint(StackNumber number) => (uint)number.value;
         public static implicit operator long(StackNumber number) => (long)number.value;
         public static implicit operator ulong(StackNumber number) => (ulong)number.value;
-        public static implicit operator bool(StackNumber number) => number.AsBool();
+        public static implicit operator bool(StackNumber number) => number.GetBool();
 
         public bool Equals(double other) => value == other;
         public bool Equals(float other) => value == other;

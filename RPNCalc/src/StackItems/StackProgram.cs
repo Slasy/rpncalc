@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
 
-namespace RPNCalc
+namespace RPNCalc.StackItems
 {
     [DebuggerDisplay("Program({ToString()})")]
     public class StackProgram : AStackItem<AStackItem[]>

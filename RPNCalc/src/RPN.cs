@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
+using RPNCalc.StackItems;
 
 namespace RPNCalc
 {
@@ -260,7 +261,7 @@ namespace RPNCalc
             {
                 var tmpStack = sideStack.Pop();
                 tmpStack.Roll(-1);
-                string expectedSymbol = tmpStack.Pop().AsString();
+                string expectedSymbol = tmpStack.Pop().GetString();
                 if (startSymbol != expectedSymbol) throw new RPNFunctionException($"Unexpected symbol, was expecting {endSymbol}");
                 AStackItem newCollection = collectionConstructor(tmpStack);
                 if (sideStack.Count > 0)

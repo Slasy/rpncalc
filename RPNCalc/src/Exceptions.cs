@@ -52,7 +52,7 @@ namespace RPNCalc
     }
 
     /// <summary>
-    /// When function argument has unexpected type.
+    /// When function argument has unexpected type or value.
     /// </summary>
     [Serializable]
     public class RPNArgumentException : RPNException

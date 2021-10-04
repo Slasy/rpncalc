@@ -1,24 +1,31 @@
 using System;
-using System.Linq;
+using System.Numerics;
+using RPNCalc.StackItems;
 using RPNCalc.Tools;
 
 namespace RPNCalc.Extensions
 {
     public static class DefaultFunctions
     {
+        private static RPNFunctionException UndefinedResult => new RPNFunctionException("Undefined result");
+
         /// <summary>
         /// If you clear all names from calclulator, you can use this extension to get default functions back.
         /// </summary>
         public static void LoadDefaultFunctions(this RPN calc)
         {
             calc.SetName("+", PLUS);
-            calc.SetName("-", stack => stack.Func((x, y) => y.AsNumber() - x));
-            calc.SetName("*", stack => stack.Func((x, y) => y.AsNumber() * x));
-            calc.SetName("/", stack => stack.Func((x, y) => y.AsNumber() / x));
-            calc.SetName("^", stack => stack.Func((x, y) => Math.Pow(y, x)));
-            calc.SetName("+-", stack => stack.Func(x => -x.AsNumber()));
-            calc.SetName("SQ", stack => stack.Func(x => x.AsNumber() * x));
-            calc.SetName("SQRT", stack => stack.Func(x => Math.Sqrt(x)));
+            calc.SetName("-", MINUS);
+            calc.SetName("*", MUL);
+            calc.SetName("/", DIV);
+            calc.SetName("^", POW);
+            calc.SetName("+-", NEG);
+            calc.SetName("++", stack => AddToVarOnStack(calc, stack, 1));
+            calc.SetName("--", stack => AddToVarOnStack(calc, stack, -1));
+            calc.SetName("1/X", ONE_OVER_X);
+
+            calc.SetName("SQ", SQ);
+            calc.SetName("SQRT", SQRT);
             calc.SetName("DROP", StackExtensions.Drop);
             calc.SetName("DUP", StackExtensions.Dup);
             calc.SetName("SWAP", stack => stack.Swap());
@@ -31,22 +38,23 @@ namespace RPNCalc.Extensions
             calc.SetName("EVAL", st => EVAL(calc, st));
             calc.SetName("STO", st => STO(calc, st));
             calc.SetName("RCL", st => RCL(calc, st));
+
             calc.SetName("IFT", st => IFT(calc, st));
             calc.SetName("IFTE", st => IFTE(calc, st));
             calc.SetName("WHILE", st => WHILE(calc, st));
             calc.SetName("FOR", st => FOR(calc, st));
             calc.SetName("LOOP", st => LOOP(calc, st));
+
             calc.SetName("==", stack => stack.Func((x, y) => y == x));
             calc.SetName("!=", stack => stack.Func((x, y) => y != x));
-            calc.SetName("<", stack => stack.Func((x, y) => y.AsNumber() < x));
-            calc.SetName("<=", stack => stack.Func((x, y) => y.AsNumber() <= x));
-            calc.SetName(">", stack => stack.Func((x, y) => y.AsNumber() > x));
-            calc.SetName(">=", stack => stack.Func((x, y) => y.AsNumber() >= x));
-            calc.SetName("++", stack => AddToVarOnStack(calc, stack, 1));
-            calc.SetName("--", stack => AddToVarOnStack(calc, stack, -1));
-            calc.SetName("1/X", stack => stack.Func(x => 1d / x));
+            calc.SetName("<", stack => stack.Func((x, y) => y.GetRealNumber() < x));
+            calc.SetName("<=", stack => stack.Func((x, y) => y.GetRealNumber() <= x));
+            calc.SetName(">", stack => stack.Func((x, y) => y.GetRealNumber() > x));
+            calc.SetName(">=", stack => stack.Func((x, y) => y.GetRealNumber() >= x));
+
             calc.SetCollectionGenerator("[", "]", st => new StackList(st));
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
+            calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
         }
 
         private static void EVAL(RPN calc, Stack<AStackItem> stack)
@@ -76,18 +84,74 @@ namespace RPNCalc.Extensions
         private static void PLUS(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is StackNumber numX)
-            {
-                stack.Push(y.AsNumber() + numX);
-            }
-            else if (x is StackString strX)
-            {
-                stack.Push(y.AsString() + strX);
-            }
-            else
-            {
-                throw new RPNFunctionException("Undefined result");
-            }
+            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() + x.GetRealNumber());
+            else if (x is StackString || y is StackString) stack.Push(y.AsString() + x.AsString());
+            else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() + x.AsComplex());
+            else throw UndefinedResult;
+        }
+
+        private static void MINUS(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() - x.GetRealNumber());
+            else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() - x.AsComplex());
+            else throw UndefinedResult;
+        }
+
+        private static void MUL(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() * x.GetRealNumber());
+            else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() * x.AsComplex());
+            else throw UndefinedResult;
+        }
+
+        private static void DIV(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() / x.GetRealNumber());
+            else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() / x.AsComplex());
+            else throw UndefinedResult;
+        }
+
+        private static void POW(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            if (x is StackNumber && y is StackNumber) stack.Push(Math.Pow(y.GetRealNumber(), x.GetRealNumber()));
+            else if (x is StackComplex || y is StackComplex) stack.Push(Complex.Pow(y.AsComplex(), x.AsComplex()));
+            else throw UndefinedResult;
+        }
+
+        private static void NEG(Stack<AStackItem> stack)
+        {
+            AStackItem x = stack.Pop();
+            if (x is StackNumber) stack.Push(-x.GetRealNumber());
+            else if (x is StackComplex) stack.Push(-x.AsComplex());
+            else throw UndefinedResult;
+        }
+
+        private static void SQ(Stack<AStackItem> stack)
+        {
+            AStackItem x = stack.Pop();
+            if (x is StackNumber) stack.Push(x.GetRealNumber() * x.GetRealNumber());
+            else if (x is StackComplex) stack.Push(x.AsComplex() * x.AsComplex());
+            else throw UndefinedResult;
+        }
+
+        private static void SQRT(Stack<AStackItem> stack)
+        {
+            AStackItem x = stack.Pop();
+            if (x is StackNumber) stack.Push(Math.Sqrt(x.GetRealNumber()));
+            else if (x is StackComplex) stack.Push(Complex.Sqrt(x.AsComplex()));
+            else throw UndefinedResult;
+        }
+
+        private static void ONE_OVER_X(Stack<AStackItem> stack)
+        {
+            AStackItem x = stack.Pop();
+            if (x is StackNumber) stack.Push(1d / x.GetRealNumber());
+            else if (x is StackComplex) stack.Push(new Complex(1, 0) / x.GetComplex());
+            else throw UndefinedResult;
         }
 
         private static void STO(RPN calc, Stack<AStackItem> stack)
@@ -120,7 +184,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             bool predicate = y;
-            var branch = x.AsProgramInstructions();
+            var branch = x.GetProgramInstructions();
             if (predicate) calc.EvalItems(branch, false);
         }
 
@@ -131,8 +195,8 @@ namespace RPNCalc.Extensions
         {
             var (x, y, z) = stack.Pop3();
             bool condition = z;
-            var trueBranch = y.AsProgramInstructions();
-            var falseBranch = x.AsProgramInstructions();
+            var trueBranch = y.GetProgramInstructions();
+            var falseBranch = x.GetProgramInstructions();
             if (condition) calc.EvalItems(trueBranch, false);
             else calc.EvalItems(falseBranch, false);
         }
@@ -143,8 +207,8 @@ namespace RPNCalc.Extensions
         private static void WHILE(RPN calc, Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            var program = x.AsProgramInstructions();
-            var condition = y.AsProgramInstructions();
+            var program = x.GetProgramInstructions();
+            var condition = y.GetProgramInstructions();
             while (evalCondition())
             {
                 calc.EvalItems(program, false);
@@ -164,11 +228,11 @@ namespace RPNCalc.Extensions
         private static void FOR(RPN calc, Stack<AStackItem> stack)
         {
             var (x, y, z, t) = stack.Pop4();
-            var programLoop = x.AsProgramInstructions();
-            var stepProgram = y.AsProgramInstructions();
-            var conditionProgram = z.AsProgramInstructions();
+            var programLoop = x.GetProgramInstructions();
+            var stepProgram = y.GetProgramInstructions();
+            var conditionProgram = z.GetProgramInstructions();
             string variableName = t;
-            calc.GetNameValue(variableName).AsNumber(); // to check type and/or throw exception
+            calc.GetNameValue(variableName).GetRealNumber(); // to check type and/or throw exception
             for (; condition(); step())
             {
                 calc.EvalItems(programLoop, false);
@@ -195,7 +259,7 @@ namespace RPNCalc.Extensions
         private static void LOOP(RPN calc, Stack<AStackItem> stack)
         {
             var (x, y, z, t) = stack.Pop4();
-            var programLoop = x.AsProgramInstructions();
+            var programLoop = x.GetProgramInstructions();
             double stepValue = y;
             double endValue = z;
             if (!z) throw new RPNArgumentException("Step value is zero");
@@ -224,12 +288,12 @@ namespace RPNCalc.Extensions
             expectedDepth = calc.StackView.Count + expectedDepth;
             calc.Eval(programInstructions);
             if (expectedDepth != calc.StackView.Count) throw new RPNArgumentException($"Unexpected behavior of {programName} program");
-            if (calc.StackView.First() is not T) throw new RPNArgumentException($"Unexpected type of return value of {programName} program");
+            if (expectedDepth > 0 && calc.StackView[0] is not T) throw new RPNArgumentException($"Unexpected type of return value of {programName} program");
         }
 
         private static void AddToVarOnStack(RPN calc, Stack<AStackItem> stack, double valueToAdd)
         {
-            string varName = stack.Pop().AsString();
+            string varName = stack.Pop().GetString();
             double number = calc.GetNameValue(varName);
             calc.SetName(varName, number + valueToAdd);
         }

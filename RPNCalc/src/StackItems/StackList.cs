@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
 
-namespace RPNCalc
+namespace RPNCalc.StackItems
 {
     [DebuggerDisplay("List({ToString()})")]
     public class StackList : AStackItem<AStackItem[]>

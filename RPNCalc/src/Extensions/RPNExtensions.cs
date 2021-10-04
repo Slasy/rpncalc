@@ -1,4 +1,5 @@
 using System;
+using RPNCalc.StackItems;
 using RPNCalc.Tools;
 
 namespace RPNCalc.Extensions

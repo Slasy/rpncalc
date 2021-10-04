@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using RPNCalc.Extensions;
 
-namespace RPNCalc
+namespace RPNCalc.StackItems
 {
     /// <summary>
     /// Base item class.
@@ -11,13 +11,13 @@ namespace RPNCalc
     {
         public enum Type
         {
-            /// <summary>Real number, internally type double</summary>
-            Number,
+            RealNumber,
             ComplexNumber,
             /// <summary>Simple text string, can be used pass reference on variable/function</summary>
             String,
             /// <summary>An expression object, contains data and/or functions and/or other programs</summary>
             Program,
+            /// <summary>C# code or <see cref="Program"/> macro</summary>
             Function,
             /// <summary>A reference to any item</summary>
             Name,
@@ -42,17 +42,17 @@ namespace RPNCalc
         public static implicit operator AStackItem(ulong number) => new StackNumber(number);
         public static implicit operator AStackItem(string str) => new StackString(str);
         public static implicit operator AStackItem(Complex complex) => new StackComplex(complex);
-        public static implicit operator double(AStackItem item) => item.AsNumber();
-        public static implicit operator float(AStackItem item) => (float)item.AsNumber();
-        public static implicit operator int(AStackItem item) => (int)item.AsNumber();
-        public static implicit operator uint(AStackItem item) => (uint)item.AsNumber();
-        public static implicit operator long(AStackItem item) => (long)item.AsNumber();
-        public static implicit operator ulong(AStackItem item) => (ulong)item.AsNumber();
-        public static implicit operator string(AStackItem item) => item.AsString();
-        public static implicit operator bool(AStackItem item) => item.AsBool();
+        public static implicit operator double(AStackItem item) => item.GetRealNumber();
+        public static implicit operator float(AStackItem item) => (float)item.GetRealNumber();
+        public static implicit operator int(AStackItem item) => (int)item.GetRealNumber();
+        public static implicit operator uint(AStackItem item) => (uint)item.GetRealNumber();
+        public static implicit operator long(AStackItem item) => (long)item.GetRealNumber();
+        public static implicit operator ulong(AStackItem item) => (ulong)item.GetRealNumber();
+        public static implicit operator string(AStackItem item) => item.GetString();
+        public static implicit operator bool(AStackItem item) => item.GetBool();
         public static implicit operator AStackItem(bool condition) => (StackNumber)condition;
         public static implicit operator AStackItem(AStackItem[] list) => new StackList(list);
-        public static implicit operator Complex(AStackItem item) => item.AsComplex();
+        public static implicit operator Complex(AStackItem item) => item.GetComplex();
 
         public override bool Equals(object obj) => throw new InvalidOperationException($"Use generic {nameof(AStackItem)}");
         public override int GetHashCode() => throw new InvalidOperationException($"Use generic {nameof(AStackItem)}");

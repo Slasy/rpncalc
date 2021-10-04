@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace RPNCalc
+namespace RPNCalc.StackItems
 {
     [DebuggerDisplay("String({ToString()})")]
     public class StackString : AStackItem<string>, IEquatable<string>

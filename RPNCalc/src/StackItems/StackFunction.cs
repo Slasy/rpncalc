@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace RPNCalc
+namespace RPNCalc.StackItems
 {
     [DebuggerDisplay("Function({name})")]
     public class StackFunction : AStackItem<RPN.Function>

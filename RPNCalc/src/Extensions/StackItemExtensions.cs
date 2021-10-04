@@ -1,57 +1,79 @@
 using System;
 using System.Numerics;
+using RPNCalc.StackItems;
 
 namespace RPNCalc.Extensions
 {
     public static class StackItemExtensions
     {
-        public static double AsNumber(this AStackItem item)
+        public static double GetRealNumber(this AStackItem item)
         {
             EnsureType<StackNumber>(item, out var number);
             return number.value;
         }
 
-        public static string AsString(this AStackItem item)
+        public static string GetString(this AStackItem item)
         {
             EnsureType<StackString>(item, out var str);
             return str.value;
         }
 
-        public static AStackItem[] AsProgramInstructions(this AStackItem item)
+        /// <summary>
+        /// Returns item as a string (if compatible).
+        /// </summary>
+        public static string AsString(this AStackItem item)
+        {
+            if (item is StackString str) return str.value;
+            return item.ToString();
+        }
+
+        public static AStackItem[] GetProgramInstructions(this AStackItem item)
         {
             EnsureType<StackProgram>(item, out var program);
             return program.value;
         }
 
-        public static bool AsBool(this AStackItem item)
+        public static bool GetBool(this AStackItem item)
         {
             EnsureType<StackNumber>(item, out var number);
             return number > double.Epsilon || number < -double.Epsilon;
         }
 
-        public static AStackItem[] AsArray(this AStackItem item)
+        public static AStackItem[] GetArray(this AStackItem item)
         {
             EnsureType<StackList>(item, out var list);
             return list.value;
         }
 
-        public static Complex AsComplex(this AStackItem item)
+        public static Complex GetComplex(this AStackItem item)
         {
             EnsureType<StackComplex>(item, out var complex);
             return complex.value;
         }
 
-        private static void EnsureType(AStackItem item, AStackItem.Type type)
+        /// <summary>
+        /// Returns complex number or converts real to complex number.
+        /// </summary>
+        public static Complex AsComplex(this AStackItem item)
+        {
+            EnsureNotNull(item);
+            if (item is StackComplex complex) return complex.value;
+            if (item is StackNumber real) return real.value;
+            throw BadArgumentException;
+        }
+
+        private static void EnsureNotNull(AStackItem item)
         {
             if (item is null) throw new ArgumentNullException(nameof(item), "Missing stack item");
-            if (item.type != type) throw new RPNArgumentException("Bad argument type");
         }
 
         private static void EnsureType<T>(AStackItem item, out T typedItem) where T : AStackItem
         {
-            if (item is null) throw new ArgumentNullException(nameof(item), "Missing stack item");
+            EnsureNotNull(item);
             if (item is T realType) typedItem = realType;
-            else throw new RPNArgumentException("Bad argument type");
+            else throw BadArgumentException;
         }
+
+        private static RPNArgumentException BadArgumentException => new RPNArgumentException("Bad argument type");
     }
 }

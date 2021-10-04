@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using RPNCalc.StackItems;
 using RPNCalc.Tools;
 
 namespace RPNCalc.Tests
