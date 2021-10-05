@@ -448,5 +448,39 @@ namespace RPNCalc.Tests
             tokens = AlgebraicTools.InfixToPostfix(tokens);
             TestContext.WriteLine(string.Join(" ", tokens));
         }
+
+        [Test]
+        public void ParseParamList()
+        {
+            var tokens = AlgebraicTools.GetTokens("foo([1,2,3])");
+            CollectionAssert.AreEqual(new[] { "(", "(", "(", "[", "(", "1", ")", "(", "2", ")", "(", "3", ")", "]", ")", ")", "foo", ")" }, tokens);
+            tokens = AlgebraicTools.GetTokens("foo(['foo','bar',1,2])");
+            CollectionAssert.AreEqual(new[] { "(", "(", "(", "[", "(", "'foo'", ")", "(", "'bar'", ")", "(", "1", ")", "(", "2", ")", "]", ")", ")", "foo", ")" }, tokens);
+        }
+
+        [Test]
+        public void IncompleteList()
+        {
+            Assert.Throws<ArgumentException>(() => AlgebraicTools.GetTokens("foo([1,2)"));
+        }
+
+        [Test]
+        public void ParseListInList()
+        {
+            var tokens = AlgebraicTools.GetTokens("foo([[10], [20]])");
+            CollectionAssert.AreEqual(new[] { "(", "(", "(", "[", "(", "[", "(", "10", ")", "]", ")", "(", "[", "(", "20", ")", "]", ")", "]", ")", ")", "foo", ")" }, tokens);
+        }
+
+        [Test]
+        public void InfixToPostfixList()
+        {
+            var tokens = AlgebraicTools.GetTokens("foo([123,456])");
+            tokens = AlgebraicTools.InfixToPostfix(tokens);
+            CollectionAssert.AreEqual(new[] { "[", "123", "456", "]", "foo" }, tokens);
+
+            tokens = AlgebraicTools.GetTokens("foo([[123],456,'foo'])");
+            tokens = AlgebraicTools.InfixToPostfix(tokens);
+            CollectionAssert.AreEqual(new[] { "[", "[", "123", "]", "456", "'foo'", "]", "foo" }, tokens);
+        }
     }
 }

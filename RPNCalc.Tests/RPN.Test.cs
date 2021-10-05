@@ -788,6 +788,12 @@ namespace RPNCalc.Tests
         {
             var result = calc.EvalAlgebraic("contain([1,2,3], 2)");
             Assert.IsTrue(result);
+            result = calc.EvalAlgebraic("contain([1,2,3], 'foo')");
+            Assert.IsFalse(result);
+            result = calc.EvalAlgebraic("contain([1,2,3], 123)");
+            Assert.IsFalse(result);
+            result = calc.EvalAlgebraic("contain([1,2,3,[10,20]], [10,20])");
+            Assert.IsTrue(result);
         }
     }
 }

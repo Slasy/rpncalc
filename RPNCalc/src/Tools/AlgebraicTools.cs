@@ -7,7 +7,7 @@ namespace RPNCalc.Tools
 {
     public static class AlgebraicTools
     {
-        private static readonly HashSet<string> operators = new(new[] { "(", ")", "*", "/", "+", "-", "^", "==", "!=", "=", ">=", "<=", ">", "<" });
+        private static readonly HashSet<string> operators = new(new[] { "[", "]", "(", ")", "*", "/", "+", "-", "^", "==", "!=", "=", ">=", "<=", ">", "<" });
         private static readonly Regex number = new(@"^\d+(?:\.\d+)?(?:e\-?\d+)?");
         private static readonly Regex negNumberVariable = new(@"^\(((?:\-\d+(?:\.\d+)?(?:e\-?\d+)?)|(?:\-\w+))\)");
         private static readonly Regex op = new(@"^(?:\" + string.Join("|\\", operators) + ")");
@@ -72,7 +72,13 @@ namespace RPNCalc.Tools
                     case '(': bracketCounter++; break;
                     case ')': bracketCounter--; break;
                     case ',':
+                        sb.Length--;
                         sb.Append(")(");
+                        break;
+                    case '[':
+                        sb.Length--;
+                        sb.Append(ListCreator(functionExpression.Substring(i), out int len));
+                        i += len;
                         break;
                 }
                 if (bracketCounter == 0)
@@ -84,6 +90,41 @@ namespace RPNCalc.Tools
             }
             if (functionName.StartsWith("(-")) functionName = functionName.Substring(2);
             throw new ArgumentException($"Function is missing ending bracket: {functionName}");
+        }
+
+        private static string ListCreator(string expression, out int strLength)
+        {
+            int bracketCounter = 0;
+            var sb = new StringBuilder(expression.Length);
+            sb.Append('(');
+            for (int i = 0; i < expression.Length; i++)
+            {
+                switch (expression[i])
+                {
+                    case '[':
+                        bracketCounter++;
+                        sb.Append(" [ (");
+                        break;
+                    case ']':
+                        bracketCounter--;
+                        sb.Append(") ] ");
+                        break;
+                    case ',':
+                        sb.Append(")(");
+                        break;
+                    default:
+                        sb.Append(expression[i]);
+                        break;
+                }
+
+                if (bracketCounter == 0)
+                {
+                    strLength = i;
+                    sb.Append(')');
+                    return sb.ToString();
+                }
+            }
+            throw new ArgumentException("List is missing ending bracket");
         }
 
         // src https://stackoverflow.com/a/1438153
@@ -116,13 +157,15 @@ namespace RPNCalc.Tools
                         postfix.Push(token);
                     }
                 }
-                else if (tokenArray[i] == "(")
+                else if (tokenArray[i] is "(" or "[")
                 {
                     bracketCounter++;
-                    stack.Push("(");
+                    stack.Push(tokenArray[i]);
+                    if (tokenArray[i] == "[") postfix.Push("[");
                 }
-                else if (tokenArray[i] == ")")
+                else if (tokenArray[i] is ")" or "]")
                 {
+                    if (tokenArray[i] == "]") postfix.Push("]");
                     bracketCounter--;
                     if (bracketCounter < 0)
                     {
@@ -131,7 +174,10 @@ namespace RPNCalc.Tools
                         continue; // ignore too many closing brackets
                     }
                     st = stack.Pop();
-                    while (st != "(")
+                    string bracketToFind = null;
+                    if (tokenArray[i] == ")") bracketToFind = "(";
+                    else if (tokenArray[i] == "]") bracketToFind = "[";
+                    while (st != bracketToFind)
                     {
                         postfix.Push(st);
                         st = stack.Pop();
