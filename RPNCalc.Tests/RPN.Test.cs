@@ -795,5 +795,34 @@ namespace RPNCalc.Tests
             result = calc.EvalAlgebraic("contain([1,2,3,[10,20]], [10,20])");
             Assert.IsTrue(result);
         }
+
+        [Test]
+        public void HeadAndTailList()
+        {
+            Assert.AreEqual(10, calc.Eval("[ 10 20 30 40 ] head"));
+            Assert.AreEqual("foo", calc.Eval("[ 'foo' 'bar' ] head"));
+            Assert.AreEqual(StackList.From("foo", "bar"), calc.Eval("[ [ 'foo' 'bar'] [ 10 20 ] ] head"));
+
+            Assert.AreEqual(StackList.From(20, 30, 40), calc.Eval("[ 10 20 30 40 ] tail"));
+            Assert.AreEqual(StackList.From("bar"), calc.Eval("[ 'foo' 'bar' ] tail"));
+            Assert.AreEqual(StackList.From(StackList.From(10, 20)), calc.Eval("[ [ 'foo' 'bar'] [ 10 20 ] ] tail"));
+
+            Assert.AreEqual(new StackList(), calc.Eval("[ 10 ] tail"));
+            Assert.AreEqual(new StackList(), calc.Eval("[ ] tail"));
+
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("[ ] head"));
+        }
+
+        [Test]
+        public void HeadAndTailString()
+        {
+            Assert.AreEqual("s", calc.Eval("'string' head"));
+            Assert.AreEqual("tring", calc.Eval("'string' tail"));
+
+            Assert.AreEqual("", calc.Eval("'f' tail"));
+            Assert.AreEqual("", calc.Eval("'' tail"));
+
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("'' head"));
+        }
     }
 }

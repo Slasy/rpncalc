@@ -24,7 +24,7 @@ namespace RPNCalc.StackItems
         }
 
         public static implicit operator StackList(AStackItem[] array) => new(array);
-        public static implicit operator AStackItem[](StackList item) => item.value;
+        //public static implicit operator AStackItem[](StackList item) => item.value;
 
         public static StackList From(params AStackItem[] array) => new(array);
 

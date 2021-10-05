@@ -288,33 +288,64 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>
-        /// [ a b c d ] -> a
+        /// <para>[ a b c d ] -> a</para>
+        /// <para>'string' -> 's'</para>
         /// </summary>
         private static void HEAD(Stack<AStackItem> stack)
         {
-            AStackItem[] array = stack.Pop().GetArray();
+            AStackItem item = stack.Pop();
+            if (item is StackString str)
+            {
+                if (str.value.Length == 0) throw new RPNArgumentException("Empty string");
+                stack.Push(str.value[0].ToString());
+                return;
+            }
+            AStackItem[] array = item.GetArray();
             if (array.Length == 0) throw new RPNArgumentException("Empty list");
             stack.Push(array[0]);
         }
 
         /// <summary>
-        /// [ a b c d ] -> [ b c d]
+        /// <para>[ a b c d ] -> [ b c d]</para>
+        /// <para>'string' -> 'tring'</para>
         /// </summary>
         private static void TAIL(Stack<AStackItem> stack)
         {
-            AStackItem[] array = stack.Pop().GetArray();
-            if (array.Length == 0) stack.Push(new StackList());
+            AStackItem item = stack.Pop();
+            if (item is StackString str)
+            {
+                if (str.value.Length == 0)
+                {
+                    stack.Push(string.Empty);
+                    return;
+                }
+                stack.Push(str.value.Substring(1));
+                return;
+            }
+            AStackItem[] array = item.GetArray();
+            if (array.Length == 0)
+            {
+                stack.Push(new StackList());
+                return;
+            }
             AStackItem[] tail = new AStackItem[array.Length - 1];
             Array.Copy(array, 1, tail, 0, tail.Length);
             stack.Push(tail);
         }
 
         /// <summary>
-        /// [ list ] item CONTAIN
+        /// <para>[ list ] item CONTAIN</para>
+        /// <para>'string' 'string' CONTAIN</para>
         /// </summary>
         private static void CONTAIN(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
+            if (y is StackString str)
+            {
+                string subStr = x.GetString();
+                stack.Push(str.value.IndexOf(subStr) >= 0);
+                return;
+            }
             AStackItem[] array = y.GetArray();
             bool contain = Array.IndexOf(array, x) >= 0;
             stack.Push(contain);
