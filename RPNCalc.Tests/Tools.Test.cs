@@ -482,5 +482,12 @@ namespace RPNCalc.Tests
             tokens = AlgebraicTools.InfixToPostfix(tokens);
             CollectionAssert.AreEqual(new[] { "[", "[", "123", "]", "456", "'foo'", "]", "foo" }, tokens);
         }
+
+        [Test]
+        public void ParseEscapedStringSymbols()
+        {
+            var tokens = RPNTools.GetTokens(@"  'foo(\'abc\')' ");
+            CollectionAssert.AreEqual(new[] { @"'foo(\'abc\')'" }, tokens);
+        }
     }
 }

@@ -8,20 +8,30 @@ namespace RPNCalc.Tools
     public static class RPNTools
     {
         private static readonly Regex numberToken = new(@"^\-?\.?\d+?(?:\.\d+)?(?:e\-?\d+)?$");
-        private static readonly Regex stringToken = new("^'([^']*)'$");
+        private static readonly Regex stringToken = new(@"^'([^'\\]*(?:\\.[^'\\]*)*)'$");
         private static readonly Regex variableNameToken = new(@"^[^'\.][^'\s\.]*$");
         private static readonly Regex[] matchers = new[] { numberToken, stringToken, variableNameToken };
-        private static readonly Regex expressionSplit = new(@"[^'\s]+|'[^']*'");
+        private static readonly Regex expressionSplit = new(@"(?<!\\)'.*?(?<!\\)'|[^\s']+");
 
         /// <summary>
         /// Splits string to array of string tokens.
         /// </summary>
         public static string[] GetTokens(string rpnExpression)
         {
+            bool escapeSymbol = false;
             int count = 0;
             for (int i = 0; i < rpnExpression.Length; i++)
             {
-                if (rpnExpression[i] == '\'') count++;
+                if (rpnExpression[i] == '\\')
+                {
+                    escapeSymbol = true;
+                    continue;
+                }
+                else if (!escapeSymbol && rpnExpression[i] == '\'')
+                {
+                    count++;
+                }
+                escapeSymbol = false;
             }
             if (count % 2 == 1) throw new RPNArgumentException("Uneven ' string symbols");
             MatchCollection matches = expressionSplit.Matches(rpnExpression);
@@ -56,7 +66,7 @@ namespace RPNCalc.Tools
                 Match match;
                 if (!(match = matcher.Match(token)).Success) continue;
                 if (matcher == numberToken) return new StackNumber(NumberConvert(match.Groups[0].Value));
-                if (matcher == stringToken) return new StackString(match.Groups[1].Value);
+                if (matcher == stringToken) return new StackString(match.Groups[1].Value.Replace("\\'", "'"));
                 if (matcher == variableNameToken) return new StackName(match.Groups[0].Value);
             }
             throw new RPNArgumentException("Invalid syntax, unknown token " + token);

@@ -824,5 +824,18 @@ namespace RPNCalc.Tests
 
             Assert.Throws<RPNArgumentException>(() => calc.Eval("'' head"));
         }
+
+        [Test]
+        public void EvalMultipleAlgExpressions()
+        {
+            Assert.AreEqual(5, calc.EvalAlgebraic("sto(3,'a') sto(4,'b') sqrt(a^2+b^2)"));
+        }
+
+        [Test]
+        public void InlineAlgExpressionWithStringValue()
+        {
+            Assert.IsTrue(calc.Eval(@"'sto(3,\'a\')' eval a a * 9 =="));
+            Assert.DoesNotThrow(() => calc.Eval(@"'\'foo' head"));
+        }
     }
 }
