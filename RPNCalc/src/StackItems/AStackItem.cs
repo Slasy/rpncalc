@@ -34,12 +34,12 @@ namespace RPNCalc.StackItems
         public static bool operator ==(AStackItem left, AStackItem right) => left.Equals(right);
         public static bool operator !=(AStackItem left, AStackItem right) => !left.Equals(right);
 
-        public static implicit operator AStackItem(double number) => new StackNumber(number);
-        public static implicit operator AStackItem(float number) => new StackNumber(number);
-        public static implicit operator AStackItem(int number) => new StackNumber(number);
-        public static implicit operator AStackItem(uint number) => new StackNumber(number);
-        public static implicit operator AStackItem(long number) => new StackNumber(number);
-        public static implicit operator AStackItem(ulong number) => new StackNumber(number);
+        public static implicit operator AStackItem(double number) => new StackReal(number);
+        public static implicit operator AStackItem(float number) => new StackReal(number);
+        public static implicit operator AStackItem(int number) => new StackReal(number);
+        public static implicit operator AStackItem(uint number) => new StackReal(number);
+        public static implicit operator AStackItem(long number) => new StackReal(number);
+        public static implicit operator AStackItem(ulong number) => new StackReal(number);
         public static implicit operator AStackItem(string str) => new StackString(str);
         public static implicit operator AStackItem(Complex complex) => new StackComplex(complex);
         public static implicit operator double(AStackItem item) => item.GetRealNumber();
@@ -50,7 +50,7 @@ namespace RPNCalc.StackItems
         public static implicit operator ulong(AStackItem item) => (ulong)item.GetRealNumber();
         public static implicit operator string(AStackItem item) => item.GetString();
         public static implicit operator bool(AStackItem item) => item.GetBool();
-        public static implicit operator AStackItem(bool condition) => (StackNumber)condition;
+        public static implicit operator AStackItem(bool condition) => (StackReal)condition;
         public static implicit operator AStackItem(AStackItem[] list) => new StackList(list);
         public static implicit operator Complex(AStackItem item) => item.GetComplex();
 

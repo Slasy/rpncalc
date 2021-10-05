@@ -46,9 +46,9 @@ namespace RPNCalc.Tests
         [Test]
         public void CompareItems()
         {
-            StackNumber n1 = 1234.5;
-            StackNumber n2 = 9999;
-            StackNumber n3 = 1234.5;
+            StackReal n1 = 1234.5;
+            StackReal n2 = 9999;
+            StackReal n3 = 1234.5;
             StackString s1 = "foo";
             StackString s2 = "bar";
             StackString s3 = "foo";

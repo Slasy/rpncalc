@@ -8,7 +8,7 @@ namespace RPNCalc.Extensions
     {
         public static double GetRealNumber(this AStackItem item)
         {
-            EnsureType<StackNumber>(item, out var number);
+            EnsureType<StackReal>(item, out var number);
             return number.value;
         }
 
@@ -35,7 +35,7 @@ namespace RPNCalc.Extensions
 
         public static bool GetBool(this AStackItem item)
         {
-            EnsureType<StackNumber>(item, out var number);
+            EnsureType<StackReal>(item, out var number);
             return number > double.Epsilon || number < -double.Epsilon;
         }
 
@@ -58,7 +58,7 @@ namespace RPNCalc.Extensions
         {
             EnsureNotNull(item);
             if (item is StackComplex complex) return complex.value;
-            if (item is StackNumber real) return real.value;
+            if (item is StackReal real) return real.value;
             throw BadArgumentException;
         }
 

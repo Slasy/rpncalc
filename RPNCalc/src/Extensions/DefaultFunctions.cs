@@ -91,7 +91,7 @@ namespace RPNCalc.Extensions
         private static void PLUS(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() + x.GetRealNumber());
+            if (x is StackReal && y is StackReal) stack.Push(y.GetRealNumber() + x.GetRealNumber());
             else if (x is StackString || y is StackString) stack.Push(y.AsString() + x.AsString());
             else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() + x.AsComplex());
             else throw UndefinedResult;
@@ -100,7 +100,7 @@ namespace RPNCalc.Extensions
         private static void MINUS(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() - x.GetRealNumber());
+            if (x is StackReal && y is StackReal) stack.Push(y.GetRealNumber() - x.GetRealNumber());
             else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() - x.AsComplex());
             else throw UndefinedResult;
         }
@@ -108,7 +108,7 @@ namespace RPNCalc.Extensions
         private static void MUL(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() * x.GetRealNumber());
+            if (x is StackReal && y is StackReal) stack.Push(y.GetRealNumber() * x.GetRealNumber());
             else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() * x.AsComplex());
             else throw UndefinedResult;
         }
@@ -116,7 +116,7 @@ namespace RPNCalc.Extensions
         private static void DIV(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is StackNumber && y is StackNumber) stack.Push(y.GetRealNumber() / x.GetRealNumber());
+            if (x is StackReal && y is StackReal) stack.Push(y.GetRealNumber() / x.GetRealNumber());
             else if (x is StackComplex || y is StackComplex) stack.Push(y.AsComplex() / x.AsComplex());
             else throw UndefinedResult;
         }
@@ -124,7 +124,7 @@ namespace RPNCalc.Extensions
         private static void POW(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is StackNumber && y is StackNumber) stack.Push(Math.Pow(y.GetRealNumber(), x.GetRealNumber()));
+            if (x is StackReal && y is StackReal) stack.Push(Math.Pow(y.GetRealNumber(), x.GetRealNumber()));
             else if (x is StackComplex || y is StackComplex) stack.Push(Complex.Pow(y.AsComplex(), x.AsComplex()));
             else throw UndefinedResult;
         }
@@ -132,7 +132,7 @@ namespace RPNCalc.Extensions
         private static void NEG(Stack<AStackItem> stack)
         {
             AStackItem x = stack.Pop();
-            if (x is StackNumber) stack.Push(-x.GetRealNumber());
+            if (x is StackReal) stack.Push(-x.GetRealNumber());
             else if (x is StackComplex) stack.Push(-x.AsComplex());
             else throw UndefinedResult;
         }
@@ -140,7 +140,7 @@ namespace RPNCalc.Extensions
         private static void SQUARE(Stack<AStackItem> stack)
         {
             AStackItem x = stack.Pop();
-            if (x is StackNumber) stack.Push(x.GetRealNumber() * x.GetRealNumber());
+            if (x is StackReal) stack.Push(x.GetRealNumber() * x.GetRealNumber());
             else if (x is StackComplex) stack.Push(x.AsComplex() * x.AsComplex());
             else throw UndefinedResult;
         }
@@ -148,7 +148,7 @@ namespace RPNCalc.Extensions
         private static void SQUARE_ROOT(Stack<AStackItem> stack)
         {
             AStackItem x = stack.Pop();
-            if (x is StackNumber) stack.Push(Math.Sqrt(x.GetRealNumber()));
+            if (x is StackReal) stack.Push(Math.Sqrt(x.GetRealNumber()));
             else if (x is StackComplex) stack.Push(Complex.Sqrt(x.AsComplex()));
             else throw UndefinedResult;
         }
@@ -156,7 +156,7 @@ namespace RPNCalc.Extensions
         private static void ONE_OVER_X(Stack<AStackItem> stack)
         {
             AStackItem x = stack.Pop();
-            if (x is StackNumber) stack.Push(1d / x.GetRealNumber());
+            if (x is StackReal) stack.Push(1d / x.GetRealNumber());
             else if (x is StackComplex) stack.Push(new Complex(1, 0) / x.GetComplex());
             else throw UndefinedResult;
         }
@@ -247,13 +247,13 @@ namespace RPNCalc.Extensions
 
             bool condition()
             {
-                ExpectedDepthEval<StackNumber>(calc, conditionProgram, "condition");
+                ExpectedDepthEval<StackReal>(calc, conditionProgram, "condition");
                 return stack.Pop();
             }
 
             void step()
             {
-                ExpectedDepthEval<StackNumber>(calc, stepProgram, "step");
+                ExpectedDepthEval<StackReal>(calc, stepProgram, "step");
                 double varValue = calc.GetNameValue(variableName);
                 calc.SetName(variableName, varValue + stack.Pop());
             }

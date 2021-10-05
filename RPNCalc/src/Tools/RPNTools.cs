@@ -65,7 +65,7 @@ namespace RPNCalc.Tools
             {
                 Match match;
                 if (!(match = matcher.Match(token)).Success) continue;
-                if (matcher == numberToken) return new StackNumber(NumberConvert(match.Groups[0].Value));
+                if (matcher == numberToken) return new StackReal(NumberConvert(match.Groups[0].Value));
                 if (matcher == stringToken) return new StackString(match.Groups[1].Value.Replace("\\'", "'"));
                 if (matcher == variableNameToken) return new StackName(match.Groups[0].Value);
             }

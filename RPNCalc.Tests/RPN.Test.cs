@@ -503,8 +503,8 @@ namespace RPNCalc.Tests
         [Test]
         public void ListAndLists()
         {
-            Assert.AreEqual(new StackList(new StackNumber[] { 10, 20 }), calc.Eval("[ 10 20 ]"));
-            var list = new AStackItem[] { 10, new StackList(new StackNumber[] { 20 }), 30, new StackList(new AStackItem[] { 40, 50, 60 }) };
+            Assert.AreEqual(new StackList(new StackReal[] { 10, 20 }), calc.Eval("[ 10 20 ]"));
+            var list = new AStackItem[] { 10, new StackList(new StackReal[] { 20 }), 30, new StackList(new AStackItem[] { 40, 50, 60 }) };
             Assert.AreEqual(list, calc.Eval("[ 10 [ 20 ] 30 [ 40 50 60 ] ]").GetArray());
             Assert.AreEqual(list, calc.Eval("[").GetArray());
             Assert.AreEqual(list, calc.Eval("10 20").GetArray());
@@ -523,8 +523,8 @@ namespace RPNCalc.Tests
         public void EvalTypedExpression1()
         {
             var result = calc.Eval(new AStackItem[] { 10, 20 });
-            Assert.IsInstanceOf<StackNumber>(result);
-            Assert.AreEqual(20, (result as StackNumber).value);
+            Assert.IsInstanceOf<StackReal>(result);
+            Assert.AreEqual(20, (result as StackReal).value);
         }
 
         [Test]
@@ -540,9 +540,9 @@ namespace RPNCalc.Tests
         public void EvalTypedExpression3()
         {
             var result = calc.Eval(new AStackItem[] { 1, 2, 3, new StackFunction("foo", st => st.Push(st.Pop().GetRealNumber() * 2)) });
-            Assert.IsInstanceOf<StackNumber>(result);
+            Assert.IsInstanceOf<StackReal>(result);
             Assert.AreEqual(3, calc.StackView.Count);
-            Assert.AreEqual(6, (result as StackNumber).value);
+            Assert.AreEqual(6, (result as StackReal).value);
         }
 
         [Test]
@@ -565,7 +565,7 @@ namespace RPNCalc.Tests
         {
             calc.Eval(new AStackItem[] { StackList.From(10, 20, new StackName("+")), 30, 40, new StackName("*") });
             Assert.AreEqual(StackList.From(10, 20, new StackName("+")), calc.StackView.Skip(1).Single());
-            Assert.IsInstanceOf<StackNumber>(calc.StackView.First());
+            Assert.IsInstanceOf<StackReal>(calc.StackView.First());
             Assert.AreEqual(1200, calc.StackView.First());
         }
 
@@ -574,7 +574,7 @@ namespace RPNCalc.Tests
         {
             var x2 = StackProgram.From(2, new StackName("^"));
             var top = calc.Eval(new AStackItem[] { x2, new StackString("X2"), new StackName("STO"), StackProgram.From(10, new StackName("X2")), new StackName("EVAL") });
-            Assert.IsInstanceOf<StackNumber>(top);
+            Assert.IsInstanceOf<StackReal>(top);
             Assert.AreEqual(100, top);
         }
 
@@ -584,7 +584,7 @@ namespace RPNCalc.Tests
             calc.SetName("plus2", new StackProgram(new AStackItem[] { 2, new StackName("+") }));
             var expression = StackProgram.From(10, new StackName("plus2"));
             var top = calc.Eval(new AStackItem[] { expression, new StackName("EVAL") });
-            Assert.IsInstanceOf<StackNumber>(top);
+            Assert.IsInstanceOf<StackReal>(top);
             Assert.AreEqual(12, top);
 
             calc.ClearStack();
@@ -614,7 +614,7 @@ namespace RPNCalc.Tests
             Assert.IsInstanceOf<StackProgram>(prog);
             Assert.AreEqual(StackProgram.From(10, 20, new StackName("+")), prog);
             var num = calc.Eval(new[] { new StackName("eval") });
-            Assert.IsInstanceOf<StackNumber>(num);
+            Assert.IsInstanceOf<StackReal>(num);
             Assert.AreEqual(30, num);
         }
 
@@ -672,7 +672,7 @@ namespace RPNCalc.Tests
             calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
             calc.SetName("pi", Math.PI);
             var result = calc.Eval("'sin(pi/2)' eval");
-            Assert.IsInstanceOf<StackNumber>(result);
+            Assert.IsInstanceOf<StackReal>(result);
             Assert.AreEqual(1d, result);
         }
 
@@ -689,7 +689,7 @@ namespace RPNCalc.Tests
         public void DefineProgramAndEvalInAlgebraicString()
         {
             var result = calc.Eval("{ dup dup * * } 'cube' sto 'cube(4)*(2+8)' eval");
-            Assert.IsInstanceOf<StackNumber>(result);
+            Assert.IsInstanceOf<StackReal>(result);
             Assert.AreEqual(640d, result);
         }
 
