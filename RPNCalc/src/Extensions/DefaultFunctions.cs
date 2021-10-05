@@ -24,8 +24,8 @@ namespace RPNCalc.Extensions
             calc.SetName("--", stack => AddToVarOnStack(calc, stack, -1));
             calc.SetName("1/X", ONE_OVER_X);
 
-            calc.SetName("SQ", SQ);
-            calc.SetName("SQRT", SQRT);
+            calc.SetName("SQ", SQUARE);
+            calc.SetName("SQRT", SQUARE_ROOT);
             calc.SetName("DROP", StackExtensions.Drop);
             calc.SetName("DUP", StackExtensions.Dup);
             calc.SetName("SWAP", stack => stack.Swap());
@@ -36,11 +36,12 @@ namespace RPNCalc.Extensions
             calc.SetName("CLST", CLEAR_STACK);
             calc.SetName("CLV", st => CLEAR_VAR(calc, st));
             calc.SetName("EVAL", st => EVAL(calc, st));
-            calc.SetName("STO", st => STO(calc, st));
-            calc.SetName("RCL", st => RCL(calc, st));
+            calc.SetName("STO", st => STORE(calc, st));
+            calc.SetName("RCL", st => RECALL(calc, st));
+            calc.SetName("RND", ROUND);
 
-            calc.SetName("IFT", st => IFT(calc, st));
-            calc.SetName("IFTE", st => IFTE(calc, st));
+            calc.SetName("IFT", st => IF_THEN(calc, st));
+            calc.SetName("IFTE", st => IF_THEN_ELSE(calc, st));
             calc.SetName("WHILE", st => WHILE(calc, st));
             calc.SetName("FOR", st => FOR(calc, st));
             calc.SetName("LOOP", st => LOOP(calc, st));
@@ -55,6 +56,8 @@ namespace RPNCalc.Extensions
             calc.SetName("HEAD", HEAD);
             calc.SetName("TAIL", TAIL);
             calc.SetName("CONTAIN", CONTAIN);
+            calc.SetName(">LIST", TO_LIST);
+            calc.SetName("LIST>", EXPLODE_LIST);
 
             calc.SetCollectionGenerator("[", "]", st => new StackList(st));
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
@@ -134,7 +137,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void SQ(Stack<AStackItem> stack)
+        private static void SQUARE(Stack<AStackItem> stack)
         {
             AStackItem x = stack.Pop();
             if (x is StackNumber) stack.Push(x.GetRealNumber() * x.GetRealNumber());
@@ -142,7 +145,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void SQRT(Stack<AStackItem> stack)
+        private static void SQUARE_ROOT(Stack<AStackItem> stack)
         {
             AStackItem x = stack.Pop();
             if (x is StackNumber) stack.Push(Math.Sqrt(x.GetRealNumber()));
@@ -158,14 +161,14 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void STO(RPN calc, Stack<AStackItem> stack)
+        private static void STORE(RPN calc, Stack<AStackItem> stack)
         {
             string name = stack.Pop();
             var value = stack.Pop();
             calc.SetName(name, value);
         }
 
-        private static void RCL(RPN calc, Stack<AStackItem> stack)
+        private static void RECALL(RPN calc, Stack<AStackItem> stack)
         {
             string name = stack.Pop();
             AStackItem item = calc.GetNameValue(name);
@@ -184,7 +187,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// number { nonzero branch } IFT
         /// </summary>
-        private static void IFT(RPN calc, Stack<AStackItem> stack)
+        private static void IF_THEN(RPN calc, Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
             bool predicate = y;
@@ -195,7 +198,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// number { nonzero branch } { zerobranch } IFTE
         /// </summary>
-        private static void IFTE(RPN calc, Stack<AStackItem> stack)
+        private static void IF_THEN_ELSE(RPN calc, Stack<AStackItem> stack)
         {
             var (x, y, z) = stack.Pop3();
             bool condition = z;
@@ -349,6 +352,35 @@ namespace RPNCalc.Extensions
             AStackItem[] array = y.GetArray();
             bool contain = Array.IndexOf(array, x) >= 0;
             stack.Push(contain);
+        }
+
+        private static void TO_LIST(Stack<AStackItem> stack)
+        {
+            int count = (int)Math.Round(stack.Pop().GetRealNumber(), MidpointRounding.AwayFromZero);
+            AStackItem[] array = new AStackItem[count];
+            for (int i = 0; i < count; i++)
+            {
+                array[i] = stack.Pop();
+            }
+            stack.Push(array);
+        }
+
+        private static void EXPLODE_LIST(Stack<AStackItem> stack)
+        {
+            AStackItem[] array = stack.Pop().GetArray();
+            foreach (AStackItem item in array)
+            {
+                stack.Push(item);
+            }
+            stack.Push(array.Length);
+        }
+
+        private static void ROUND(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            int digits = (int)Math.Round(x.GetRealNumber(), MidpointRounding.AwayFromZero);
+            double rounded = Math.Round(y.GetRealNumber(), digits, MidpointRounding.AwayFromZero);
+            stack.Push(rounded);
         }
 
         private static AStackItem CreateComplexNumber(Stack<AStackItem> stack)
