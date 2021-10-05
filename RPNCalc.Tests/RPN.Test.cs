@@ -773,6 +773,21 @@ namespace RPNCalc.Tests
         }
 
         [Test]
-        public void 
+        public void ListOperations()
+        {
+            calc.Eval("[ 1 2 3 'foo' [ 10 ] 'bar' ] 'lst' sto");
+            Assert.IsTrue(calc.Eval("'lst' rcl 'foo' contain"));
+            Assert.IsFalse(calc.Eval("'lst' rcl '3' contain"));
+            Assert.IsTrue(calc.Eval("'lst' rcl 3 contain"));
+            Assert.IsTrue(calc.Eval("'lst' rcl [ 10 ] contain"));
+            Assert.IsFalse(calc.Eval("'lst' rcl [ 20 ] contain"));
+        }
+
+        [Test]
+        public void AlgListOperations()
+        {
+            var result = calc.EvalAlgebraic("contain([1,2,3], 2)");
+            Assert.IsTrue(result);
+        }
     }
 }

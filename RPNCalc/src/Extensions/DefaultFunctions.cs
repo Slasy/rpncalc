@@ -52,6 +52,10 @@ namespace RPNCalc.Extensions
             calc.SetName(">", stack => stack.Func((x, y) => y.GetRealNumber() > x));
             calc.SetName(">=", stack => stack.Func((x, y) => y.GetRealNumber() >= x));
 
+            calc.SetName("HEAD", HEAD);
+            calc.SetName("TAIL", TAIL);
+            calc.SetName("CONTAIN", CONTAIN);
+
             calc.SetCollectionGenerator("[", "]", st => new StackList(st));
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
@@ -281,6 +285,46 @@ namespace RPNCalc.Extensions
                 double varValue = calc.GetNameValue(variableName);
                 calc.SetName(variableName, varValue + stepValue);
             }
+        }
+
+        /// <summary>
+        /// [ a b c d ] -> a
+        /// </summary>
+        private static void HEAD(Stack<AStackItem> stack)
+        {
+            AStackItem[] array = stack.Pop().GetArray();
+            if (array.Length == 0) throw new RPNArgumentException("Empty list");
+            stack.Push(array[0]);
+        }
+
+        /// <summary>
+        /// [ a b c d ] -> [ b c d]
+        /// </summary>
+        private static void TAIL(Stack<AStackItem> stack)
+        {
+            AStackItem[] array = stack.Pop().GetArray();
+            if (array.Length == 0) stack.Push(new StackList());
+            AStackItem[] tail = new AStackItem[array.Length - 1];
+            Array.Copy(array, 1, tail, 0, tail.Length);
+            stack.Push(tail);
+        }
+
+        /// <summary>
+        /// [ list ] item CONTAIN
+        /// </summary>
+        private static void CONTAIN(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            AStackItem[] array = y.GetArray();
+            bool contain = Array.IndexOf(array, x) >= 0;
+            stack.Push(contain);
+        }
+
+        private static AStackItem CreateComplexNumber(Stack<AStackItem> stack)
+        {
+            if (stack.Count != 2) throw new RPNArgumentException("Invalid syntax of complex number");
+            var (i, r) = stack.Pop2();
+            return new StackComplex(r, i);
         }
 
         private static void ExpectedDepthEval<T>(RPN calc, AStackItem[] programInstructions, string programName, int expectedDepth = 1) where T : AStackItem
