@@ -837,5 +837,24 @@ namespace RPNCalc.Tests
             Assert.IsTrue(calc.Eval(@"'sto(3,\'a\')' eval a a * 9 =="));
             Assert.DoesNotThrow(() => calc.Eval(@"'\'foo' head"));
         }
+
+        [Test]
+        public void NamesWithDots()
+        {
+            Assert.DoesNotThrow(() => calc.Eval("123.456 'item.id' sto 'item.id' rcl 456.789 'foo.bar.baz' 3 >list"));
+            Assert.AreEqual(123.456, calc.Eval("'item.id' rcl"));
+            calc.ClearStack();
+            Assert.AreEqual(123.456, calc.Eval("item.id"));
+        }
+
+        [Test]
+        public void NamesWithDotsInAlgebraic()
+        {
+            Assert.DoesNotThrow(() => calc.EvalAlgebraic("sto(123.456,'item.id')"));
+            Assert.DoesNotThrow(() => calc.EvalAlgebraic("sto(123.456, 'item.id') rcl('item.id')"));
+            Assert.AreEqual(123.456, calc.EvalAlgebraic("rcl('item.id')"));
+            calc.ClearStack();
+            Assert.AreEqual(123.456, calc.EvalAlgebraic("item.id"));
+        }
     }
 }

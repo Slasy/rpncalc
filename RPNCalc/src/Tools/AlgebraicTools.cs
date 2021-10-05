@@ -12,8 +12,8 @@ namespace RPNCalc.Tools
         private static readonly Regex negNumberVariable = new(@"^\(((?:\-\d+(?:\.\d+)?(?:e\-?\d+)?)|(?:\-\w+))\)");
         private static readonly Regex op = new(@"^(?:\" + string.Join("|\\", operators) + ")");
         private static readonly Regex func = new(@"^((?:\w+)|(?:\(\-\w+))\(");
-        private static readonly Regex variable = new(@"^\w+");
-        private static readonly Regex text = new(@"^'\w+'");
+        private static readonly Regex variable = new(@"^[_a-zA-Z][\w\.]*");
+        private static readonly Regex text = new("^'.*?'");
         private static readonly Regex[] matchers = new[] { negNumberVariable, number, func, op, variable, text };
 
         /// <summary>
