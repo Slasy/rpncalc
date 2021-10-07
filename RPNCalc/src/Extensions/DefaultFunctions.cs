@@ -66,6 +66,8 @@ namespace RPNCalc.Extensions
             calc.SetName(">LIST", TO_LIST);
             calc.SetName("LIST>", EXPLODE_LIST);
 
+            calc.SetName("TYPE", TYPE);
+
             calc.SetCollectionGenerator("[", "]", st => new StackList(st));
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
@@ -469,6 +471,11 @@ namespace RPNCalc.Extensions
             array[index] = x;
             stack.Push(array);
             stack.Push((index + 1) % array.Length);
+        }
+
+        private static void TYPE(Stack<AStackItem> stack)
+        {
+            stack.Push((int)stack.Pop().type);
         }
 
         private static AStackItem CreateComplexNumber(Stack<AStackItem> stack)
