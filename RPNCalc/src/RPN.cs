@@ -12,6 +12,19 @@ namespace RPNCalc
     /// </summary>
     public class RPN
     {
+        public class Options
+        {
+            /// <summary>Set true if you want variable and function names to be case sensitive.</summary>
+            public bool CaseSensitiveNames { get; set; } = false;
+            /// <summary>Automatically clear stack before each <see cref="Eval(AStackItem[])"/> call.</summary>
+            public bool AlwaysClearStack { get; set; } = true;
+            /// <summary>Load a set of function to new calc instance,
+            /// calculator knows very little without any functions.</summary>
+            public bool LoadDefaultFunctions { get; set; } = true;
+
+            public static Options Default => new();
+        }
+
         /// <summary>
         /// Delegate for all RPN functions/operations, expects to directly operates on stack.
         /// </summary>
@@ -54,7 +67,7 @@ namespace RPNCalc
         protected bool IsUsingMainStack => currentStackInUse == mainStack;
 
         /// <summary>
-        /// <para>RPN calculator, setup default set of functions:</para>
+        /// <para>RPN calculator, some of default functions:</para>
         /// <para>+ - * / ^ addition, subtraction, multiplication, division, exponentiation</para>
         /// <para>+- ++ -- change sign, +1 to variable, -1 from variable</para>
         /// <para>SQ, SQRT : square, square root</para>
@@ -64,15 +77,13 @@ namespace RPNCalc
         /// <para>STO, RCL, EVAL : store variable, recall variable, evaluate/execute program on stack</para>
         /// <para>IFT, IFTE, WHILE : if then, if then else, while loop</para>
         /// </summary>
-        /// <param name="caseSensitiveNames">Set true if you want variable and function names to be case sensitive.</param>
-        /// <param name="alwaysClearStack">Automatically clear stack before each <see cref="Eval(AStackItem[])"/> call.</param>
-        /// <param name="loadDefaultFunctions">Calculator knows very little without any functions.</param>
-        public RPN(bool caseSensitiveNames = false, bool alwaysClearStack = true, bool loadDefaultFunctions = true)
+        public RPN(Options options = null)
         {
-            CaseSensitiveNames = caseSensitiveNames;
-            AlwaysClearStack = alwaysClearStack;
+            options ??= Options.Default;
+            CaseSensitiveNames = options.CaseSensitiveNames;
+            AlwaysClearStack = options.AlwaysClearStack;
             currentStackInUse = mainStack;
-            if (loadDefaultFunctions) this.LoadDefaultFunctions();
+            if (options.LoadDefaultFunctions) this.LoadDefaultFunctions();
         }
 
         /// <summary>
@@ -246,7 +257,7 @@ namespace RPNCalc
             return true;
         }
 
-        private Function GenerateStartCollectionStack(string startSymbol)
+        protected Function GenerateStartCollectionStack(string startSymbol)
         {
             return _ =>
             {
@@ -255,7 +266,7 @@ namespace RPNCalc
             };
         }
 
-        private Function GenerateEndCollectionStack(string startSymbol, string endSymbol, Func<Stack<AStackItem>, AStackItem> collectionConstructor)
+        protected Function GenerateEndCollectionStack(string startSymbol, string endSymbol, Func<Stack<AStackItem>, AStackItem> collectionConstructor)
         {
             return _ =>
             {

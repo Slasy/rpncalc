@@ -13,7 +13,7 @@ namespace RPNCalc.StackItems
 
         public bool Equals(string other) => value == other;
 
-        public override string ToString() => $"'{value}'";
+        public override string ToString() => $"'{value.Replace("'", "\\'")}'";
 
         public override bool Equals(AStackItem other) => other is StackString str && value == str.value;
     }

@@ -12,7 +12,7 @@ namespace RPNCalc.Tests
         [SetUp]
         public void Setup()
         {
-            calc = new RPN(true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
         }
 
         [Test]

@@ -15,7 +15,7 @@ namespace RPNCalc.Tests
         [SetUp]
         public void Setup()
         {
-            calc = new RPN(alwaysClearStack: false);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false });
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SettingNotCaseSensitiveVariablesAndFunctions()
         {
-            calc = new RPN(false);
+            calc = new RPN(new RPN.Options { CaseSensitiveNames = false });
 
             calc.SetName("Foo", 123);
             Assert.IsTrue(calc.Names.ContainsKey("foo"));
@@ -71,7 +71,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SettingCaseSensitiveVariablesAndFunctions()
         {
-            calc = new RPN(true);
+            calc = new RPN(new RPN.Options { CaseSensitiveNames = true });
 
             calc.SetName("Foo", 123);
             Assert.IsTrue(calc.Names.ContainsKey("Foo"));
@@ -163,7 +163,7 @@ namespace RPNCalc.Tests
         [Test]
         public void KeepStackInMacro()
         {
-            calc = new RPN(true, true);
+            calc = new RPN(new RPN.Options { CaseSensitiveNames = true, AlwaysClearStack = true });
             calc.Eval("1 2");
             calc.SetName("foo", new[] { new StackName("DUP"), new StackName("*"), new StackName("+") });
             calc.Eval("10 20 foo");
@@ -346,7 +346,7 @@ namespace RPNCalc.Tests
         [Test]
         public void ClearVariable()
         {
-            calc = new RPN(alwaysClearStack: false);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false });
             calc.SetName("foo", "foobar");
             CollectionAssert.Contains(calc.Names.Keys, "foo");
             Assert.AreEqual("foobar", calc.Names["foo"]);
@@ -374,14 +374,14 @@ namespace RPNCalc.Tests
         [Test]
         public void FailSummingIncompatibleTypes()
         {
-            calc = new RPN(alwaysClearStack: true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             Assert.Throws<RPNFunctionException>(() => calc.Eval("{ dup } { sto } +"));
         }
 
         [Test]
         public void IfThen()
         {
-            calc = new RPN(alwaysClearStack: true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             string result = calc.Eval("10 10 == { 'yes 10 == 10' } ift");
             Assert.AreEqual("yes 10 == 10", result);
             var emptyResult = calc.Eval(" 10 10 != { 'yes 10 != 10' } ift");
@@ -391,7 +391,7 @@ namespace RPNCalc.Tests
         [Test]
         public void IfThenElse()
         {
-            calc = new RPN(alwaysClearStack: true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             string result = calc.Eval("10 10 == { 'yes 10 == 10' } {'nope 10 != 10'} ifte");
             Assert.AreEqual("yes 10 == 10", result);
             var emptyResult = calc.Eval("10 10 != { 'yes 10 != 10' } {'nope 10 == 10'} ifte");
@@ -482,7 +482,7 @@ namespace RPNCalc.Tests
         [Test]
         public void Loop()
         {
-            calc = new RPN(alwaysClearStack: true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             Assert.True(calc.Eval("10 'i' sto 'i' 20 1 { i } loop dup 20 =="));
             CollectionAssert.AreEqual(new[] { 1, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10 }, calc.StackView);
             Assert.True(calc.Eval("10 'i' sto 'i' 5 -1 { i } loop dup 5 =="));
@@ -514,7 +514,7 @@ namespace RPNCalc.Tests
         [Test]
         public void ThrowsOnIncorrectCollectionSymbols()
         {
-            calc = new RPN(false, true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             Assert.Throws<RPNFunctionException>(() => calc.Eval("[ 10 >>"));
             Assert.DoesNotThrow(() => calc.Eval("[ << 10 >> ]"));
         }
@@ -628,7 +628,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SqueakyCleanCalc()
         {
-            calc = new RPN(false, false, false);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, LoadDefaultFunctions = false });
             calc.Eval("10 20 3.14");
             CollectionAssert.AreEqual(new[] { 3.14, 20, 10 }, calc.StackView);
             calc.Eval("'foo bar'");
@@ -647,7 +647,7 @@ namespace RPNCalc.Tests
         [Test]
         public void MinimalCalc()
         {
-            calc = new RPN(false, false, false);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, LoadDefaultFunctions = false });
             calc.SetName("add2numbers", st => { var (x, y) = st.Pop2(); st.Push(x.GetRealNumber() + y); });
             calc.SetName("giv4pls", st => st.Push(4)); // https://xkcd.com/221/
             calc.EvalAlgebraic("add2numbers(giv4pls(),giv4pls())");
@@ -658,7 +658,7 @@ namespace RPNCalc.Tests
         [Test]
         public void MoreComplexAlgExpression()
         {
-            calc = new RPN(false, false);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false });
             calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
             calc.SetName("cos", st => st.Push(Math.Cos(st.Pop())));
             calc.SetName("tan", st => st.Push(Math.Tan(st.Pop())));
@@ -740,7 +740,7 @@ namespace RPNCalc.Tests
         [Test]
         public void ComplexAndRealNumbersOperations()
         {
-            calc = new RPN(alwaysClearStack: true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             Assert.AreEqual(new Complex(10, 20) * 2, calc.Eval("( 10 20 ) 2 *"));
             Assert.AreEqual(new Complex(10, 20) + 2, calc.Eval("( 10 20 ) 2 +"));
             Assert.AreEqual(new Complex(10, 20) - 2, calc.Eval("( 10 20 ) 2 -"));
@@ -751,7 +751,7 @@ namespace RPNCalc.Tests
         [Test]
         public void ComplexAndComplexNumbersOperations()
         {
-            calc = new RPN(alwaysClearStack: true);
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             Assert.AreEqual(new Complex(10, 20) * new Complex(2, 3), calc.Eval("( 10 20 ) ( 2 3 ) *"));
             Assert.AreEqual(new Complex(10, 20) + new Complex(2, 3), calc.Eval("( 10 20 ) ( 2 3 ) +"));
             Assert.AreEqual(new Complex(10, 20) - new Complex(2, 3), calc.Eval("( 10 20 ) ( 2 3 ) -"));
@@ -855,6 +855,89 @@ namespace RPNCalc.Tests
             Assert.AreEqual(123.456, calc.EvalAlgebraic("rcl('item.id')"));
             calc.ClearStack();
             Assert.AreEqual(123.456, calc.EvalAlgebraic("item.id"));
+        }
+
+        [Test]
+        public void Rounding()
+        {
+            Assert.AreEqual(-2, calc.Eval("-2.49999 0 rnd"));
+            Assert.AreEqual(-2, calc.Eval("-2 0 rnd"));
+            Assert.AreEqual(-2, calc.Eval("-1.5 0 rnd"));
+            Assert.AreEqual(2, calc.Eval("1.5 0 rnd"));
+            Assert.AreEqual(2, calc.Eval("2 0 rnd"));
+            Assert.AreEqual(2, calc.Eval("2.49999 0 rnd"));
+
+            Assert.AreEqual(-2.5, calc.Eval("-2.49999 2 rnd"));
+            Assert.AreEqual(-2, calc.Eval("-2 2 rnd"));
+            Assert.AreEqual(-1.5, calc.Eval("-1.5 2 rnd"));
+            Assert.AreEqual(1.5, calc.Eval("1.5 2 rnd"));
+            Assert.AreEqual(2, calc.Eval("2 2 rnd"));
+            Assert.AreEqual(2.5, calc.Eval("2.49999 2 rnd"));
+        }
+
+        [Test]
+        public void RoundingMacro()
+        {
+            Assert.AreEqual(-2, calc.Eval("-2.49999 rnd0"));
+            Assert.AreEqual(-2, calc.Eval("-2 rnd0"));
+            Assert.AreEqual(-2, calc.Eval("-1.5 rnd0"));
+            Assert.AreEqual(2, calc.Eval("1.5 rnd0"));
+            Assert.AreEqual(2, calc.Eval("2 rnd0"));
+            Assert.AreEqual(2, calc.Eval("2.49999 rnd0"));
+        }
+
+        [Test]
+        public void IndexOfItemInArrayAndString()
+        {
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
+            Assert.AreEqual(0, calc.Eval("[ 10 20 30 ] 10 pos"));
+            Assert.AreEqual(1, calc.Eval("[ 10 20 30 ] 20 pos"));
+            Assert.AreEqual(2, calc.Eval("[ 10 20 30 ] 30 pos"));
+            Assert.AreEqual(-1, calc.Eval("[ 10 20 30 ] 40 pos"));
+            Assert.AreEqual(4, calc.Eval("[ 10 20 30 '40' 40 ] 40 pos"));
+            Assert.AreEqual(3, calc.Eval("[ 10 20 30 '40' 40 ] '40' pos"));
+
+            Assert.AreEqual(0, calc.Eval("'foobar123' 'f' pos"));
+            Assert.AreEqual(1, calc.Eval("'foobar123' 'o' pos"));
+            Assert.AreEqual(2, calc.Eval("'foobar123' 'ob' pos"));
+            Assert.AreEqual(7, calc.Eval("'foobar123' '2' pos"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("'foobar123' 2 pos"));
+        }
+
+        [Test]
+        public void AccessingIndexes()
+        {
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
+            Assert.AreEqual(10, calc.Eval("[ 10 20 30 ] 0 get"));
+            Assert.AreEqual(20, calc.Eval("[ 10 20 30 ] 1 get"));
+            Assert.AreEqual(30, calc.Eval("[ 10 20 30 ] 2 get"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("[ 10 20 30 ] 3 get"));
+
+            Assert.AreEqual("f", calc.Eval("'foobar' 0 get"));
+            Assert.AreEqual("o", calc.Eval("'foobar' 1 get"));
+            Assert.AreEqual("b", calc.Eval("'foobar' 3 get"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("'foobar' 99 get"));
+        }
+
+        [Test]
+        public void AutoIndexing()
+        {
+            calc = new RPN(new RPN.Options { AlwaysClearStack = true });
+            Assert.AreEqual(10, calc.Eval("[ 10 20 30 ] 0 geti"));
+            CollectionAssert.AreEqual(new AStackItem[] { 10, 1, StackList.From(10, 20, 30) }, calc.StackView);
+            Assert.AreEqual(20, calc.Eval("[ 10 20 30 ] 1 geti"));
+            CollectionAssert.AreEqual(new AStackItem[] { 20, 2, StackList.From(10, 20, 30) }, calc.StackView);
+            Assert.AreEqual(30, calc.Eval("[ 10 20 30 ] 2 geti"));
+            CollectionAssert.AreEqual(new AStackItem[] { 30, 0, StackList.From(10, 20, 30) }, calc.StackView);
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("[ 10 20 30 ] 3 geti"));
+
+            Assert.AreEqual("f", calc.Eval("'foobar' 0 geti"));
+            CollectionAssert.AreEqual(new AStackItem[] { "f", 1, "foobar" }, calc.StackView);
+            Assert.AreEqual("o", calc.Eval("'foobar' 1 geti"));
+            CollectionAssert.AreEqual(new AStackItem[] { "o", 2, "foobar" }, calc.StackView);
+            Assert.AreEqual("b", calc.Eval("'foobar' 3 geti"));
+            CollectionAssert.AreEqual(new AStackItem[] { "b", 4, "foobar" }, calc.StackView);
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("'foobar' 99 geti"));
         }
     }
 }

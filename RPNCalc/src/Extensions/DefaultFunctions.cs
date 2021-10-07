@@ -7,7 +7,8 @@ namespace RPNCalc.Extensions
 {
     public static class DefaultFunctions
     {
-        private static RPNFunctionException UndefinedResult => new RPNFunctionException("Undefined result");
+        private static RPNFunctionException UndefinedResult => new("Undefined result");
+        private static RPNArgumentException IndexOutOfRange => new("Index out of range");
 
         /// <summary>
         /// If you clear all names from calclulator, you can use this extension to get default functions back.
@@ -39,6 +40,7 @@ namespace RPNCalc.Extensions
             calc.SetName("STO", st => STORE(calc, st));
             calc.SetName("RCL", st => RECALL(calc, st));
             calc.SetName("RND", ROUND);
+            calc.SetName("RND0", CreateMacro("0 RND"));
 
             calc.SetName("IFT", st => IF_THEN(calc, st));
             calc.SetName("IFTE", st => IF_THEN_ELSE(calc, st));
@@ -56,6 +58,11 @@ namespace RPNCalc.Extensions
             calc.SetName("HEAD", HEAD);
             calc.SetName("TAIL", TAIL);
             calc.SetName("CONTAIN", CONTAIN);
+            calc.SetName("POS", POSTION);
+            calc.SetName("GET", GET_FROM_LIST);
+            calc.SetName("GETI", GET_INC_FROM_LIST);
+            calc.SetName("PUT", PUT_TO_LIST);
+            calc.SetName("PUTI", PUT_INC_TO_LIST);
             calc.SetName(">LIST", TO_LIST);
             calc.SetName("LIST>", EXPLODE_LIST);
 
@@ -63,6 +70,8 @@ namespace RPNCalc.Extensions
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
         }
+
+        private static AStackItem[] CreateMacro(string expression) => RPNTools.TokensToItems(RPNTools.GetTokens(expression));
 
         private static void EVAL(RPN calc, Stack<AStackItem> stack)
         {
@@ -342,25 +351,36 @@ namespace RPNCalc.Extensions
         /// </summary>
         private static void CONTAIN(Stack<AStackItem> stack)
         {
+            stack.Push(Position(stack) >= 0);
+        }
+
+        private static void POSTION(Stack<AStackItem> stack)
+        {
+            stack.Push(Position(stack));
+        }
+
+        private static int Position(Stack<AStackItem> stack)
+        {
             var (x, y) = stack.Pop2();
             if (y is StackString str)
             {
                 string subStr = x.GetString();
-                stack.Push(str.value.IndexOf(subStr) >= 0);
-                return;
+                return str.value.IndexOf(subStr);
             }
             AStackItem[] array = y.GetArray();
-            bool contain = Array.IndexOf(array, x) >= 0;
-            stack.Push(contain);
+            return Array.IndexOf(array, x);
         }
 
+        /// <summary>
+        /// a b c d 2 -> a b [ c d ]
+        /// </summary>
         private static void TO_LIST(Stack<AStackItem> stack)
         {
-            int count = (int)Math.Round(stack.Pop().GetRealNumber(), MidpointRounding.AwayFromZero);
+            int count = GetInteger(stack.Pop());
             AStackItem[] array = new AStackItem[count];
             for (int i = 0; i < count; i++)
             {
-                array[i] = stack.Pop();
+                array[array.Length - i - 1] = stack.Pop();
             }
             stack.Push(array);
         }
@@ -375,12 +395,80 @@ namespace RPNCalc.Extensions
             stack.Push(array.Length);
         }
 
+        /// <summary>
+        /// 0.6789 2 -> 0.68
+        /// </summary>
         private static void ROUND(Stack<AStackItem> stack)
         {
             var (x, y) = stack.Pop2();
-            int digits = (int)Math.Round(x.GetRealNumber(), MidpointRounding.AwayFromZero);
+            int digits = GetInteger(x);
             double rounded = Math.Round(y.GetRealNumber(), digits, MidpointRounding.AwayFromZero);
             stack.Push(rounded);
+        }
+
+        /// <summary>
+        /// [ a b c d ] 2 -> c
+        /// </summary>
+        private static void GET_FROM_LIST(Stack<AStackItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            int index = GetInteger(x);
+            if (y is StackString str)
+            {
+                if (str.value.Length <= index || index < 0) throw IndexOutOfRange;
+                stack.Push(str.value[index].ToString());
+                return;
+            }
+            var array = y.GetArray();
+            if (array.Length <= index || index < 0) throw IndexOutOfRange;
+            stack.Push(array[index]);
+        }
+
+        /// <summary>
+        /// [ a b c d ] 2 -> [ a b c d ] 3 c
+        /// </summary>
+        private static void GET_INC_FROM_LIST(Stack<AStackItem> stack)
+        {
+            var index = GetInteger(stack.Pop());
+            var y = stack.Peek();
+            if (y is StackString str)
+            {
+                if (str.value.Length <= index || index < 0) throw IndexOutOfRange;
+                stack.Push((index + 1) % str.value.Length);
+                stack.Push(str.value[index].ToString());
+                return;
+            }
+            var array = y.GetArray();
+            if (array.Length <= index || index < 0) throw IndexOutOfRange;
+            stack.Push((index + 1) % array.Length);
+            stack.Push(array[index]);
+        }
+
+        /// <summary>
+        /// [ a b c d ] 1 X -> [ a X c d ]
+        /// </summary>
+        private static void PUT_TO_LIST(Stack<AStackItem> stack)
+        {
+            var (x, y, z) = stack.Pop3();
+            int index = GetInteger(y);
+            var array = z.GetArray();
+            if (array.Length <= index || index < 0) throw IndexOutOfRange;
+            array[index] = x;
+            stack.Push(array);
+        }
+
+        /// <summary>
+        /// [ a b c d ] 1 X -> [ a X c d ] 2
+        /// </summary>
+        private static void PUT_INC_TO_LIST(Stack<AStackItem> stack)
+        {
+            var (x, y, z) = stack.Pop3();
+            int index = GetInteger(y);
+            var array = z.GetArray();
+            if (array.Length <= index || index < 0) throw IndexOutOfRange;
+            array[index] = x;
+            stack.Push(array);
+            stack.Push((index + 1) % array.Length);
         }
 
         private static AStackItem CreateComplexNumber(Stack<AStackItem> stack)
@@ -403,6 +491,11 @@ namespace RPNCalc.Extensions
             string varName = stack.Pop().GetString();
             double number = calc.GetNameValue(varName);
             calc.SetName(varName, number + valueToAdd);
+        }
+
+        private static int GetInteger(AStackItem item)
+        {
+            return (int)Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
         }
     }
 }
