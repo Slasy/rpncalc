@@ -31,6 +31,16 @@ namespace RPNCalc
         public delegate void Function(Stack<AStackItem> stack);
 
         /// <summary>
+        /// Called before each evaluated instruction.
+        /// </summary>
+        public event Action<RPN, AStackItem> ProgramStepBefore;
+
+        /// <summary>
+        /// Called after each evaluated instruction.
+        /// </summary>
+        public event Action<RPN, AStackItem> ProgramStepAfter;
+
+        /// <summary>
         /// Collection of all currently accessible names and usable in this calculator.
         /// </summary>
         public IReadOnlyDictionary<string, AStackItem> Names => names;
@@ -138,6 +148,7 @@ namespace RPNCalc
         /// <param name="evalPrograms">Set to false to just push a program or name to stack without evaluating</param>
         public void EvalItem(AStackItem item, bool evalPrograms)
         {
+            ProgramStepBefore?.Invoke(this, item);
             switch (item)
             {
                 case StackProgram prog when evalPrograms:
@@ -159,6 +170,7 @@ namespace RPNCalc
                     currentStackInUse.Push(item);
                     break;
             }
+            ProgramStepAfter?.Invoke(this, item);
         }
 
         /// <summary>
