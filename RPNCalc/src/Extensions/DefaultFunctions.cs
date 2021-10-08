@@ -72,6 +72,8 @@ namespace RPNCalc.Extensions
             calc.SetCollectionGenerator("[", "]", st => new StackList(st));
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
+
+            calc.SetName("END", _ => calc.StopProgram = true);
         }
 
         private static AStackItem[] CreateMacro(string expression) => RPNTools.TokensToItems(RPNTools.GetTokens(expression));

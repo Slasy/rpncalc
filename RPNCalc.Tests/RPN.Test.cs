@@ -941,5 +941,15 @@ namespace RPNCalc.Tests
             CollectionAssert.AreEqual(new AStackItem[] { "b", 4, "foobar" }, calc.StackView);
             Assert.Throws<RPNArgumentException>(() => calc.Eval("'foobar' 99 geti"));
         }
+
+        [Test]
+        public void EndProgram()
+        {
+            Assert.AreEqual(3, calc.Eval("{ 1 2 3 end 4 5 6 } eval"));
+            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, calc.StackView);
+            calc.ClearStack();
+            Assert.AreEqual(2, calc.Eval("{ 1 2 end 3 4 } 'prog' sto prog"));
+            CollectionAssert.AreEqual(new[] { 2, 1 }, calc.StackView);
+        }
     }
 }

@@ -54,6 +54,11 @@ namespace RPNCalc
         /// <summary>Names (and function names) are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
+        /// <summary>
+        /// Set to stop currently running calculator program.
+        /// </summary>
+        public bool StopProgram { protected get; set; }
+
         protected readonly Stack<AStackItem> mainStack = new();
         protected readonly StringBuilder buffer = new();
         /// <summary>Used to "buffer" multiple items to collection (list, program, whatever...)</summary>
@@ -116,6 +121,11 @@ namespace RPNCalc
             foreach (AStackItem item in items)
             {
                 EvalItem(item, evalPrograms);
+                if (StopProgram)
+                {
+                    StopProgram = false;
+                    break;
+                }
             }
             if (mainStack.Count == 0) return null;
             return mainStack.Peek();
