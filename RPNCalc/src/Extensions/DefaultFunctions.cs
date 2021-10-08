@@ -65,6 +65,7 @@ namespace RPNCalc.Extensions
             calc.SetName("PUTI", PUT_INC_TO_LIST);
             calc.SetName(">LIST", TO_LIST);
             calc.SetName("LIST>", EXPLODE_LIST);
+            calc.SetName("SIZE", SIZE);
 
             calc.SetName("TYPE", TYPE);
 
@@ -387,6 +388,9 @@ namespace RPNCalc.Extensions
             stack.Push(array);
         }
 
+        /// <summary>
+        /// [ a b c ] -> a b c 3
+        /// </summary>
         private static void EXPLODE_LIST(Stack<AStackItem> stack)
         {
             AStackItem[] array = stack.Pop().GetArray();
@@ -476,6 +480,17 @@ namespace RPNCalc.Extensions
         private static void TYPE(Stack<AStackItem> stack)
         {
             stack.Push((int)stack.Pop().type);
+        }
+
+        private static void SIZE(Stack<AStackItem> stack)
+        {
+            int size = stack.Pop() switch
+            {
+                StackList list => list.value.Length,
+                StackString str => str.value.Length,
+                _ => 1,
+            };
+            stack.Push(size);
         }
 
         private static AStackItem CreateComplexNumber(Stack<AStackItem> stack)
