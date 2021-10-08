@@ -483,14 +483,16 @@ namespace RPNCalc.Tests
         public void Loop()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = true });
-            Assert.True(calc.Eval("10 'i' sto 'i' 20 1 { i } loop dup 20 =="));
-            CollectionAssert.AreEqual(new[] { 1, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10 }, calc.StackView);
-            Assert.True(calc.Eval("10 'i' sto 'i' 5 -1 { i } loop dup 5 =="));
-            CollectionAssert.AreEqual(new[] { 1, 5, 6, 7, 8, 9, 10 }, calc.StackView);
-            Assert.True(calc.Eval("-10 'i' sto 'i' -5 1 { i } loop dup -5 =="));
-            CollectionAssert.AreEqual(new[] { 1, -5, -6, -7, -8, -9, -10 }, calc.StackView);
-            Assert.True(calc.Eval("-5 'i' sto 'i' -10 -1 { i } loop dup -10 =="));
-            CollectionAssert.AreEqual(new[] { 1, -10, -9, -8, -7, -6, -5 }, calc.StackView);
+            Assert.True(calc.Eval("10 'i' sto 'i' 20 1 { i } loop dup 19 =="));
+            CollectionAssert.AreEqual(new[] { 1, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10 }, calc.StackView);
+            Assert.True(calc.Eval("10 'i' sto 'i' 5 -1 { i } loop dup 6 =="));
+            CollectionAssert.AreEqual(new[] { 1, 6, 7, 8, 9, 10 }, calc.StackView);
+            Assert.True(calc.Eval("-10 'i' sto 'i' -5 1 { i } loop dup -6 =="));
+            CollectionAssert.AreEqual(new[] { 1, -6, -7, -8, -9, -10 }, calc.StackView);
+            Assert.True(calc.Eval("-5 'i' sto 'i' -10 -1 { i } loop dup -9 =="));
+            CollectionAssert.AreEqual(new[] { 1, -9, -8, -7, -6, -5 }, calc.StackView);
+            Assert.IsNull(calc.Eval("0 'i' sto 'i' 0 1 { i } loop"));
+            Assert.AreEqual(0, calc.Eval("0 'i' sto 'i' 1 1 { i } loop"));
         }
 
         [Test]

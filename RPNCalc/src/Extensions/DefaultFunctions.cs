@@ -280,7 +280,7 @@ namespace RPNCalc.Extensions
             var programLoop = x.GetProgramInstructions();
             double stepValue = y;
             double endValue = z;
-            if (!z) throw new RPNArgumentException("Step value is zero");
+            if (!y) throw new RPNArgumentException("Step value is zero");
             string variableName = t;
             for (; condition(); step())
             {
@@ -290,8 +290,8 @@ namespace RPNCalc.Extensions
             bool condition()
             {
                 double varValue = calc.GetNameValue(variableName);
-                if (stepValue > 0) return varValue <= endValue;
-                else return varValue >= endValue;
+                if (stepValue > 0) return varValue < endValue;
+                else return varValue > endValue;
             }
 
             void step()
