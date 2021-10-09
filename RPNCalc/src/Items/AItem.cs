@@ -54,6 +54,18 @@ namespace RPNCalc.Items
         public static implicit operator AItem(AItem[] list) => new ListItem(list);
         public static implicit operator Complex(AItem item) => item.GetComplex();
 
+        public T EnsureType<T>() where T : AItem
+        {
+            EnsureType(out T typed);
+            return typed;
+        }
+
+        public void EnsureType<T>(out T typedItem) where T : AItem
+        {
+            if (this is T realType) typedItem = realType;
+            else throw new RPNArgumentException("Bad argument type");
+        }
+
         public override bool Equals(object obj) => throw new InvalidOperationException($"Use generic {nameof(AItem)}");
         public override int GetHashCode() => throw new InvalidOperationException($"Use generic {nameof(AItem)}");
     }

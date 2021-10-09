@@ -28,6 +28,13 @@ namespace RPNCalc
             public static Options Default => new();
         }
 
+        public enum Namespace
+        {
+            Default,
+            Global,
+            Local,
+        }
+
         /// <summary>
         /// Delegate for all RPN functions/operations, expects to directly operates on stack.
         /// </summary>
@@ -168,7 +175,7 @@ namespace RPNCalc
                 case ProgramItem:
                     currentStackInUse.Push(item);
                     break;
-                case Items.FunctionItem function:
+                case FunctionItem function:
                     if (IsUsingMainStack || IsWhiteListFunction(function.name)) function.value(currentStackInUse);
                     else currentStackInUse.Push(new NameItem(function.name));
                     break;
@@ -203,24 +210,37 @@ namespace RPNCalc
         /// Set custom variable for this calculator instance.
         /// </summary>
         /// <param name="name">variable name</param>
-        /// <param name="value">value or null to remove variable</param>
-        /// <param name="globalNamesOnly">force seting global name space even when running in local name space</param>
+        /// <param name="value">value</param>
+        /// <param name="namespaceType"></param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
-        public void SetName(string name, AItem value, bool globalNamesOnly = false)
+        public void SetName(string name, AItem value, Namespace namespaceType = Namespace.Default)
         {
             EnsureValidName(name);
+            if (value is null) throw new RPNArgumentException($"Can't set {name} to null");
             name = GetKeyName(name);
-            if (value is null)
+            if (namespaceType == Namespace.Default)
             {
-                if (globalNamesOnly || localNames.Count == 0 || !localNames.Peek().Remove(name))
+                if (localNames.Count > 0)
                 {
-                    globalNames.Remove(name);
+                    Dictionary<string, AItem> @namespace = GetNameSpaceWithName(name);
+                    if (@namespace is null || @namespace == globalNames)
+                    {
+                        localNames.Peek()[name] = value;
+                    }
+                    else
+                    {
+                        @namespace[name] = value;
+                    }
+                }
+                else
+                {
+                    globalNames[name] = value;
                 }
             }
-            else
+            else if (namespaceType == Namespace.Local)
             {
-                if (!globalNamesOnly && localNames.Count > 0)
+                if (localNames.Count > 0)
                 {
                     localNames.Peek()[name] = value;
                 }
@@ -228,6 +248,10 @@ namespace RPNCalc
                 {
                     globalNames[name] = value;
                 }
+            }
+            else
+            {
+                globalNames[name] = value;
             }
         }
 
@@ -249,7 +273,8 @@ namespace RPNCalc
         /// <exception cref="ArgumentNullException"/>
         public void SetName(string name, AItem[] instructions)
         {
-            if (instructions is null) SetName(name, (Function)null);
+            EnsureValidName(name);
+            if (instructions is null) throw new RPNArgumentException($"Can't set name {name} to null");
             else SetName(name, _ => EvalItems(instructions, false));
         }
 
@@ -260,42 +285,73 @@ namespace RPNCalc
             SetFunction(endSymbol, GenerateEndCollectionStack(startSymbol, endSymbol, collectionGenerator), true);
         }
 
-        public void RemoveName(string name)
+        public void RemoveName(string name, Namespace namespaceType = Namespace.Default)
         {
-            globalNames.Remove(GetKeyName(name));
-            functionWhiteList.Remove(GetKeyName(name));
+            EnsureValidName(name);
+            name = GetKeyName(name);
+            if (namespaceType == Namespace.Default)
+            {
+                Dictionary<string, AItem> @namespace = GetNameSpaceWithName(name);
+                if (@namespace is null) return;
+                @namespace.Remove(name);
+                if (@namespace == globalNames) functionWhiteList.Remove(name);
+            }
+            else if (namespaceType == Namespace.Global)
+            {
+                globalNames.Remove(name);
+                functionWhiteList.Remove(name);
+            }
+            else if (LocalNames.Count > 0)
+            {
+                localNames.Peek().Remove(name);
+            }
         }
 
-        public AItem GetNameValue(string varName, bool globalNamesOnly = false)
+        public AItem GetNameValue(string name, Namespace namespaceType = Namespace.Default)
         {
-            if (!globalNamesOnly && localNames.Count > 0 && localNames.Peek().TryGetValue(varName, out var localItem))
+            EnsureValidName(name);
+            name = GetKeyName(name);
+            if (namespaceType == Namespace.Global)
             {
-                return localItem;
+                if (globalNames.TryGetValue(name, out var value)) return value;
             }
-            if (globalNames.TryGetValue(GetKeyName(varName), out var globalItem))
+            else if (namespaceType == Namespace.Default)
             {
-                return globalItem;
+                Dictionary<string, AItem> @namespace = GetNameSpaceWithName(name);
+                if (@namespace is not null) return @namespace[name];
             }
-            throw new RPNUndefinedNameException($"Unknown name {varName}");
+            else if (localNames.Count > 0)
+            {
+                if (localNames.Peek().TryGetValue(name, out var value)) return value;
+            }
+            throw new RPNUndefinedNameException($"Unknown name {name}");
+        }
+
+        protected Dictionary<string, AItem> GetNameSpaceWithName(string name)
+        {
+            EnsureValidName(name);
+            name = GetKeyName(name);
+            for (int i = 0; i < localNames.Count; i++)
+            {
+                if (localNames[i].ContainsKey(name))
+                {
+                    return localNames[i];
+                }
+            }
+            if (globalNames.ContainsKey(name)) return globalNames;
+            return null;
         }
 
         protected void SetFunction(string name, Function function, bool alsoAddToWhiteList)
         {
             EnsureValidName(name);
+            if (function is null) throw new RPNArgumentException("Can't set function {name} to null");
             name = GetKeyName(name);
-            if (function is null)
-            {
-                globalNames.Remove(name);
-                functionWhiteList.Remove(name);
-            }
-            else
-            {
-                globalNames[name] = new Items.FunctionItem(name, function);
-                if (alsoAddToWhiteList) functionWhiteList.Add(name);
-            }
+            globalNames[name] = new FunctionItem(name, function);
+            if (alsoAddToWhiteList) functionWhiteList.Add(name);
         }
 
-        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name));
+        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetNameSpaceWithName(name) == globalNames;
         protected void EnsureValidName(string name)
         {
             //if (name is null) throw new RPNArgumentException($"Name is null");

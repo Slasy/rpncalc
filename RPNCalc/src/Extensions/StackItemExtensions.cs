@@ -27,6 +27,12 @@ namespace RPNCalc.Extensions
             return item.ToString();
         }
 
+        public static ProgramItem GetProgram(this AItem item)
+        {
+            EnsureType<ProgramItem>(item, out var program);
+            return program;
+        }
+
         public static AItem[] GetProgramInstructions(this AItem item)
         {
             EnsureType<ProgramItem>(item, out var program);
@@ -70,10 +76,9 @@ namespace RPNCalc.Extensions
         private static void EnsureType<T>(AItem item, out T typedItem) where T : AItem
         {
             EnsureNotNull(item);
-            if (item is T realType) typedItem = realType;
-            else throw BadArgumentException;
+            item.EnsureType(out typedItem);
         }
 
-        private static RPNArgumentException BadArgumentException => new RPNArgumentException("Bad argument type");
+        private static RPNArgumentException BadArgumentException => new("Bad argument type");
     }
 }

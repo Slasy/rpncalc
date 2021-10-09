@@ -8,14 +8,24 @@ using RPNCalc.Tools;
 
 namespace RPNCalc.Tests
 {
+    [Timeout(3000)]
     public class RPNTest
     {
         private RPN calc;
+
+        [System.Diagnostics.DebuggerHidden]
+        [System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugBreak()
+        {
+            if (System.Diagnostics.Debugger.IsAttached)
+                System.Diagnostics.Debugger.Break();
+        }
 
         [SetUp]
         public void Setup()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = false });
+            calc.SetName("_DBG_", _ => DebugBreak());
         }
 
         [Test]
@@ -980,7 +990,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SetGlobalValue()
         {
-            Assert.AreEqual(123, calc.Eval("123 'foo' sto { 666 'foo' sto } eval 'foo' rcl"));
+            Assert.AreEqual(123, calc.Eval("123 'foo' sto { 666 'foo' lsto } eval 'foo' rcl"));
             Assert.AreEqual(666, calc.Eval("{ 666 'foo' gsto } eval 'foo' rcl"));
         }
 
@@ -1021,6 +1031,27 @@ namespace RPNCalc.Tests
             calc.Eval(@"'[ 123 456 \'foo\' ]' str> list>");
             Assert.AreEqual(new AItem[] { 3, "foo", 456, 123 }, calc.StackView);
             Assert.AreEqual(30, calc.Eval("'{ 10 20 + } eval' str>"));
+        }
+
+        [Test]
+        public void MultiLayerLocalNames()
+        {
+            calc.Eval(@"
+                111 'var' sto
+                {
+                    222 'var' lsto
+                    0 'i' lsto
+                    _DBG_
+                    'i' 5 1 {
+                        _DBG_
+                        var i + 'var' sto
+                    } loop
+                    _DBG_
+                    var
+                    'var' grcl
+                } eval");
+            CollectionAssert.AreEqual(new[] { 111, 222 + 0 + 1 + 2 + 3 + 4 }, calc.StackView);
+            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'i' rcl"));
         }
     }
 }

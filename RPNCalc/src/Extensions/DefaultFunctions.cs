@@ -37,10 +37,12 @@ namespace RPNCalc.Extensions
             calc.SetName("CLST", CLEAR_STACK);
             calc.SetName("CLV", st => CLEAR_VAR(calc, st));
             calc.SetName("EVAL", st => EVAL(calc, st));
-            calc.SetName("STO", st => STORE(calc, st, false));
-            calc.SetName("RCL", st => RECALL(calc, st, false));
-            calc.SetName("GSTO", st => STORE(calc, st, true));
-            calc.SetName("GRCL", st => RECALL(calc, st, true));
+            calc.SetName("STO", st => STORE(calc, st, RPN.Namespace.Default));
+            calc.SetName("RCL", st => RECALL(calc, st, RPN.Namespace.Default));
+            calc.SetName("GSTO", st => STORE(calc, st, RPN.Namespace.Global));
+            calc.SetName("GRCL", st => RECALL(calc, st, RPN.Namespace.Global));
+            calc.SetName("LSTO", st => STORE(calc, st, RPN.Namespace.Local));
+            calc.SetName("LRCL", st => RECALL(calc, st, RPN.Namespace.Local));
             calc.SetName("RND", ROUND);
             calc.SetName("RND0", CreateMacro("0 RND"));
 
@@ -179,17 +181,17 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void STORE(RPN calc, Stack<AItem> stack, bool global)
+        private static void STORE(RPN calc, Stack<AItem> stack, RPN.Namespace @namespace)
         {
             string name = stack.Pop();
             var value = stack.Pop();
-            calc.SetName(name, value, global);
+            calc.SetName(name, value, @namespace);
         }
 
-        private static void RECALL(RPN calc, Stack<AItem> stack, bool global)
+        private static void RECALL(RPN calc, Stack<AItem> stack, RPN.Namespace @namespace)
         {
             string name = stack.Pop();
-            AItem item = calc.GetNameValue(name, global);
+            AItem item = calc.GetNameValue(name, @namespace);
             stack.Push(item);
         }
 
@@ -209,8 +211,8 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             bool predicate = y;
-            var branch = x.GetProgramInstructions();
-            if (predicate) calc.EvalItems(branch, false);
+            var branch = x.GetProgram();
+            if (predicate) calc.EvalItem(branch, true);
         }
 
         /// <summary>
@@ -220,10 +222,10 @@ namespace RPNCalc.Extensions
         {
             var (x, y, z) = stack.Pop3();
             bool condition = z;
-            var trueBranch = y.GetProgramInstructions();
-            var falseBranch = x.GetProgramInstructions();
-            if (condition) calc.EvalItems(trueBranch, false);
-            else calc.EvalItems(falseBranch, false);
+            var trueBranch = y.GetProgram();
+            var falseBranch = x.GetProgram();
+            if (condition) calc.EvalItem(trueBranch, true);
+            else calc.EvalItem(falseBranch, true);
         }
 
         /// <summary>
@@ -232,16 +234,16 @@ namespace RPNCalc.Extensions
         private static void WHILE(RPN calc, Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
-            var program = x.GetProgramInstructions();
-            var condition = y.GetProgramInstructions();
+            var program = x.GetProgram();
+            var condition = y.GetProgram();
             while (evalCondition())
             {
-                calc.EvalItems(program, false);
+                calc.EvalItem(program, true);
             }
 
             bool evalCondition()
             {
-                calc.EvalItems(condition, false);
+                calc.EvalItem(condition, true);
                 return stack.Pop();
             }
         }
@@ -253,14 +255,14 @@ namespace RPNCalc.Extensions
         private static void FOR(RPN calc, Stack<AItem> stack)
         {
             var (x, y, z, t) = stack.Pop4();
-            var programLoop = x.GetProgramInstructions();
-            var stepProgram = y.GetProgramInstructions();
-            var conditionProgram = z.GetProgramInstructions();
+            var programLoop = x.GetProgram();
+            var stepProgram = y.GetProgram();
+            var conditionProgram = z.GetProgram();
             string variableName = t;
             calc.GetNameValue(variableName).GetRealNumber(); // to check type and/or throw exception
             for (; condition(); step())
             {
-                calc.EvalItems(programLoop, false);
+                calc.EvalItem(programLoop, true);
             }
 
             bool condition()
@@ -284,14 +286,14 @@ namespace RPNCalc.Extensions
         private static void LOOP(RPN calc, Stack<AItem> stack)
         {
             var (x, y, z, t) = stack.Pop4();
-            var programLoop = x.GetProgramInstructions();
+            var programLoop = x.GetProgram();
             double stepValue = y;
             double endValue = z;
             if (!y) throw new RPNArgumentException("Step value is zero");
             string variableName = t;
             for (; condition(); step())
             {
-                calc.EvalItems(programLoop, false);
+                calc.EvalItem(programLoop, true);
             }
 
             bool condition()
@@ -518,10 +520,10 @@ namespace RPNCalc.Extensions
             return new ComplexNumberItem(r, i);
         }
 
-        private static void ExpectedDepthEval<T>(RPN calc, AItem[] programInstructions, string programName, int expectedDepth = 1) where T : AItem
+        private static void ExpectedDepthEval<T>(RPN calc, ProgramItem programInstructions, string programName, int expectedDepth = 1) where T : AItem
         {
             expectedDepth = calc.StackView.Count + expectedDepth;
-            calc.Eval(programInstructions);
+            calc.EvalItem(programInstructions, true);
             if (expectedDepth != calc.StackView.Count) throw new RPNArgumentException($"Unexpected behavior of {programName} program");
             if (expectedDepth > 0 && calc.StackView[0] is not T) throw new RPNArgumentException($"Unexpected type of return value of {programName} program");
         }
@@ -529,8 +531,8 @@ namespace RPNCalc.Extensions
         private static void AddToVarOnStack(RPN calc, Stack<AItem> stack, double valueToAdd)
         {
             string varName = stack.Pop().GetString();
-            double number = calc.GetNameValue(varName);
-            calc.SetName(varName, number + valueToAdd);
+            var number = calc.GetNameValue(varName).EnsureType<RealNumberItem>();
+            number.value += valueToAdd;
         }
 
         private static int GetInteger(AItem item)
