@@ -1,11 +1,11 @@
 using NUnit.Framework;
-using RPNCalc.StackItems;
+using RPNCalc.Items;
 
 namespace RPNCalc.Tests
 {
     public class StackTest
     {
-        private Stack<AStackItem> stack;
+        private Stack<AItem> stack;
 
         [SetUp]
         public void Setup()
@@ -16,14 +16,14 @@ namespace RPNCalc.Tests
         [Test]
         public void CompareItemsAbstract()
         {
-            AStackItem n1 = 1234.5;
-            AStackItem n2 = 9999;
-            AStackItem n3 = 1234.5;
-            AStackItem s1 = "foo";
-            AStackItem s2 = "bar";
-            AStackItem s3 = "foo";
-            AStackItem p1 = StackProgram.From(new StackName("foo"));
-            AStackItem p2 = StackProgram.From(new StackName("foo"));
+            AItem n1 = 1234.5;
+            AItem n2 = 9999;
+            AItem n3 = 1234.5;
+            AItem s1 = "foo";
+            AItem s2 = "bar";
+            AItem s3 = "foo";
+            AItem p1 = ProgramItem.From(new NameItem("foo"));
+            AItem p2 = ProgramItem.From(new NameItem("foo"));
             Assert.True(n1 != n2);
             Assert.False(n1 == n2);
             Assert.True(n1 == n3);
@@ -46,14 +46,14 @@ namespace RPNCalc.Tests
         [Test]
         public void CompareItems()
         {
-            StackReal n1 = 1234.5;
-            StackReal n2 = 9999;
-            StackReal n3 = 1234.5;
-            StackString s1 = "foo";
-            StackString s2 = "bar";
-            StackString s3 = "foo";
-            StackProgram p1 = StackProgram.From(new StackName("foo"));
-            StackProgram p2 = StackProgram.From(new StackName("foo"));
+            RealNumberItem n1 = 1234.5;
+            RealNumberItem n2 = 9999;
+            RealNumberItem n3 = 1234.5;
+            StackStringItem s1 = "foo";
+            StackStringItem s2 = "bar";
+            StackStringItem s3 = "foo";
+            ProgramItem p1 = ProgramItem.From(new NameItem("foo"));
+            ProgramItem p2 = ProgramItem.From(new NameItem("foo"));
             Assert.True(n1 != n2);
             Assert.False(n1 == n2);
             Assert.True(n1 == n3);
@@ -76,20 +76,20 @@ namespace RPNCalc.Tests
         [Test]
         public void ImplicitListConverts()
         {
-            Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, 30 }));
-            Assert.DoesNotThrow(() => stack.Push(new AStackItem[] { 10, 20, "foo bar", "foo", true, false, StackProgram.From(new StackName("foo"), new StackName("dup"), new StackName("+")) }));
+            Assert.DoesNotThrow(() => stack.Push(new AItem[] { 10, 20, 30 }));
+            Assert.DoesNotThrow(() => stack.Push(new AItem[] { 10, 20, "foo bar", "foo", true, false, ProgramItem.From(new NameItem("foo"), new NameItem("dup"), new NameItem("+")) }));
             Assert.AreEqual(2, stack.Count);
-            Assert.AreEqual(30, (stack[1] as StackList).value[2]);
-            Assert.AreEqual("foo bar", (stack[0] as StackList).value[2]);
-            Assert.AreEqual(false, (bool)(stack[0] as StackList).value[5]);
+            Assert.AreEqual(30, (stack[1] as ListItem).value[2]);
+            Assert.AreEqual("foo bar", (stack[0] as ListItem).value[2]);
+            Assert.AreEqual(false, (bool)(stack[0] as ListItem).value[5]);
         }
 
         [Test]
         public void EqualityOfVariables()
         {
-            Assert.AreEqual(new StackName("foobar"), new StackName("foobar"));
-            Assert.AreNotEqual(new StackName("foobar"), new StackString("foobar"));
-            Assert.AreNotEqual(new StackString("foobar"), new StackName("foobar"));
+            Assert.AreEqual(new NameItem("foobar"), new NameItem("foobar"));
+            Assert.AreNotEqual(new NameItem("foobar"), new StackStringItem("foobar"));
+            Assert.AreNotEqual(new StackStringItem("foobar"), new NameItem("foobar"));
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using RPNCalc.Extensions;
-using RPNCalc.StackItems;
+using RPNCalc.Items;
 using RPNCalc.Tools;
 
 namespace RPNCalc.Tests
@@ -154,7 +154,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SetMacro()
         {
-            calc.SetName("macro", new AStackItem[] { 1, 2, new StackName("+"), new StackName("dup"), 2, new StackName("/"), new StackName("swap") });
+            calc.SetName("macro", new AItem[] { 1, 2, new NameItem("+"), new NameItem("dup"), 2, new NameItem("/"), new NameItem("swap") });
             CollectionAssert.Contains(calc.FunctionsView, "macro");
             calc.Eval("10 20 macro");
             CollectionAssert.AreEqual(new[] { 3, 1.5, 20, 10 }, calc.StackView);
@@ -165,7 +165,7 @@ namespace RPNCalc.Tests
         {
             calc = new RPN(new RPN.Options { CaseSensitiveNames = true, AlwaysClearStack = true });
             calc.Eval("1 2");
-            calc.SetName("foo", new[] { new StackName("DUP"), new StackName("*"), new StackName("+") });
+            calc.SetName("foo", new[] { new NameItem("DUP"), new NameItem("*"), new NameItem("+") });
             calc.Eval("10 20 foo");
             CollectionAssert.AreEqual(new[] { 410 }, calc.StackView);
         }
@@ -189,7 +189,7 @@ namespace RPNCalc.Tests
             string top = null;
             Assert.DoesNotThrow(() => top = calc.Eval("foo 'foo'"));
             Assert.AreEqual("foo", top);
-            CollectionAssert.AreEqual(new AStackItem[] { "foo", 1234 }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { "foo", 1234 }, calc.StackView);
         }
 
         [Test]
@@ -208,17 +208,17 @@ namespace RPNCalc.Tests
         [Test]
         public void PushProgramToStack()
         {
-            AStackItem top = null;
+            AItem top = null;
             Assert.DoesNotThrow(() => top = calc.Eval("1 2 3 { 10 20 dup + * }"));
-            Assert.AreEqual(AStackItem.Type.Program, top.type);
-            Assert.AreEqual("{ 10 20 dup + * }", (top as StackProgram).ToString());
+            Assert.AreEqual(AItem.Type.Program, top.type);
+            Assert.AreEqual("{ 10 20 dup + * }", (top as ProgramItem).ToString());
         }
 
         [Test]
         public void ProgramInsideProgram()
         {
-            AStackItem p = calc.Eval("{ { 1 2 + } 3 * }");
-            Assert.AreEqual("{ { 1 2 + } 3 * }", (p as StackProgram).ToString());
+            AItem p = calc.Eval("{ { 1 2 + } 3 * }");
+            Assert.AreEqual("{ { 1 2 + } 3 * }", (p as ProgramItem).ToString());
         }
 
         [Test]
@@ -246,7 +246,7 @@ namespace RPNCalc.Tests
         public void StringsInsideProgram()
         {
             calc.Eval("{ 'foo' 'bar' }");
-            CollectionAssert.AreEqual(new[] { StackProgram.From("foo", "bar") }, calc.StackView);
+            CollectionAssert.AreEqual(new[] { ProgramItem.From("foo", "bar") }, calc.StackView);
             calc.Eval("eval");
             CollectionAssert.AreEqual(new[] { "bar", "foo" }, calc.StackView);
         }
@@ -254,7 +254,7 @@ namespace RPNCalc.Tests
         [Test]
         public void DoNothingEvalNumber()
         {
-            AStackItem result = null;
+            AItem result = null;
             Assert.DoesNotThrow(() => result = calc.Eval("42 eval"));
             Assert.AreEqual(42, result.GetRealNumber());
             Assert.DoesNotThrow(() => result = calc.Eval("-42.1337e2 eval"));
@@ -272,7 +272,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SetProgramVariable()
         {
-            calc.SetName("foo", StackProgram.From(new StackName("dup"), new StackName("*"), new StackName("+")));
+            calc.SetName("foo", ProgramItem.From(new NameItem("dup"), new NameItem("*"), new NameItem("+")));
             double n = calc.Eval("10 20 foo eval").GetRealNumber();
             Assert.AreEqual(410, n);
         }
@@ -326,10 +326,10 @@ namespace RPNCalc.Tests
         [Test]
         public void RclProgram()
         {
-            calc.SetName("foo", StackProgram.From(new StackName("dup"), new StackName("+")));
+            calc.SetName("foo", ProgramItem.From(new NameItem("dup"), new NameItem("+")));
             var s = calc.Eval("'foo' rcl").GetProgramInstructions();
-            Assert.AreEqual(StackProgram.From(new StackName("dup"), new StackName("+")), new StackProgram(s));
-            CollectionAssert.AreEqual(new[] { StackProgram.From(new StackName("dup"), new StackName("+")) }, calc.StackView);
+            Assert.AreEqual(ProgramItem.From(new NameItem("dup"), new NameItem("+")), new ProgramItem(s));
+            CollectionAssert.AreEqual(new[] { ProgramItem.From(new NameItem("dup"), new NameItem("+")) }, calc.StackView);
         }
 
         [Test]
@@ -505,12 +505,12 @@ namespace RPNCalc.Tests
         [Test]
         public void ListAndLists()
         {
-            Assert.AreEqual(new StackList(new StackReal[] { 10, 20 }), calc.Eval("[ 10 20 ]"));
-            var list = new AStackItem[] { 10, new StackList(new StackReal[] { 20 }), 30, new StackList(new AStackItem[] { 40, 50, 60 }) };
+            Assert.AreEqual(new ListItem(new RealNumberItem[] { 10, 20 }), calc.Eval("[ 10 20 ]"));
+            var list = new AItem[] { 10, new ListItem(new RealNumberItem[] { 20 }), 30, new ListItem(new AItem[] { 40, 50, 60 }) };
             Assert.AreEqual(list, calc.Eval("[ 10 [ 20 ] 30 [ 40 50 60 ] ]").GetArray());
             Assert.AreEqual(list, calc.Eval("[").GetArray());
             Assert.AreEqual(list, calc.Eval("10 20").GetArray());
-            Assert.AreEqual(new StackList(new AStackItem[] { 10, 20 }), calc.Eval("]"));
+            Assert.AreEqual(new ListItem(new AItem[] { 10, 20 }), calc.Eval("]"));
         }
 
         [Test]
@@ -524,39 +524,39 @@ namespace RPNCalc.Tests
         [Test]
         public void EvalTypedExpression1()
         {
-            var result = calc.Eval(new AStackItem[] { 10, 20 });
-            Assert.IsInstanceOf<StackReal>(result);
-            Assert.AreEqual(20, (result as StackReal).value);
+            var result = calc.Eval(new AItem[] { 10, 20 });
+            Assert.IsInstanceOf<RealNumberItem>(result);
+            Assert.AreEqual(20, (result as RealNumberItem).value);
         }
 
         [Test]
         public void EvalTypedExpression2()
         {
-            var result = calc.Eval(new AStackItem[] { 1, 2, 3, new StackList(new AStackItem[] { 10, 20 }) });
-            Assert.IsInstanceOf<StackList>(result);
+            var result = calc.Eval(new AItem[] { 1, 2, 3, new ListItem(new AItem[] { 10, 20 }) });
+            Assert.IsInstanceOf<ListItem>(result);
             Assert.AreEqual(4, calc.StackView.Count);
-            Assert.AreEqual(20, (result as StackList).value[1].GetRealNumber());
+            Assert.AreEqual(20, (result as ListItem).value[1].GetRealNumber());
         }
 
         [Test]
         public void EvalTypedExpression3()
         {
-            var result = calc.Eval(new AStackItem[] { 1, 2, 3, new StackFunction("foo", st => st.Push(st.Pop().GetRealNumber() * 2)) });
-            Assert.IsInstanceOf<StackReal>(result);
+            var result = calc.Eval(new AItem[] { 1, 2, 3, new FunctionItem("foo", st => st.Push(st.Pop().GetRealNumber() * 2)) });
+            Assert.IsInstanceOf<RealNumberItem>(result);
             Assert.AreEqual(3, calc.StackView.Count);
-            Assert.AreEqual(6, (result as StackReal).value);
+            Assert.AreEqual(6, (result as RealNumberItem).value);
         }
 
         [Test]
         public void EvalTypedExpression4()
         {
-            var result = calc.Eval(new AStackItem[] { 1, 2, 3, new StackList(new AStackItem[] { new StackFunction("foo", st => st.Push(st.Pop().GetRealNumber() * 2)) }) });
-            Assert.IsInstanceOf<StackList>(result);
+            var result = calc.Eval(new AItem[] { 1, 2, 3, new ListItem(new AItem[] { new FunctionItem("foo", st => st.Push(st.Pop().GetRealNumber() * 2)) }) });
+            Assert.IsInstanceOf<ListItem>(result);
             Assert.AreEqual(4, calc.StackView.Count);
-            Assert.IsInstanceOf<StackFunction>((result as StackList).value[0]);
-            StackFunction function = (result as StackList).value[0] as StackFunction;
+            Assert.IsInstanceOf<FunctionItem>((result as ListItem).value[0]);
+            FunctionItem function = (result as ListItem).value[0] as FunctionItem;
             Assert.AreEqual("foo", function.name);
-            var st = new Stack<AStackItem>();
+            var st = new Stack<AItem>();
             st.Push(5);
             function.value(st);
             Assert.AreEqual(10, st.Pop().GetRealNumber());
@@ -565,28 +565,28 @@ namespace RPNCalc.Tests
         [Test]
         public void CallFunctionUsingVariable()
         {
-            calc.Eval(new AStackItem[] { StackList.From(10, 20, new StackName("+")), 30, 40, new StackName("*") });
-            Assert.AreEqual(StackList.From(10, 20, new StackName("+")), calc.StackView.Skip(1).Single());
-            Assert.IsInstanceOf<StackReal>(calc.StackView.First());
+            calc.Eval(new AItem[] { ListItem.From(10, 20, new NameItem("+")), 30, 40, new NameItem("*") });
+            Assert.AreEqual(ListItem.From(10, 20, new NameItem("+")), calc.StackView.Skip(1).Single());
+            Assert.IsInstanceOf<RealNumberItem>(calc.StackView.First());
             Assert.AreEqual(1200, calc.StackView.First());
         }
 
         [Test]
         public void CreateAndCallProgramLikeFunction()
         {
-            var x2 = StackProgram.From(2, new StackName("^"));
-            var top = calc.Eval(new AStackItem[] { x2, new StackString("X2"), new StackName("STO"), StackProgram.From(10, new StackName("X2")), new StackName("EVAL") });
-            Assert.IsInstanceOf<StackReal>(top);
+            var x2 = ProgramItem.From(2, new NameItem("^"));
+            var top = calc.Eval(new AItem[] { x2, new StackStringItem("X2"), new NameItem("STO"), ProgramItem.From(10, new NameItem("X2")), new NameItem("EVAL") });
+            Assert.IsInstanceOf<RealNumberItem>(top);
             Assert.AreEqual(100, top);
         }
 
         [Test]
         public void ShouldKeepInnerProgramOnStack()
         {
-            calc.SetName("plus2", new StackProgram(new AStackItem[] { 2, new StackName("+") }));
-            var expression = StackProgram.From(10, new StackName("plus2"));
-            var top = calc.Eval(new AStackItem[] { expression, new StackName("EVAL") });
-            Assert.IsInstanceOf<StackReal>(top);
+            calc.SetName("plus2", new ProgramItem(new AItem[] { 2, new NameItem("+") }));
+            var expression = ProgramItem.From(10, new NameItem("plus2"));
+            var top = calc.Eval(new AItem[] { expression, new NameItem("EVAL") });
+            Assert.IsInstanceOf<RealNumberItem>(top);
             Assert.AreEqual(12, top);
 
             calc.ClearStack();
@@ -597,14 +597,14 @@ namespace RPNCalc.Tests
         [Test]
         public void InnerPrograms()
         {
-            var ifTrue = StackProgram.From(new AStackItem[] { 10 });
-            var ifFalse = StackProgram.From(new AStackItem[] { 20 });
-            var prog = StackProgram.From(42, new StackName("=="), ifTrue, ifFalse, new StackName("ifte"));
-            var result = calc.Eval(new AStackItem[] { 42, prog, new StackName("eval") });
+            var ifTrue = ProgramItem.From(new AItem[] { 10 });
+            var ifFalse = ProgramItem.From(new AItem[] { 20 });
+            var prog = ProgramItem.From(42, new NameItem("=="), ifTrue, ifFalse, new NameItem("ifte"));
+            var result = calc.Eval(new AItem[] { 42, prog, new NameItem("eval") });
             TestContext.WriteLine(calc.DumpStack());
             Assert.AreEqual(10, result);
 
-            result = calc.Eval(new AStackItem[] { 0, prog, new StackName("eval") });
+            result = calc.Eval(new AItem[] { 0, prog, new NameItem("eval") });
             TestContext.WriteLine(calc.DumpStack());
             Assert.AreEqual(20, result);
         }
@@ -612,11 +612,11 @@ namespace RPNCalc.Tests
         [Test]
         public void BuildAndProgram()
         {
-            var prog = calc.Eval(new AStackItem[] { new StackName("{"), 10, 20, new StackName("+"), new StackName("}") });
-            Assert.IsInstanceOf<StackProgram>(prog);
-            Assert.AreEqual(StackProgram.From(10, 20, new StackName("+")), prog);
-            var num = calc.Eval(new[] { new StackName("eval") });
-            Assert.IsInstanceOf<StackReal>(num);
+            var prog = calc.Eval(new AItem[] { new NameItem("{"), 10, 20, new NameItem("+"), new NameItem("}") });
+            Assert.IsInstanceOf<ProgramItem>(prog);
+            Assert.AreEqual(ProgramItem.From(10, 20, new NameItem("+")), prog);
+            var num = calc.Eval(new[] { new NameItem("eval") });
+            Assert.IsInstanceOf<RealNumberItem>(num);
             Assert.AreEqual(30, num);
         }
 
@@ -634,7 +634,7 @@ namespace RPNCalc.Tests
             calc.Eval("10 20 3.14");
             CollectionAssert.AreEqual(new[] { 3.14, 20, 10 }, calc.StackView);
             calc.Eval("'foo bar'");
-            CollectionAssert.AreEqual(new AStackItem[] { "foo bar", 3.14, 20, 10 }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { "foo bar", 3.14, 20, 10 }, calc.StackView);
             Assert.AreEqual("Unknown name {", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("{ 1 2 }")).Message);
             Assert.AreEqual("Unknown name [", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("[ 1 2 ]")).Message);
             Assert.AreEqual("Unknown name +", Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("1 2 +")).Message);
@@ -674,7 +674,7 @@ namespace RPNCalc.Tests
             calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
             calc.SetName("pi", Math.PI);
             var result = calc.Eval("'sin(pi/2)' eval");
-            Assert.IsInstanceOf<StackReal>(result);
+            Assert.IsInstanceOf<RealNumberItem>(result);
             Assert.AreEqual(1d, result);
         }
 
@@ -691,7 +691,7 @@ namespace RPNCalc.Tests
         public void DefineProgramAndEvalInAlgebraicString()
         {
             var result = calc.Eval("{ dup dup * * } 'cube' sto 'cube(4)*(2+8)' eval");
-            Assert.IsInstanceOf<StackReal>(result);
+            Assert.IsInstanceOf<RealNumberItem>(result);
             Assert.AreEqual(640d, result);
         }
 
@@ -699,13 +699,13 @@ namespace RPNCalc.Tests
         public void ConnectAsStrings()
         {
             Assert.AreEqual("1FOO2BAR", calc.Eval("1 'FOO' + 2 + 'BAR' +"));
-            Assert.AreEqual("{ 10 20 + }123", calc.Eval(new AStackItem[] {
+            Assert.AreEqual("{ 10 20 + }123", calc.Eval(new AItem[] {
                 string.Empty,
-                StackProgram.From(10, 20, new StackName("+")),
-                new StackName("+"),
-                1, new StackName("+"),
-                2, new StackName("+"),
-                3, new StackName("+") }));
+                ProgramItem.From(10, 20, new NameItem("+")),
+                new NameItem("+"),
+                1, new NameItem("+"),
+                2, new NameItem("+"),
+                3, new NameItem("+") }));
         }
 
         [Test]
@@ -714,19 +714,19 @@ namespace RPNCalc.Tests
             calc.Eval("( 10 20 ) ( 50 0 )");
             CollectionAssert.AreEqual(new[] { new Complex(50, 0), new Complex(10, 20) }, calc.StackView);
             calc.ClearStack();
-            Assert.AreEqual(new StackComplex(123, 0), calc.Eval("( 123 0 )"));
+            Assert.AreEqual(new ComplexNumberItem(123, 0), calc.Eval("( 123 0 )"));
         }
 
         [Test]
         public void ComplexNumbersConversion()
         {
             double r;
-            Assert.Throws<RPNArgumentException>(() => r = new StackComplex(1234, 0));
-            Complex complex1 = new StackComplex(1234, 0);
-            Complex complex2 = new StackComplex(1234, 5678);
-            StackComplex complex3 = new Complex(999, 666);
-            StackComplex complex4 = 42;
-            StackComplex complex5 = 42.42;
+            Assert.Throws<RPNArgumentException>(() => r = new ComplexNumberItem(1234, 0));
+            Complex complex1 = new ComplexNumberItem(1234, 0);
+            Complex complex2 = new ComplexNumberItem(1234, 5678);
+            ComplexNumberItem complex3 = new Complex(999, 666);
+            ComplexNumberItem complex4 = 42;
+            ComplexNumberItem complex5 = 42.42;
             Assert.AreEqual(1234, complex1.Real);
             Assert.AreEqual(0, complex1.Imaginary);
             Assert.AreEqual(1234, complex2.Real);
@@ -803,14 +803,14 @@ namespace RPNCalc.Tests
         {
             Assert.AreEqual(10, calc.Eval("[ 10 20 30 40 ] head"));
             Assert.AreEqual("foo", calc.Eval("[ 'foo' 'bar' ] head"));
-            Assert.AreEqual(StackList.From("foo", "bar"), calc.Eval("[ [ 'foo' 'bar'] [ 10 20 ] ] head"));
+            Assert.AreEqual(ListItem.From("foo", "bar"), calc.Eval("[ [ 'foo' 'bar'] [ 10 20 ] ] head"));
 
-            Assert.AreEqual(StackList.From(20, 30, 40), calc.Eval("[ 10 20 30 40 ] tail"));
-            Assert.AreEqual(StackList.From("bar"), calc.Eval("[ 'foo' 'bar' ] tail"));
-            Assert.AreEqual(StackList.From(StackList.From(10, 20)), calc.Eval("[ [ 'foo' 'bar'] [ 10 20 ] ] tail"));
+            Assert.AreEqual(ListItem.From(20, 30, 40), calc.Eval("[ 10 20 30 40 ] tail"));
+            Assert.AreEqual(ListItem.From("bar"), calc.Eval("[ 'foo' 'bar' ] tail"));
+            Assert.AreEqual(ListItem.From(ListItem.From(10, 20)), calc.Eval("[ [ 'foo' 'bar'] [ 10 20 ] ] tail"));
 
-            Assert.AreEqual(new StackList(), calc.Eval("[ 10 ] tail"));
-            Assert.AreEqual(new StackList(), calc.Eval("[ ] tail"));
+            Assert.AreEqual(new ListItem(), calc.Eval("[ 10 ] tail"));
+            Assert.AreEqual(new ListItem(), calc.Eval("[ ] tail"));
 
             Assert.Throws<RPNArgumentException>(() => calc.Eval("[ ] head"));
         }
@@ -926,19 +926,19 @@ namespace RPNCalc.Tests
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = true });
             Assert.AreEqual(10, calc.Eval("[ 10 20 30 ] 0 geti"));
-            CollectionAssert.AreEqual(new AStackItem[] { 10, 1, StackList.From(10, 20, 30) }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { 10, 1, ListItem.From(10, 20, 30) }, calc.StackView);
             Assert.AreEqual(20, calc.Eval("[ 10 20 30 ] 1 geti"));
-            CollectionAssert.AreEqual(new AStackItem[] { 20, 2, StackList.From(10, 20, 30) }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { 20, 2, ListItem.From(10, 20, 30) }, calc.StackView);
             Assert.AreEqual(30, calc.Eval("[ 10 20 30 ] 2 geti"));
-            CollectionAssert.AreEqual(new AStackItem[] { 30, 0, StackList.From(10, 20, 30) }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { 30, 0, ListItem.From(10, 20, 30) }, calc.StackView);
             Assert.Throws<RPNArgumentException>(() => calc.Eval("[ 10 20 30 ] 3 geti"));
 
             Assert.AreEqual("f", calc.Eval("'foobar' 0 geti"));
-            CollectionAssert.AreEqual(new AStackItem[] { "f", 1, "foobar" }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { "f", 1, "foobar" }, calc.StackView);
             Assert.AreEqual("o", calc.Eval("'foobar' 1 geti"));
-            CollectionAssert.AreEqual(new AStackItem[] { "o", 2, "foobar" }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { "o", 2, "foobar" }, calc.StackView);
             Assert.AreEqual("b", calc.Eval("'foobar' 3 geti"));
-            CollectionAssert.AreEqual(new AStackItem[] { "b", 4, "foobar" }, calc.StackView);
+            CollectionAssert.AreEqual(new AItem[] { "b", 4, "foobar" }, calc.StackView);
             Assert.Throws<RPNArgumentException>(() => calc.Eval("'foobar' 99 geti"));
         }
 
@@ -956,7 +956,7 @@ namespace RPNCalc.Tests
         public void LocalNames()
         {
             calc.Eval("1234 'global_name' sto");
-            calc.SetName("foo", new AStackItem[] { new StackName("global_name") });
+            calc.SetName("foo", new AItem[] { new NameItem("global_name") });
             Assert.AreEqual(1234, calc.Eval("{ 'global_name' rcl } eval"));
             Assert.AreEqual("foo", calc.Eval("{ 'foo' 'global_name' sto global_name } eval"));
             Assert.AreEqual(1234, calc.Eval("{ 'global_name' rcl } eval"));
@@ -1004,9 +1004,9 @@ namespace RPNCalc.Tests
             Assert.AreEqual(123, calc.Eval("'123' str>"));
             Assert.AreEqual(1.23, calc.Eval("'1.23' str>"));
             Assert.AreEqual("123", calc.Eval(@"'\'123\'' str>"));
-            Assert.AreEqual(new StackComplex(1.23, -3.21), calc.Eval("'( 1.23 -3.21 )' str>"));
-            Assert.AreEqual(StackList.From(123, 456, "foo"), calc.Eval(@"'[ 123 456 \'foo\' ]' str>"));
-            Assert.AreEqual(StackProgram.From(10, 20, new StackName("+")), calc.Eval("'{ 10 20 + }' str>"));
+            Assert.AreEqual(new ComplexNumberItem(1.23, -3.21), calc.Eval("'( 1.23 -3.21 )' str>"));
+            Assert.AreEqual(ListItem.From(123, 456, "foo"), calc.Eval(@"'[ 123 456 \'foo\' ]' str>"));
+            Assert.AreEqual(ProgramItem.From(10, 20, new NameItem("+")), calc.Eval("'{ 10 20 + }' str>"));
         }
 
         [Test]
@@ -1016,10 +1016,10 @@ namespace RPNCalc.Tests
             Assert.AreEqual(new[] { 345, 123 }, calc.StackView);
             Assert.AreEqual(12.3, calc.Eval("'1.23 10 *' str>"));
             Assert.AreEqual("123foo", calc.Eval(@"'\'123\' \'foo\' +' str>"));
-            Assert.AreEqual(new StackComplex(2.46, -6.42), calc.Eval("'( 1.23 -3.21 ) 2 *' str>"));
+            Assert.AreEqual(new ComplexNumberItem(2.46, -6.42), calc.Eval("'( 1.23 -3.21 ) 2 *' str>"));
             calc.ClearStack();
             calc.Eval(@"'[ 123 456 \'foo\' ]' str> list>");
-            Assert.AreEqual(new AStackItem[] { 3, "foo", 456, 123 }, calc.StackView);
+            Assert.AreEqual(new AItem[] { 3, "foo", 456, 123 }, calc.StackView);
             Assert.AreEqual(30, calc.Eval("'{ 10 20 + } eval' str>"));
         }
     }

@@ -1,6 +1,6 @@
 using System;
 using NUnit.Framework;
-using RPNCalc.StackItems;
+using RPNCalc.Items;
 using RPNCalc.Tools;
 
 namespace RPNCalc.Tests
@@ -374,7 +374,7 @@ namespace RPNCalc.Tests
         public void TokenizeStringTokens_Numbers()
         {
             var tokens = RPNTools.TokensToItems(".1", ".1e1", "10", "20", "-30", "4e1", "0.5e2", "6000e-2", "-700e-1", "-0.008e4");
-            CollectionAssert.AreEqual(new AStackItem[] { .1, 1, 10, 20, -30, 40, 50, 60, -70, -80 }, tokens);
+            CollectionAssert.AreEqual(new AItem[] { .1, 1, 10, 20, -30, 40, 50, 60, -70, -80 }, tokens);
         }
 
         [Test]
@@ -389,7 +389,7 @@ namespace RPNCalc.Tests
         public void TokenizeStringTokens_Strings()
         {
             var tokens = RPNTools.TokensToItems("'foo'", "'bar'", "'one234'", "'{'", "''", "'6000e-2'", "'-700e-1'", "'-0.008e4'");
-            CollectionAssert.AreEqual(new AStackItem[] { "foo", "bar", "one234", "{", "", "6000e-2", "-700e-1", "-0.008e4" }, tokens);
+            CollectionAssert.AreEqual(new AItem[] { "foo", "bar", "one234", "{", "", "6000e-2", "-700e-1", "-0.008e4" }, tokens);
         }
 
         [Test]
@@ -406,13 +406,13 @@ namespace RPNCalc.Tests
         {
             var tokens = RPNTools.TokensToItems("foo", "bar", "one234", "{", "STO!", "~!>>");
             CollectionAssert.AreEqual(
-                new AStackItem[] {
-                    new StackName("foo"),
-                    new StackName("bar"),
-                    new StackName("one234"),
-                    new StackName("{"),
-                    new StackName("STO!"),
-                    new StackName("~!>>")
+                new AItem[] {
+                    new NameItem("foo"),
+                    new NameItem("bar"),
+                    new NameItem("one234"),
+                    new NameItem("{"),
+                    new NameItem("STO!"),
+                    new NameItem("~!>>")
                 }, tokens);
         }
 

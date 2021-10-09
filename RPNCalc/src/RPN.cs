@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
-using RPNCalc.StackItems;
+using RPNCalc.Items;
 
 namespace RPNCalc
 {
@@ -12,11 +12,14 @@ namespace RPNCalc
     /// </summary>
     public class RPN
     {
+        /// <summary>
+        /// Calculator options.
+        /// </summary>
         public class Options
         {
             /// <summary>Set true if you want variable and function names to be case sensitive.</summary>
             public bool CaseSensitiveNames { get; set; } = false;
-            /// <summary>Automatically clear stack before each <see cref="Eval(AStackItem[])"/> call.</summary>
+            /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
             public bool AlwaysClearStack { get; set; } = true;
             /// <summary>Load a set of function to new calc instance,
             /// calculator knows very little without any functions.</summary>
@@ -28,43 +31,43 @@ namespace RPNCalc
         /// <summary>
         /// Delegate for all RPN functions/operations, expects to directly operates on stack.
         /// </summary>
-        public delegate void Function(Stack<AStackItem> stack);
+        public delegate void Function(Stack<AItem> stack);
 
         /// <summary>
         /// Called before each evaluated instruction.
         /// </summary>
-        public event Action<RPN, AStackItem> ProgramStepBefore;
+        public event Action<RPN, AItem> ProgramStepBefore;
 
         /// <summary>
         /// Called after each evaluated instruction.
         /// </summary>
-        public event Action<RPN, AStackItem> ProgramStepAfter;
+        public event Action<RPN, AItem> ProgramStepAfter;
 
         /// <summary>
         /// Collection of all currently globally accessible names usable in this calculator.
         /// </summary>
-        public IReadOnlyDictionary<string, AStackItem> GlobalNames => globalNames;
+        public IReadOnlyDictionary<string, AItem> GlobalNames => globalNames;
 
         /// <summary>
         /// Collection of current local names only, returns empty dictionary if running in global name space.
         /// </summary>
-        public IReadOnlyDictionary<string, AStackItem> LocalNames => localNames.Count > 0 ? localNames.Peek() : new();
+        public IReadOnlyDictionary<string, AItem> LocalNames => localNames.Count > 0 ? localNames.Peek() : new();
 
         /// <summary>
         /// <para>From all names only function names available to use in this calculator.</para>
         /// <para>Also includes all default functions.</para>
         /// </summary>
         public IReadOnlyCollection<string> FunctionsView => globalNames
-            .Where(x => x.Value.type == AStackItem.Type.Function)
+            .Where(x => x.Value.type == AItem.Type.Function)
             .Select(x => x.Key)
             .ToArray();
 
         /// <summary>
         /// Read only access to current stack. On index 0 is top of the stack.
         /// </summary>
-        public IReadOnlyList<AStackItem> StackView => mainStack;
+        public IReadOnlyList<AItem> StackView => mainStack;
 
-        /// <summary>Automatically clear stack before each <see cref="Eval(AStackItem[])"/> call.</summary>
+        /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
         public bool AlwaysClearStack { get; set; } = true;
         /// <summary>Names (and function names) are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
@@ -74,16 +77,16 @@ namespace RPNCalc
         /// </summary>
         public bool StopProgram { protected get; set; }
 
-        protected readonly Stack<AStackItem> mainStack = new();
+        protected readonly Stack<AItem> mainStack = new();
         protected readonly StringBuilder buffer = new();
         /// <summary>Used to "buffer" multiple items to collection (list, program, whatever...)</summary>
-        protected readonly Stack<Stack<AStackItem>> sideStack = new();
+        protected readonly Stack<Stack<AItem>> sideStack = new();
         /// <summary>Functions that are always called even when not using main stack</summary>
         protected readonly HashSet<string> functionWhiteList = new();
         /// <summary>Pointer to current stack that is used to push items to</summary>
-        protected Stack<AStackItem> currentStackInUse;
-        protected readonly Dictionary<string, AStackItem> globalNames = new();
-        protected readonly Stack<Dictionary<string, AStackItem>> localNames = new();
+        protected Stack<AItem> currentStackInUse;
+        protected readonly Dictionary<string, AItem> globalNames = new();
+        protected readonly Stack<Dictionary<string, AItem>> localNames = new();
 
         protected bool IsUsingMainStack => currentStackInUse == mainStack;
 
@@ -118,11 +121,11 @@ namespace RPNCalc
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
         /// <exception cref="RPNArgumentException"/>
-        public AStackItem Eval(AStackItem[] instruction)
+        public AItem Eval(AItem[] instruction)
         {
             if (AlwaysClearStack) ClearStack();
             // this is already processing a "program" so it starts at level 1
-            AStackItem top = EvalItems(instruction, false);
+            AItem top = EvalItems(instruction, false);
             if (AlwaysClearStack && sideStack.Count != 0) throw new RPNFunctionException("A collection-creating function didn't finished buffering items");
             return top;
         }
@@ -132,9 +135,9 @@ namespace RPNCalc
         /// </summary>
         /// <param name="items">Set of instructions/items for evaluation</param>
         /// <param name="evalPrograms">Set to false to just push a program or name to stack without evaluating</param>
-        public AStackItem EvalItems(AStackItem[] items, bool evalPrograms)
+        public AItem EvalItems(AItem[] items, bool evalPrograms)
         {
-            foreach (AStackItem item in items)
+            foreach (AItem item in items)
             {
                 EvalItem(item, evalPrograms);
                 if (StopProgram)
@@ -152,24 +155,24 @@ namespace RPNCalc
         /// </summary>
         /// <param name="item">One instruction/item for evaluation</param>
         /// <param name="evalPrograms">Set to false to just push a program or name to stack without evaluating</param>
-        public void EvalItem(AStackItem item, bool evalPrograms)
+        public void EvalItem(AItem item, bool evalPrograms)
         {
             ProgramStepBefore?.Invoke(this, item);
             switch (item)
             {
-                case StackProgram prog when evalPrograms:
+                case ProgramItem prog when evalPrograms:
                     localNames.Push(new());
                     EvalItems(prog.value, false);
                     localNames.Pop().Clear();
                     break;
-                case StackProgram:
+                case ProgramItem:
                     currentStackInUse.Push(item);
                     break;
-                case StackFunction function:
+                case Items.FunctionItem function:
                     if (IsUsingMainStack || IsWhiteListFunction(function.name)) function.value(currentStackInUse);
-                    else currentStackInUse.Push(new StackName(function.name));
+                    else currentStackInUse.Push(new NameItem(function.name));
                     break;
-                case StackName name:
+                case NameItem name:
                     if (IsUsingMainStack || IsWhiteListFunction(name.value)) EvalItem(GetNameValue(name.value), true);
                     else currentStackInUse.Push(name);
                     break;
@@ -204,7 +207,7 @@ namespace RPNCalc
         /// <param name="globalNamesOnly">force seting global name space even when running in local name space</param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
-        public void SetName(string name, AStackItem value, bool globalNamesOnly = false)
+        public void SetName(string name, AItem value, bool globalNamesOnly = false)
         {
             EnsureValidName(name);
             name = GetKeyName(name);
@@ -244,13 +247,13 @@ namespace RPNCalc
         /// <param name="instructions">macro expression or null to remove function</param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
-        public void SetName(string name, AStackItem[] instructions)
+        public void SetName(string name, AItem[] instructions)
         {
             if (instructions is null) SetName(name, (Function)null);
             else SetName(name, _ => EvalItems(instructions, false));
         }
 
-        public void SetCollectionGenerator(string startSymbol, string endSymbol, Func<Stack<AStackItem>, AStackItem> collectionGenerator)
+        public void SetCollectionGenerator(string startSymbol, string endSymbol, Func<Stack<AItem>, AItem> collectionGenerator)
         {
             //if (startSymbol == endSymbol) throw new RPNArgumentException("Start and end symbols must be different");
             SetFunction(startSymbol, GenerateStartCollectionStack(startSymbol), true);
@@ -263,7 +266,7 @@ namespace RPNCalc
             functionWhiteList.Remove(GetKeyName(name));
         }
 
-        public AStackItem GetNameValue(string varName, bool globalNamesOnly = false)
+        public AItem GetNameValue(string varName, bool globalNamesOnly = false)
         {
             if (!globalNamesOnly && localNames.Count > 0 && localNames.Peek().TryGetValue(varName, out var localItem))
             {
@@ -287,7 +290,7 @@ namespace RPNCalc
             }
             else
             {
-                globalNames[name] = new StackFunction(name, function);
+                globalNames[name] = new Items.FunctionItem(name, function);
                 if (alsoAddToWhiteList) functionWhiteList.Add(name);
             }
         }
@@ -317,7 +320,7 @@ namespace RPNCalc
             };
         }
 
-        protected Function GenerateEndCollectionStack(string startSymbol, string endSymbol, Func<Stack<AStackItem>, AStackItem> collectionConstructor)
+        protected Function GenerateEndCollectionStack(string startSymbol, string endSymbol, Func<Stack<AItem>, AItem> collectionConstructor)
         {
             return _ =>
             {
@@ -325,7 +328,7 @@ namespace RPNCalc
                 tmpStack.Roll(-1);
                 string expectedSymbol = tmpStack.Pop().GetString();
                 if (startSymbol != expectedSymbol) throw new RPNFunctionException($"Unexpected symbol, was expecting {endSymbol}");
-                AStackItem newCollection = collectionConstructor(tmpStack);
+                AItem newCollection = collectionConstructor(tmpStack);
                 if (sideStack.Count > 0)
                 {
                     sideStack.Peek().Push(newCollection);

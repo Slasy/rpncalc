@@ -1,5 +1,5 @@
 using System;
-using RPNCalc.StackItems;
+using RPNCalc.Items;
 using RPNCalc.Tools;
 
 namespace RPNCalc.Extensions
@@ -18,10 +18,10 @@ namespace RPNCalc.Extensions
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
         /// <exception cref="RPNArgumentException"/>
-        public static AStackItem Eval(this RPN calc, string rpnExpression)
+        public static AItem Eval(this RPN calc, string rpnExpression)
         {
             string[] tokens = RPNTools.GetTokens(rpnExpression);
-            AStackItem[] instructions = RPNTools.TokensToItems(tokens);
+            AItem[] instructions = RPNTools.TokensToItems(tokens);
             return calc.Eval(instructions);
         }
 
@@ -37,11 +37,11 @@ namespace RPNCalc.Extensions
         /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
         /// <exception cref="RPNArgumentException"/>
-        public static AStackItem EvalAlgebraic(this RPN calc, string algebraicExpression)
+        public static AItem EvalAlgebraic(this RPN calc, string algebraicExpression)
         {
             string[] tokens = AlgebraicTools.GetTokens(algebraicExpression);
             tokens = AlgebraicTools.InfixToPostfix(tokens);
-            AStackItem[] instructions = RPNTools.TokensToItems(tokens);
+            AItem[] instructions = RPNTools.TokensToItems(tokens);
             return calc.Eval(instructions);
         }
 

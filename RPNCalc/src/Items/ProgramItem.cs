@@ -3,17 +3,17 @@ using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
 
-namespace RPNCalc.StackItems
+namespace RPNCalc.Items
 {
     [DebuggerDisplay("Program({ToString()})")]
-    public class StackProgram : AStackItem<AStackItem[]>
+    public class ProgramItem : AItem<AItem[]>
     {
-        public StackProgram(AStackItem[] array) : base(Type.Program, array) { }
-        public StackProgram(Stack<AStackItem> stack) : base(Type.Program, stack.ToReverseArray()) { }
+        public ProgramItem(AItem[] array) : base(Type.Program, array) { }
+        public ProgramItem(Stack<AItem> stack) : base(Type.Program, stack.ToReverseArray()) { }
 
-        public static StackProgram From(params AStackItem[] array) => new(array);
+        public static ProgramItem From(params AItem[] array) => new(array);
 
-        public override bool Equals(AStackItem other)=>other is StackProgram program && value.SequenceEqual(program.value);
+        public override bool Equals(AItem other)=>other is ProgramItem program && value.SequenceEqual(program.value);
 
         public override string ToString()
         {

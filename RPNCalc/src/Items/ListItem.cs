@@ -4,33 +4,33 @@ using System.Linq;
 using System.Text;
 using RPNCalc.Extensions;
 
-namespace RPNCalc.StackItems
+namespace RPNCalc.Items
 {
     [DebuggerDisplay("List({ToString()})")]
-    public class StackList : AStackItem<AStackItem[]>
+    public class ListItem : AItem<AItem[]>
     {
         /// <summary>Empty list.</summary>
-        public StackList() : base(Type.List, Array.Empty<AStackItem>()) { }
-        public StackList(AStackItem[] array) : base(Type.List, array) { }
+        public ListItem() : base(Type.List, Array.Empty<AItem>()) { }
+        public ListItem(AItem[] array) : base(Type.List, array) { }
         /// <summary>Items in list will be in revers order - bottom/last item in stack will be first.</summary>
-        public StackList(Stack<AStackItem> stack) : base(Type.List, stack.ToReverseArray()) { }
+        public ListItem(Stack<AItem> stack) : base(Type.List, stack.ToReverseArray()) { }
 
-        public static StackList operator +(StackList list, AStackItem item)
+        public static ListItem operator +(ListItem list, AItem item)
         {
-            AStackItem[] newArray = new AStackItem[list.value.Length + 1];
+            AItem[] newArray = new AItem[list.value.Length + 1];
             Array.Copy(list.value, newArray, list.value.Length);
             newArray[list.value.Length] = item;
-            return new StackList(newArray);
+            return new ListItem(newArray);
         }
 
-        public static implicit operator StackList(AStackItem[] array) => new(array);
+        public static implicit operator ListItem(AItem[] array) => new(array);
         //public static implicit operator AStackItem[](StackList item) => item.value;
 
-        public static StackList From(params AStackItem[] array) => new(array);
+        public static ListItem From(params AItem[] array) => new(array);
 
-        public bool Equals(AStackItem[] other) => value.SequenceEqual(other);
+        public bool Equals(AItem[] other) => value.SequenceEqual(other);
 
-        public override bool Equals(AStackItem other) => other is StackList list && value.SequenceEqual(list.value);
+        public override bool Equals(AItem other) => other is ListItem list && value.SequenceEqual(list.value);
 
         public override string ToString()
         {

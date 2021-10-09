@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using RPNCalc.StackItems;
+using RPNCalc.Items;
 
 namespace RPNCalc.Tools
 {
@@ -48,9 +48,9 @@ namespace RPNCalc.Tools
         /// <para>Expects RPN expression.</para>
         /// </summary>
         /// <param name="postfixTokens">Can be output of <see cref="AlgebraicTools.InfixToPostfix(string[], bool)"/> method</param>
-        public static AStackItem[] TokensToItems(params string[] postfixTokens)
+        public static AItem[] TokensToItems(params string[] postfixTokens)
         {
-            AStackItem[] items = new AStackItem[postfixTokens.Length];
+            AItem[] items = new AItem[postfixTokens.Length];
             for (int i = 0; i < postfixTokens.Length; i++)
             {
                 items[i] = MatchToken(postfixTokens[i]);
@@ -58,16 +58,16 @@ namespace RPNCalc.Tools
             return items;
         }
 
-        private static AStackItem MatchToken(string token)
+        private static AItem MatchToken(string token)
         {
             token = token.Trim();
             foreach (var matcher in matchers)
             {
                 Match match;
                 if (!(match = matcher.Match(token)).Success) continue;
-                if (matcher == numberToken) return new StackReal(NumberConvert(match.Groups[0].Value));
-                if (matcher == stringToken) return new StackString(match.Groups[1].Value.Replace("\\'", "'"));
-                if (matcher == variableNameToken) return new StackName(match.Groups[0].Value);
+                if (matcher == numberToken) return new RealNumberItem(NumberConvert(match.Groups[0].Value));
+                if (matcher == stringToken) return new StackStringItem(match.Groups[1].Value.Replace("\\'", "'"));
+                if (matcher == variableNameToken) return new NameItem(match.Groups[0].Value);
             }
             throw new RPNArgumentException("Invalid syntax, unknown token " + token);
         }
