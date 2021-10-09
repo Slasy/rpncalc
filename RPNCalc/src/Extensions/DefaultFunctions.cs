@@ -70,6 +70,8 @@ namespace RPNCalc.Extensions
             calc.SetName("SIZE", SIZE);
 
             calc.SetName("TYPE", TYPE);
+            calc.SetName(">STR", TO_STRING);
+            calc.SetName("STR>", stack => FROM_STRING(calc, stack));
 
             calc.SetCollectionGenerator("[", "]", st => new StackList(st));
             calc.SetCollectionGenerator("{", "}", st => new StackProgram(st));
@@ -495,6 +497,18 @@ namespace RPNCalc.Extensions
                 _ => 1,
             };
             stack.Push(size);
+        }
+
+        private static void TO_STRING(Stack<AStackItem> stack)
+        {
+            AStackItem item = stack.Pop();
+            stack.Push(item.AsString());
+        }
+
+        private static void FROM_STRING(RPN calc, Stack<AStackItem> stack)
+        {
+            string str = stack.Pop().GetString();
+            calc.Eval(str);
         }
 
         private static AStackItem CreateComplexNumber(Stack<AStackItem> stack)

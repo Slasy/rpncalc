@@ -8,7 +8,7 @@ namespace RPNCalc.Tools
     public static class RPNTools
     {
         private static readonly Regex numberToken = new(@"^\-?\.?\d+?(?:\.\d+)?(?:e\-?\d+)?$");
-        private static readonly Regex stringToken = new(@"^'([^'\\]*(?:\\.[^'\\]*)*)'$");
+        private static readonly Regex stringToken = new(@"^'([^'\\]*(?:\\.[^']*)*)'$");
         private static readonly Regex variableNameToken = new(@"^[^'\.][^'\s]*$");
         private static readonly Regex[] matchers = new[] { numberToken, stringToken, variableNameToken };
         private static readonly Regex expressionSplit = new(@"(?<!\\)'.*?(?<!\\)'|[^\s']+");

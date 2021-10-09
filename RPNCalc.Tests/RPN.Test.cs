@@ -983,5 +983,44 @@ namespace RPNCalc.Tests
             Assert.AreEqual(123, calc.Eval("123 'foo' sto { 666 'foo' sto } eval 'foo' rcl"));
             Assert.AreEqual(666, calc.Eval("{ 666 'foo' gsto } eval 'foo' rcl"));
         }
+
+        [Test]
+        public void ItemToString()
+        {
+            Assert.AreEqual("123", calc.Eval("123 >str"));
+            Assert.AreEqual("1.23", calc.Eval("1.23 >str"));
+            Assert.AreEqual("123", calc.Eval("'123' >str"));
+            Assert.AreEqual("foo", calc.Eval("'foo' >str"));
+            Assert.AreEqual("[ 123 'foo' ]", calc.Eval(" [   123        'foo' ] >str"));
+            Assert.AreEqual("{ 10 20 * }", calc.Eval(" {\n10   20\n*\n} >str"));
+            Assert.AreEqual("( -3 3.1415 )", calc.Eval("   (  -3  31415e-4 ) >str"));
+            Assert.AreEqual("don't", calc.Eval(@"'don\'t' >str"));
+            Assert.AreEqual("don't", calc.Eval(@"'don\'t' >str >str"));
+        }
+
+        [Test]
+        public void StringToItem()
+        {
+            Assert.AreEqual(123, calc.Eval("'123' str>"));
+            Assert.AreEqual(1.23, calc.Eval("'1.23' str>"));
+            Assert.AreEqual("123", calc.Eval(@"'\'123\'' str>"));
+            Assert.AreEqual(new StackComplex(1.23, -3.21), calc.Eval("'( 1.23 -3.21 )' str>"));
+            Assert.AreEqual(StackList.From(123, 456, "foo"), calc.Eval(@"'[ 123 456 \'foo\' ]' str>"));
+            Assert.AreEqual(StackProgram.From(10, 20, new StackName("+")), calc.Eval("'{ 10 20 + }' str>"));
+        }
+
+        [Test]
+        public void StringToEvalExpression()
+        {
+            calc.Eval("'123 345' str>");
+            Assert.AreEqual(new[] { 345, 123 }, calc.StackView);
+            Assert.AreEqual(12.3, calc.Eval("'1.23 10 *' str>"));
+            Assert.AreEqual("123foo", calc.Eval(@"'\'123\' \'foo\' +' str>"));
+            Assert.AreEqual(new StackComplex(2.46, -6.42), calc.Eval("'( 1.23 -3.21 ) 2 *' str>"));
+            calc.ClearStack();
+            calc.Eval(@"'[ 123 456 \'foo\' ]' str> list>");
+            Assert.AreEqual(new AStackItem[] { 3, "foo", 456, 123 }, calc.StackView);
+            Assert.AreEqual(30, calc.Eval("'{ 10 20 + } eval' str>"));
+        }
     }
 }

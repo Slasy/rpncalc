@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using RPNCalc.Extensions;
 
 namespace RPNCalc.StackItems
@@ -44,6 +45,6 @@ namespace RPNCalc.StackItems
 
         public override bool Equals(AStackItem other) => (other is StackReal number && number.value == value) || (other is StackComplex complex && complex.value == value);
 
-        public override string ToString() => value.ToString();
+        public override string ToString() => value.ToString(CultureInfo.InvariantCulture);
     }
 }
