@@ -41,15 +41,20 @@ namespace RPNCalc
         public event Action<RPN, AStackItem> ProgramStepAfter;
 
         /// <summary>
-        /// Collection of all currently accessible names and usable in this calculator.
+        /// Collection of all currently globally accessible names usable in this calculator.
         /// </summary>
-        public IReadOnlyDictionary<string, AStackItem> Names => names;
+        public IReadOnlyDictionary<string, AStackItem> GlobalNames => globalNames;
+
+        /// <summary>
+        /// Collection of current local names only, returns empty dictionary if running in global name space.
+        /// </summary>
+        public IReadOnlyDictionary<string, AStackItem> LocalNames => localNames.Count > 0 ? localNames.Peek() : new();
 
         /// <summary>
         /// <para>From all names only function names available to use in this calculator.</para>
         /// <para>Also includes all default functions.</para>
         /// </summary>
-        public IReadOnlyCollection<string> FunctionsView => names
+        public IReadOnlyCollection<string> FunctionsView => globalNames
             .Where(x => x.Value.type == AStackItem.Type.Function)
             .Select(x => x.Key)
             .ToArray();
@@ -77,7 +82,8 @@ namespace RPNCalc
         protected readonly HashSet<string> functionWhiteList = new();
         /// <summary>Pointer to current stack that is used to push items to</summary>
         protected Stack<AStackItem> currentStackInUse;
-        protected readonly Dictionary<string, AStackItem> names = new();
+        protected readonly Dictionary<string, AStackItem> globalNames = new();
+        protected readonly Stack<Dictionary<string, AStackItem>> localNames = new();
 
         protected bool IsUsingMainStack => currentStackInUse == mainStack;
 
@@ -152,7 +158,9 @@ namespace RPNCalc
             switch (item)
             {
                 case StackProgram prog when evalPrograms:
+                    localNames.Push(new());
                     EvalItems(prog.value, false);
+                    localNames.Pop().Clear();
                     break;
                 case StackProgram:
                     currentStackInUse.Push(item);
@@ -186,21 +194,38 @@ namespace RPNCalc
         /// <summary>
         /// Clear ALL names, also clears ALL built-in functions
         /// </summary>
-        public void ClearAllNames() => names.Clear();
+        public void ClearAllNames() => globalNames.Clear();
 
         /// <summary>
         /// Set custom variable for this calculator instance.
         /// </summary>
         /// <param name="name">variable name</param>
         /// <param name="value">value or null to remove variable</param>
+        /// <param name="globalNamesOnly">force seting global name space even when running in local name space</param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
-        public void SetName(string name, AStackItem value)
+        public void SetName(string name, AStackItem value, bool globalNamesOnly = false)
         {
             EnsureValidName(name);
             name = GetKeyName(name);
-            if (value is null) names.Remove(name);
-            else names[name] = value;
+            if (value is null)
+            {
+                if (globalNamesOnly || localNames.Count == 0 || !localNames.Peek().Remove(name))
+                {
+                    globalNames.Remove(name);
+                }
+            }
+            else
+            {
+                if (!globalNamesOnly && localNames.Count > 0)
+                {
+                    localNames.Peek()[name] = value;
+                }
+                else
+                {
+                    globalNames[name] = value;
+                }
+            }
         }
 
         /// <summary>
@@ -234,17 +259,21 @@ namespace RPNCalc
 
         public void RemoveName(string name)
         {
-            names.Remove(GetKeyName(name));
+            globalNames.Remove(GetKeyName(name));
             functionWhiteList.Remove(GetKeyName(name));
         }
 
-        public AStackItem GetNameValue(string varName)
+        public AStackItem GetNameValue(string varName, bool globalNamesOnly = false)
         {
-            if (!names.TryGetValue(GetKeyName(varName), out var item))
+            if (!globalNamesOnly && localNames.Count > 0 && localNames.Peek().TryGetValue(varName, out var localItem))
             {
-                throw new RPNUndefinedNameException($"Unknown name {varName}");
+                return localItem;
             }
-            return item;
+            if (globalNames.TryGetValue(GetKeyName(varName), out var globalItem))
+            {
+                return globalItem;
+            }
+            throw new RPNUndefinedNameException($"Unknown name {varName}");
         }
 
         protected void SetFunction(string name, Function function, bool alsoAddToWhiteList)
@@ -253,12 +282,12 @@ namespace RPNCalc
             name = GetKeyName(name);
             if (function is null)
             {
-                names.Remove(name);
+                globalNames.Remove(name);
                 functionWhiteList.Remove(name);
             }
             else
             {
-                names[name] = new StackFunction(name, function);
+                globalNames[name] = new StackFunction(name, function);
                 if (alsoAddToWhiteList) functionWhiteList.Add(name);
             }
         }

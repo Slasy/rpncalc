@@ -37,8 +37,10 @@ namespace RPNCalc.Extensions
             calc.SetName("CLST", CLEAR_STACK);
             calc.SetName("CLV", st => CLEAR_VAR(calc, st));
             calc.SetName("EVAL", st => EVAL(calc, st));
-            calc.SetName("STO", st => STORE(calc, st));
-            calc.SetName("RCL", st => RECALL(calc, st));
+            calc.SetName("STO", st => STORE(calc, st, false));
+            calc.SetName("RCL", st => RECALL(calc, st, false));
+            calc.SetName("GSTO", st => STORE(calc, st, true));
+            calc.SetName("GRCL", st => RECALL(calc, st, true));
             calc.SetName("RND", ROUND);
             calc.SetName("RND0", CreateMacro("0 RND"));
 
@@ -175,17 +177,17 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void STORE(RPN calc, Stack<AStackItem> stack)
+        private static void STORE(RPN calc, Stack<AStackItem> stack, bool global)
         {
             string name = stack.Pop();
             var value = stack.Pop();
-            calc.SetName(name, value);
+            calc.SetName(name, value, global);
         }
 
-        private static void RECALL(RPN calc, Stack<AStackItem> stack)
+        private static void RECALL(RPN calc, Stack<AStackItem> stack, bool global)
         {
             string name = stack.Pop();
-            AStackItem item = calc.GetNameValue(name);
+            AStackItem item = calc.GetNameValue(name, global);
             stack.Push(item);
         }
 
