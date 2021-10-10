@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using RPNCalc.Items;
 
@@ -70,7 +69,7 @@ namespace RPNCalc.Extensions
 
         private static void EnsureNotNull(AItem item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item), "Missing stack item");
+            if (item is null) throw new RPNArgumentException("Missing stack item");
         }
 
         private static void EnsureType<T>(AItem item, out T typedItem) where T : AItem

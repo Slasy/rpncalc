@@ -89,7 +89,7 @@ namespace RPNCalc.Tools
                 }
             }
             if (functionName.StartsWith("(-")) functionName = functionName.Substring(2);
-            throw new ArgumentException($"Function is missing ending bracket: {functionName}");
+            throw new RPNArgumentException($"Function is missing ending bracket: {functionName}");
         }
 
         private static string ListCreator(string expression, out int strLength)
@@ -124,7 +124,7 @@ namespace RPNCalc.Tools
                     return sb.ToString();
                 }
             }
-            throw new ArgumentException("List is missing ending bracket");
+            throw new RPNArgumentException("List is missing ending bracket");
         }
 
         // src https://stackoverflow.com/a/1438153
@@ -133,7 +133,7 @@ namespace RPNCalc.Tools
         /// </summary>
         /// <param name="tokenArray">Array of symbols in algebraic (infix) notation</param>
         /// <param name="strictMode">Throw exception on uneven bracket count</param>
-        /// <exception cref="ArgumentException"/>
+        /// <exception cref="RPNArgumentException"/>
         public static string[] InfixToPostfix(string[] tokenArray, bool strictMode = true)
         {
             var stack = new System.Collections.Generic.Stack<string>();
@@ -169,7 +169,7 @@ namespace RPNCalc.Tools
                     bracketCounter--;
                     if (bracketCounter < 0)
                     {
-                        if (strictMode) throw new ArgumentException("Too many closing brackets");
+                        if (strictMode) throw new RPNArgumentException("Too many closing brackets");
                         bracketCounter = 0;
                         continue; // ignore too many closing brackets
                     }
@@ -201,7 +201,7 @@ namespace RPNCalc.Tools
                     stack.Push(tokenArray[i]);
                 }
             }
-            if (strictMode && bracketCounter > 0) throw new ArgumentException("Too many opening brackets");
+            if (strictMode && bracketCounter > 0) throw new RPNArgumentException("Too many opening brackets");
             while (stack.Count > 0)
             {
                 string element = stack.Pop();

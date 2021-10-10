@@ -134,12 +134,6 @@ namespace RPNCalc
         /// </summary>
         /// <param name="instruction">one or more instructions</param>
         /// <returns>top value on stack or null if stack is empty</returns>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="RPNUndefinedNameException"/>
-        /// <exception cref="RPNEmptyStackException"/>
-        /// <exception cref="RPNFunctionException"/>
-        /// <exception cref="RPNArgumentException"/>
         public AItem Eval(AItem[] instruction)
         {
             if (AlwaysClearStack) ClearStack();
@@ -185,9 +179,6 @@ namespace RPNCalc
                     EvalItems(prog.value, false);
                     localNames.Pop().Clear();
                     break;
-                case ProgramItem:
-                    currentStackInUse.Push(item);
-                    break;
                 case FunctionItem function:
                     if (IsUsingMainStack || IsWhiteListFunction(function.name)) function.value(currentStackInUse);
                     else currentStackInUse.Push(new NameItem(function.name));
@@ -220,8 +211,6 @@ namespace RPNCalc
         /// <param name="name">variable name</param>
         /// <param name="value">value</param>
         /// <param name="namespaceType"></param>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="ArgumentNullException"/>
         public void SetNameValue(string name, AItem value, Namespace namespaceType = Namespace.Default)
         {
             EnsureValidName(name);
@@ -232,7 +221,7 @@ namespace RPNCalc
             {
                 if (localNames.Count > 0)
                 {
-                    Dictionary<string, AItem> @namespace = GetNamespaceWithName(name);
+                    Dictionary<string, AItem> @namespace = GetNamespaceContainingName(name);
                     if (@namespace is null || @namespace == globalNames)
                     {
                         localNames.Peek()[name] = value;
@@ -275,8 +264,6 @@ namespace RPNCalc
         /// <param name="name">function name</param>
         /// <param name="function">function or null to remove function</param>
         /// <param name="setProtected">name of function will be protected against overriding and removing</param>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="ArgumentNullException"/>
         public void SetNameValue(string name, Function function, bool setProtected = false) => SetFunction(name, function, false, setProtected);
 
         /// <summary>
@@ -285,8 +272,6 @@ namespace RPNCalc
         /// <param name="name">function name</param>
         /// <param name="instructions">macro expression or null to remove function</param>
         /// <param name="setProtected">name of function will be protected against overriding and removing</param>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="ArgumentNullException"/>
         public void SetNameValue(string name, AItem[] instructions, bool setProtected = false)
         {
             EnsureValidName(name);
@@ -314,7 +299,7 @@ namespace RPNCalc
             name = GetKeyName(name);
             if (namespaceType == Namespace.Default)
             {
-                Dictionary<string, AItem> @namespace = GetNamespaceWithName(name);
+                Dictionary<string, AItem> @namespace = GetNamespaceContainingName(name);
                 if (@namespace is null) return;
                 @namespace.Remove(name);
                 if (@namespace == globalNames) functionWhiteList.Remove(name);
@@ -343,7 +328,7 @@ namespace RPNCalc
             }
             else if (namespaceType == Namespace.Default)
             {
-                Dictionary<string, AItem> @namespace = GetNamespaceWithName(name);
+                Dictionary<string, AItem> @namespace = GetNamespaceContainingName(name);
                 if (@namespace is not null) return @namespace[name];
             }
             else if (namespaceType == Namespace.Local && localNames.Count > 0)
@@ -353,7 +338,7 @@ namespace RPNCalc
             throw new RPNUndefinedNameException($"Unknown name {name}");
         }
 
-        protected Dictionary<string, AItem> GetNamespaceWithName(string name)
+        protected Dictionary<string, AItem> GetNamespaceContainingName(string name)
         {
             EnsureValidName(name);
             name = GetKeyName(name);
@@ -378,7 +363,7 @@ namespace RPNCalc
             if (alsoAddToProtected) protectedNames.Add(name);
         }
 
-        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetNamespaceWithName(name) == globalNames;
+        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetNamespaceContainingName(name) == globalNames;
         protected bool IsProtectedName(string name) => protectedNames.Contains(GetKeyName(name));
         protected void EnsureNotProtected(string name, Namespace namespaceType)
         {

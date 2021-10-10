@@ -194,14 +194,14 @@ namespace RPNCalc.Tests
         public void ExceptionOnTooManyOpeningBrackets1()
         {
             var tokens = AlgebraicTools.GetTokens("10*(((3+5)");
-            Assert.Throws<ArgumentException>(() => AlgebraicTools.InfixToPostfix(tokens));
+            Assert.Throws<RPNArgumentException>(() => AlgebraicTools.InfixToPostfix(tokens));
         }
 
         [Test]
         public void ExceptionOnTooManyOpeningBrackets2()
         {
             var tokens = AlgebraicTools.GetTokens("10*(((3+5)^20");
-            Assert.Throws<ArgumentException>(() => AlgebraicTools.InfixToPostfix(tokens));
+            Assert.Throws<RPNArgumentException>(() => AlgebraicTools.InfixToPostfix(tokens));
         }
 
         [Test]
@@ -216,7 +216,7 @@ namespace RPNCalc.Tests
         public void ExceptionOnTooManyClosingBrackets()
         {
             var tokens = AlgebraicTools.GetTokens("10*(((3+5))))^20)))");
-            Assert.Throws<ArgumentException>(() => AlgebraicTools.InfixToPostfix(tokens));
+            Assert.Throws<RPNArgumentException>(() => AlgebraicTools.InfixToPostfix(tokens));
         }
 
         [Test]
@@ -461,7 +461,7 @@ namespace RPNCalc.Tests
         [Test]
         public void IncompleteList()
         {
-            Assert.Throws<ArgumentException>(() => AlgebraicTools.GetTokens("foo([1,2)"));
+            Assert.Throws<RPNArgumentException>(() => AlgebraicTools.GetTokens("foo([1,2)"));
         }
 
         [Test]

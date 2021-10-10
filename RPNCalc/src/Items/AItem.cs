@@ -13,14 +13,14 @@ namespace RPNCalc.Items
         {
             RealNumber,
             ComplexNumber,
-            /// <summary>Simple text string, can be used pass reference on variable/function</summary>
+            /// <summary>Simple text string.</summary>
             String,
-            /// <summary>A reference to any item</summary>
+            /// <summary>A reference to any item.</summary>
             Name,
             List,
-            /// <summary>An expression object, contains data and/or functions and/or other programs</summary>
+            /// <summary>An expression object, contains data and/or functions and/or other programs.</summary>
             Program,
-            /// <summary>C# code or <see cref="Program"/> macro</summary>
+            /// <summary>C# code or macro.</summary>
             Function,
         }
 
