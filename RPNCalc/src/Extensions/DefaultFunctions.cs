@@ -68,6 +68,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("<=", stack => stack.Func((x, y) => y.GetRealNumber() <= x));
             calc.SetNameValue(">", stack => stack.Func((x, y) => y.GetRealNumber() > x));
             calc.SetNameValue(">=", stack => stack.Func((x, y) => y.GetRealNumber() >= x));
+            calc.SetNameValue("NOT", stack => stack.Func(x => !x.GetBool()));
 
             calc.SetNameValue("HEAD", HEAD);
             calc.SetNameValue("TAIL", TAIL);

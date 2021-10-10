@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using NUnit.Framework;
 using RPNCalc.Extensions;
 using RPNCalc.Items;
@@ -1104,6 +1105,90 @@ namespace RPNCalc.Tests
             calc.ClearStack();
             Assert.AreEqual(999, calc.Eval("macro 123"));
             calc.ClearStack();
+        }
+
+        [Test]
+        public void TuringCompletenessBrainfuckTest()
+        {
+            var bfOutput = new StringBuilder();
+            calc.SetNameValue("ORD", st => st.Func(x => (int)x.GetString()[0]));
+            calc.SetNameValue("_MSG", st =>
+            {
+                string r = st.Pop() switch
+                {
+                    RealNumberItem real => ((char)(int)real.value).ToString(),
+                    AItem other => other.AsString() + "\n",
+                };
+                //Console.Write(r);
+                bfOutput.Append(r);
+            });
+            calc.SetNameValue("bf_input", string.Empty);
+            const string bfCodeImplement = @"
+{
+  0 'i' lsto
+  'i' swap 1 { 0 } loop
+  'i' lrcl
+  >list
+  'i' clv
+} 'zero_list' sto
+{
+  dup size 'max_pc' lsto
+  0 'pc' lsto
+  0 'mc' lsto
+  0 'bc' lsto
+  16 zero_list 'mem' lsto
+  { pc max_pc < }
+  {
+    dup pc get
+    dup '>' == { 'mc' ++ } ift
+    dup '<' == { 'mc' -- } ift
+    dup '+' == { mem mc mem mc get 1 + put drop } ift
+    dup '-' == { mem mc mem mc get 1 - put drop } ift
+    dup '.' == { mem mc get _msg } ift
+    dup ',' == { mem mc bf_input head bf_input tail 'bf_input' sto ord put drop } ift
+    dup '[' == mem mc get 0 == *
+    {
+      'bc' ++
+      { bc 0 > pc max_pc >= * }
+      {
+        'pc' ++
+        dup
+        pc get
+        dup '[' == { 'bc' ++ break } ift
+        dup ']' == { 'bc' -- break } ift
+        drop
+      } while
+      0
+    } ift
+    dup ']' == mem mc get *
+    {
+      'bc' ++
+      drop
+      { bc 0 > pc 0 > * }
+      {
+        'pc' --
+        dup
+        pc get
+        dup '[' == { 'bc' -- break } ift
+        dup ']' == { 'bc' ++ break } ift
+        drop
+      } while
+      0
+    } ift
+    drop
+    'pc' ++
+  } while
+  mem
+} 'bf' sto
+";
+            const string bfCodeRun = @"
+'output: ' _msg
+'++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.'
+bf
+";
+            Assert.DoesNotThrow(() => calc.Eval(bfCodeImplement));
+            Assert.DoesNotThrow(() => calc.Eval(bfCodeRun));
+            Assert.AreEqual("output: \nHello World!\n", bfOutput.ToString());
         }
     }
 }
