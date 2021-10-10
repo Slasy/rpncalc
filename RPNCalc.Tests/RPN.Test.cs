@@ -25,7 +25,7 @@ namespace RPNCalc.Tests
         public void Setup()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = false });
-            calc.SetName("_DBG_", _ => DebugBreak());
+            calc.SetNameValue("_DBG_", _ => DebugBreak());
         }
 
         [Test]
@@ -69,11 +69,11 @@ namespace RPNCalc.Tests
         {
             calc = new RPN(new RPN.Options { CaseSensitiveNames = false });
 
-            calc.SetName("Foo", 123);
+            calc.SetNameValue("Foo", 123);
             Assert.IsTrue(calc.GlobalNames.ContainsKey("foo"));
-            calc.SetName("bAr", 456);
+            calc.SetNameValue("bAr", 456);
             Assert.IsTrue(calc.GlobalNames.ContainsKey("bar"));
-            calc.SetName("PlUs", st => st.Push((double)st.Pop() + st.Pop()));
+            calc.SetNameValue("PlUs", st => st.Push((double)st.Pop() + st.Pop()));
             Assert.IsTrue(calc.FunctionsView.Contains("plus"));
             Assert.AreEqual(123 + 456, calc.Eval("foO BAR plus"));
         }
@@ -83,11 +83,11 @@ namespace RPNCalc.Tests
         {
             calc = new RPN(new RPN.Options { CaseSensitiveNames = true });
 
-            calc.SetName("Foo", 123);
+            calc.SetNameValue("Foo", 123);
             Assert.IsTrue(calc.GlobalNames.ContainsKey("Foo"));
-            calc.SetName("bAr", 456);
+            calc.SetNameValue("bAr", 456);
             Assert.IsTrue(calc.GlobalNames.ContainsKey("bAr"));
-            calc.SetName("PlUs", st => st.Push((double)st.Pop() + st.Pop()));
+            calc.SetNameValue("PlUs", st => st.Push((double)st.Pop() + st.Pop()));
             Assert.IsTrue(calc.FunctionsView.Contains("PlUs"));
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("foO BAR plus"));
             Assert.AreEqual(123 + 456, calc.Eval("Foo bAr PlUs"));
@@ -96,17 +96,17 @@ namespace RPNCalc.Tests
         [Test]
         public void NoExceptionOnSameFunctionVariableName()
         {
-            calc.SetName("foo", 123);
-            Assert.DoesNotThrow(() => calc.SetName("foo", _ => { }));
-            calc.SetName("bar", _ => { });
-            Assert.DoesNotThrow(() => calc.SetName("bar", 123));
+            calc.SetNameValue("foo", 123);
+            Assert.DoesNotThrow(() => calc.SetNameValue("foo", _ => { }));
+            calc.SetNameValue("bar", _ => { });
+            Assert.DoesNotThrow(() => calc.SetNameValue("bar", 123));
         }
 
         [Test]
         public void UnsetFunctionAndVariable()
         {
-            calc.SetName("foo", 123);
-            calc.SetName("bar", _ => { });
+            calc.SetNameValue("foo", 123);
+            calc.SetNameValue("bar", _ => { });
             CollectionAssert.IsSubsetOf(new[] { "foo", "bar" }, calc.GlobalNames.Keys);
             CollectionAssert.Contains(calc.FunctionsView, "bar");
             CollectionAssert.DoesNotContain(calc.FunctionsView, "foo");
@@ -120,10 +120,10 @@ namespace RPNCalc.Tests
         public void Pythagoras()
         {
             // a^2 + b^2 = c^2
-            calc.SetName("a", 3);
-            calc.SetName("b", 4);
-            calc.SetName("c", 5);
-            calc.SetName("=", st =>
+            calc.SetNameValue("a", 3);
+            calc.SetNameValue("b", 4);
+            calc.SetNameValue("c", 5);
+            calc.SetNameValue("=", st =>
             {
                 var (x, y) = st.Pop2();
                 st.Push(y);
@@ -138,9 +138,9 @@ namespace RPNCalc.Tests
         public void Quadratic()
         {
             // 2x^2 - 5x - 3 = 0
-            calc.SetName("a", 2);
-            calc.SetName("b", -5);
-            calc.SetName("c", -3);
+            calc.SetNameValue("a", 2);
+            calc.SetNameValue("b", -5);
+            calc.SetNameValue("c", -3);
             double root1 = calc.Eval("b +- b sq 4 a c * * - sqrt + 2 a * /");
             double root2 = calc.Eval("b +- b sq 4 a c * * - sqrt - 2 a * /");
             Assert.AreEqual(3, root1);
@@ -164,7 +164,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SetMacro()
         {
-            calc.SetName("macro", new AItem[] { 1, 2, new NameItem("+"), new NameItem("dup"), 2, new NameItem("/"), new NameItem("swap") });
+            calc.SetNameValue("macro", new AItem[] { 1, 2, new NameItem("+"), new NameItem("dup"), 2, new NameItem("/"), new NameItem("swap") });
             CollectionAssert.Contains(calc.FunctionsView, "macro");
             calc.Eval("10 20 macro");
             CollectionAssert.AreEqual(new[] { 3, 1.5, 20, 10 }, calc.StackView);
@@ -175,7 +175,7 @@ namespace RPNCalc.Tests
         {
             calc = new RPN(new RPN.Options { CaseSensitiveNames = true, AlwaysClearStack = true });
             calc.Eval("1 2");
-            calc.SetName("foo", new[] { new NameItem("DUP"), new NameItem("*"), new NameItem("+") });
+            calc.SetNameValue("foo", new[] { new NameItem("DUP"), new NameItem("*"), new NameItem("+") });
             calc.Eval("10 20 foo");
             CollectionAssert.AreEqual(new[] { 410 }, calc.StackView);
         }
@@ -183,7 +183,7 @@ namespace RPNCalc.Tests
         [Test]
         public void RotRollOver()
         {
-            calc.SetName("eq", st => { var (x, y) = st.Peek2(); st.Push(x == y ? 1 : 0); });
+            calc.SetNameValue("eq", st => { var (x, y) = st.Peek2(); st.Push(x == y ? 1 : 0); });
             calc.Eval("5 20 over / 4 eq roll drop drop +");
             CollectionAssert.AreEqual(new[] { 6 }, calc.StackView);
             calc.Eval("1 2 3 clst 10 20 30 rot + eq");
@@ -195,7 +195,7 @@ namespace RPNCalc.Tests
         [Test]
         public void PushAStringsToStack()
         {
-            calc.SetName("foo", 1234);
+            calc.SetNameValue("foo", 1234);
             string top = null;
             Assert.DoesNotThrow(() => top = calc.Eval("foo 'foo'"));
             Assert.AreEqual("foo", top);
@@ -274,7 +274,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SetStringVariable()
         {
-            calc.SetName("foo", "foobar");
+            calc.SetNameValue("foo", "foobar");
             string s = calc.Eval("foo").GetString();
             Assert.AreEqual("foobar", s);
         }
@@ -282,7 +282,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SetProgramVariable()
         {
-            calc.SetName("foo", ProgramItem.From(new NameItem("dup"), new NameItem("*"), new NameItem("+")));
+            calc.SetNameValue("foo", ProgramItem.From(new NameItem("dup"), new NameItem("*"), new NameItem("+")));
             double n = calc.Eval("10 20 foo eval").GetRealNumber();
             Assert.AreEqual(410, n);
         }
@@ -318,7 +318,7 @@ namespace RPNCalc.Tests
         [Test]
         public void RclNumber()
         {
-            calc.SetName("foo", 1234);
+            calc.SetNameValue("foo", 1234);
             double n = calc.Eval("'foo' rcl").GetRealNumber();
             Assert.AreEqual(1234, n);
             CollectionAssert.AreEqual(new[] { 1234 }, calc.StackView);
@@ -327,7 +327,7 @@ namespace RPNCalc.Tests
         [Test]
         public void RclString()
         {
-            calc.SetName("foo", "foobar");
+            calc.SetNameValue("foo", "foobar");
             string s = calc.Eval("'foo' rcl").GetString();
             Assert.AreEqual("foobar", s);
             CollectionAssert.AreEqual(new[] { "foobar" }, calc.StackView);
@@ -336,7 +336,7 @@ namespace RPNCalc.Tests
         [Test]
         public void RclProgram()
         {
-            calc.SetName("foo", ProgramItem.From(new NameItem("dup"), new NameItem("+")));
+            calc.SetNameValue("foo", ProgramItem.From(new NameItem("dup"), new NameItem("+")));
             var s = calc.Eval("'foo' rcl").GetProgramInstructions();
             Assert.AreEqual(ProgramItem.From(new NameItem("dup"), new NameItem("+")), new ProgramItem(s));
             CollectionAssert.AreEqual(new[] { ProgramItem.From(new NameItem("dup"), new NameItem("+")) }, calc.StackView);
@@ -345,7 +345,7 @@ namespace RPNCalc.Tests
         [Test]
         public void RclSto()
         {
-            calc.SetName("foo", "foobar");
+            calc.SetNameValue("foo", "foobar");
             var top = calc.Eval("'foo' rcl dup sto");
             Assert.IsNull(top);
             CollectionAssert.IsSubsetOf(new[] { "foo", "foobar" }, calc.GlobalNames.Keys);
@@ -357,7 +357,7 @@ namespace RPNCalc.Tests
         public void ClearVariable()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = false });
-            calc.SetName("foo", "foobar");
+            calc.SetNameValue("foo", "foobar");
             CollectionAssert.Contains(calc.GlobalNames.Keys, "foo");
             Assert.AreEqual("foobar", calc.GlobalNames["foo"]);
             Assert.DoesNotThrow(() => calc.Eval("foo 'foo' clv"));
@@ -593,7 +593,7 @@ namespace RPNCalc.Tests
         [Test]
         public void ShouldKeepInnerProgramOnStack()
         {
-            calc.SetName("plus2", new ProgramItem(new AItem[] { 2, new NameItem("+") }));
+            calc.SetNameValue("plus2", new ProgramItem(new AItem[] { 2, new NameItem("+") }));
             var expression = ProgramItem.From(10, new NameItem("plus2"));
             var top = calc.Eval(new AItem[] { expression, new NameItem("EVAL") });
             Assert.IsInstanceOf<RealNumberItem>(top);
@@ -660,8 +660,8 @@ namespace RPNCalc.Tests
         public void MinimalCalc()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, LoadDefaultFunctions = false });
-            calc.SetName("add2numbers", st => { var (x, y) = st.Pop2(); st.Push(x.GetRealNumber() + y); });
-            calc.SetName("giv4pls", st => st.Push(4)); // https://xkcd.com/221/
+            calc.SetNameValue("add2numbers", st => { var (x, y) = st.Pop2(); st.Push(x.GetRealNumber() + y); });
+            calc.SetNameValue("giv4pls", st => st.Push(4)); // https://xkcd.com/221/
             calc.EvalAlgebraic("add2numbers(giv4pls(),giv4pls())");
             CollectionAssert.AreEqual(new[] { 8 }, calc.StackView);
             Assert.AreEqual("Unknown name +", Assert.Throws<RPNUndefinedNameException>(() => calc.EvalAlgebraic("giv4pls() + giv4pls()")).Message);
@@ -671,9 +671,9 @@ namespace RPNCalc.Tests
         public void MoreComplexAlgExpression()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false });
-            calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
-            calc.SetName("cos", st => st.Push(Math.Cos(st.Pop())));
-            calc.SetName("tan", st => st.Push(Math.Tan(st.Pop())));
+            calc.SetNameValue("sin", st => st.Push(Math.Sin(st.Pop())));
+            calc.SetNameValue("cos", st => st.Push(Math.Cos(st.Pop())));
+            calc.SetNameValue("tan", st => st.Push(Math.Tan(st.Pop())));
             var result = calc.EvalAlgebraic("sin(cos(tan(3)+2)*5)/3");
             Assert.AreEqual(-.329230492289, result, 0.0001);
         }
@@ -681,8 +681,8 @@ namespace RPNCalc.Tests
         [Test]
         public void EvalStringAsAlgExpression()
         {
-            calc.SetName("sin", st => st.Push(Math.Sin(st.Pop())));
-            calc.SetName("pi", Math.PI);
+            calc.SetNameValue("sin", st => st.Push(Math.Sin(st.Pop())));
+            calc.SetNameValue("pi", Math.PI);
             var result = calc.Eval("'sin(pi/2)' eval");
             Assert.IsInstanceOf<RealNumberItem>(result);
             Assert.AreEqual(1d, result);
@@ -953,20 +953,10 @@ namespace RPNCalc.Tests
         }
 
         [Test]
-        public void EndProgram()
-        {
-            Assert.AreEqual(3, calc.Eval("{ 1 2 3 end 4 5 6 } eval"));
-            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, calc.StackView);
-            calc.ClearStack();
-            Assert.AreEqual(2, calc.Eval("{ 1 2 end 3 4 } 'prog' sto prog"));
-            CollectionAssert.AreEqual(new[] { 2, 1 }, calc.StackView);
-        }
-
-        [Test]
         public void LocalNames()
         {
             calc.Eval("1234 'global_name' sto");
-            calc.SetName("foo", new AItem[] { new NameItem("global_name") });
+            calc.SetNameValue("foo", new AItem[] { new NameItem("global_name") });
             Assert.AreEqual(1234, calc.Eval("{ 'global_name' rcl } eval"));
             Assert.AreEqual("foo", calc.Eval("{ 'foo' 'global_name' sto global_name } eval"));
             Assert.AreEqual(1234, calc.Eval("{ 'global_name' rcl } eval"));
@@ -1052,6 +1042,68 @@ namespace RPNCalc.Tests
                 } eval");
             CollectionAssert.AreEqual(new[] { 111, 222 + 0 + 1 + 2 + 3 + 4 }, calc.StackView);
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'i' rcl"));
+        }
+
+        [Test]
+        public void ReadFlags()
+        {
+            calc.Eval("_stop_loop FS? _stop_loop FC?");
+            CollectionAssert.AreEqual(new[] { 1, 0 }, calc.StackView);
+        }
+
+        [Test]
+        public void SetFlags()
+        {
+            calc.Eval("0 SF 0 FS? 1 FS?");
+            CollectionAssert.AreEqual(new[] { 0, 1 }, calc.StackView);
+        }
+
+        [Test]
+        public void FailDestroyFlags()
+        {
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("'_FLAGS' clv"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("1234 '_FLAGS' sto"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("1234 '_FLAGS' lsto"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("1234 '_FLAGS' gsto"));
+        }
+
+        [Test, Timeout(100)]
+        public void BreakWhile()
+        {
+            calc.Eval("{ 1 } { break 123 } while");
+            CollectionAssert.IsEmpty(calc.StackView);
+        }
+
+        [Test]
+        public void BreakLoop()
+        {
+            calc.Eval("123 'i' sto 'i' 999 1 { i break i } loop");
+            CollectionAssert.AreEqual(new[] { 123 }, calc.StackView);
+        }
+
+        [Test]
+        public void EndProgram()
+        {
+            Assert.AreEqual(123, calc.Eval("{ 123 end 456 } eval"));
+            Assert.AreEqual(666, calc.Eval("666 end 999"));
+        }
+
+        [Test]
+        public void RunMacroWithoutCreatingNewNamespace()
+        {
+            calc.SetNameValue("macro", new AItem[] { 999, new NameItem("END") });
+            Assert.AreEqual(999, calc.Eval("{ macro 123 } eval"));
+            calc.ClearStack();
+            calc.Eval("{ 0 { macro 123 } } eval");
+            CollectionAssert.DoesNotContain(calc.StackView, 123);
+            CollectionAssert.DoesNotContain(calc.StackView, 999);
+            calc.ClearStack();
+            calc.Eval("{ 0 { macro 123 } eval } eval");
+            CollectionAssert.DoesNotContain(calc.StackView, 123);
+            CollectionAssert.Contains(calc.StackView, 999);
+            calc.ClearStack();
+            Assert.AreEqual(999, calc.Eval("macro 123"));
+            calc.ClearStack();
         }
     }
 }

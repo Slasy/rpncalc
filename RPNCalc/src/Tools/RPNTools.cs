@@ -13,6 +13,12 @@ namespace RPNCalc.Tools
         private static readonly Regex[] matchers = new[] { numberToken, stringToken, variableNameToken };
         private static readonly Regex expressionSplit = new(@"(?<!\\)'.*?(?<!\\)'|[^\s']+");
 
+        public static AItem[] CreateMacroInstructions(string expression)
+        {
+            string[] tokens = GetTokens(expression);
+            return TokensToItems(tokens);
+        }
+
         /// <summary>
         /// Splits string to array of string tokens.
         /// </summary>

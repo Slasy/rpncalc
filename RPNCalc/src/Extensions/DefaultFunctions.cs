@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using RPNCalc.Items;
 using RPNCalc.Tools;
@@ -10,79 +11,95 @@ namespace RPNCalc.Extensions
         private static RPNFunctionException UndefinedResult => new("Undefined result");
         private static RPNArgumentException IndexOutOfRange => new("Index out of range");
 
+        private const string FLAGS_NAME = "_FLAGS";
+        private const string FLAG_STOP_LOOP = "_STOP_LOOP";
+        private static readonly AItem[] CHECK_BREAK_LOOP_MACRO = RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} FS?C");
+        private static readonly AItem[] DROP_VALUE_MACRO = RPNTools.CreateMacroInstructions("DROP");
+        private static readonly AItem[] CLEAR_STOP_LOOP_FLAG_MACRO = RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} CF");
+
         /// <summary>
         /// If you clear all names from calclulator, you can use this extension to get default functions back.
         /// </summary>
         public static void LoadDefaultFunctions(this RPN calc)
         {
-            calc.SetName("+", PLUS);
-            calc.SetName("-", MINUS);
-            calc.SetName("*", MUL);
-            calc.SetName("/", DIV);
-            calc.SetName("^", POW);
-            calc.SetName("+-", NEG);
-            calc.SetName("++", stack => AddToVarOnStack(calc, stack, 1));
-            calc.SetName("--", stack => AddToVarOnStack(calc, stack, -1));
-            calc.SetName("1/X", ONE_OVER_X);
+            calc.SetNameValue("+", PLUS);
+            calc.SetNameValue("-", MINUS);
+            calc.SetNameValue("*", MUL);
+            calc.SetNameValue("/", DIV);
+            calc.SetNameValue("^", POW);
+            calc.SetNameValue("+-", NEG);
+            calc.SetNameValue("++", stack => AddToVarOnStack(calc, stack, 1));
+            calc.SetNameValue("--", stack => AddToVarOnStack(calc, stack, -1));
+            calc.SetNameValue("1/X", ONE_OVER_X);
 
-            calc.SetName("SQ", SQUARE);
-            calc.SetName("SQRT", SQUARE_ROOT);
-            calc.SetName("DROP", StackExtensions.Drop);
-            calc.SetName("DUP", StackExtensions.Dup);
-            calc.SetName("SWAP", stack => stack.Swap());
-            calc.SetName("DEPTH", stack => stack.Push(stack.Count));
-            calc.SetName("ROT", stack => stack.Rotate(3));
-            calc.SetName("ROLL", stack => stack.Roll(1));
-            calc.SetName("OVER", StackExtensions.Over);
-            calc.SetName("CLST", CLEAR_STACK);
-            calc.SetName("CLV", st => CLEAR_VAR(calc, st));
-            calc.SetName("EVAL", st => EVAL(calc, st));
-            calc.SetName("STO", st => STORE(calc, st, RPN.Namespace.Default));
-            calc.SetName("RCL", st => RECALL(calc, st, RPN.Namespace.Default));
-            calc.SetName("GSTO", st => STORE(calc, st, RPN.Namespace.Global));
-            calc.SetName("GRCL", st => RECALL(calc, st, RPN.Namespace.Global));
-            calc.SetName("LSTO", st => STORE(calc, st, RPN.Namespace.Local));
-            calc.SetName("LRCL", st => RECALL(calc, st, RPN.Namespace.Local));
-            calc.SetName("RND", ROUND);
-            calc.SetName("RND0", CreateMacro("0 RND"));
+            calc.SetNameValue("EVAL", st => EVAL(calc, st));
 
-            calc.SetName("IFT", st => IF_THEN(calc, st));
-            calc.SetName("IFTE", st => IF_THEN_ELSE(calc, st));
-            calc.SetName("WHILE", st => WHILE(calc, st));
-            calc.SetName("FOR", st => FOR(calc, st));
-            calc.SetName("LOOP", st => LOOP(calc, st));
+            calc.SetNameValue("SQ", SQUARE);
+            calc.SetNameValue("SQRT", SQUARE_ROOT);
+            calc.SetNameValue("DROP", StackExtensions.Drop);
+            calc.SetNameValue("DUP", StackExtensions.Dup);
+            calc.SetNameValue("SWAP", stack => stack.Swap());
+            calc.SetNameValue("DEPTH", stack => stack.Push(stack.Count));
+            calc.SetNameValue("ROT", stack => stack.Rotate(3));
+            calc.SetNameValue("ROLL", stack => stack.Roll(1));
+            calc.SetNameValue("OVER", StackExtensions.Over);
+            calc.SetNameValue("CLST", CLEAR_STACK);
+            calc.SetNameValue("CLV", st => CLEAR_VAR(calc, st));
+            calc.SetNameValue("STO", st => STORE(calc, st, RPN.Namespace.Default));
+            calc.SetNameValue("RCL", st => RECALL(calc, st, RPN.Namespace.Default));
+            calc.SetNameValue("GSTO", st => STORE(calc, st, RPN.Namespace.Global));
+            calc.SetNameValue("GRCL", st => RECALL(calc, st, RPN.Namespace.Global));
+            calc.SetNameValue("LSTO", st => STORE(calc, st, RPN.Namespace.Local));
+            calc.SetNameValue("LRCL", st => RECALL(calc, st, RPN.Namespace.Local));
+            calc.SetNameValue("RND", ROUND);
+            calc.SetNameValue("RND0", RPNTools.CreateMacroInstructions("0 RND"));
 
-            calc.SetName("==", stack => stack.Func((x, y) => y == x));
-            calc.SetName("!=", stack => stack.Func((x, y) => y != x));
-            calc.SetName("<", stack => stack.Func((x, y) => y.GetRealNumber() < x));
-            calc.SetName("<=", stack => stack.Func((x, y) => y.GetRealNumber() <= x));
-            calc.SetName(">", stack => stack.Func((x, y) => y.GetRealNumber() > x));
-            calc.SetName(">=", stack => stack.Func((x, y) => y.GetRealNumber() >= x));
+            calc.SetNameValue("IFT", st => IF_THEN(calc, st));
+            calc.SetNameValue("IFTE", st => IF_THEN_ELSE(calc, st));
+            calc.SetNameValue("WHILE", st => WHILE(calc, st));
+            calc.SetNameValue("FOR", st => FOR(calc, st));
+            calc.SetNameValue("LOOP", st => LOOP(calc, st));
+            calc.SetNameValue("END", _ => calc.StopProgram = true);
+            calc.SetNameValue("BREAK", RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} SF END"));
 
-            calc.SetName("HEAD", HEAD);
-            calc.SetName("TAIL", TAIL);
-            calc.SetName("CONTAIN", CONTAIN);
-            calc.SetName("POS", POSTION);
-            calc.SetName("GET", GET_FROM_LIST);
-            calc.SetName("GETI", GET_INC_FROM_LIST);
-            calc.SetName("PUT", PUT_TO_LIST);
-            calc.SetName("PUTI", PUT_INC_TO_LIST);
-            calc.SetName(">LIST", TO_LIST);
-            calc.SetName("LIST>", EXPLODE_LIST);
-            calc.SetName("SIZE", SIZE);
+            calc.SetNameValue("==", stack => stack.Func((x, y) => y == x));
+            calc.SetNameValue("!=", stack => stack.Func((x, y) => y != x));
+            calc.SetNameValue("<", stack => stack.Func((x, y) => y.GetRealNumber() < x));
+            calc.SetNameValue("<=", stack => stack.Func((x, y) => y.GetRealNumber() <= x));
+            calc.SetNameValue(">", stack => stack.Func((x, y) => y.GetRealNumber() > x));
+            calc.SetNameValue(">=", stack => stack.Func((x, y) => y.GetRealNumber() >= x));
 
-            calc.SetName("TYPE", TYPE);
-            calc.SetName(">STR", TO_STRING);
-            calc.SetName("STR>", stack => FROM_STRING(calc, stack));
+            calc.SetNameValue("HEAD", HEAD);
+            calc.SetNameValue("TAIL", TAIL);
+            calc.SetNameValue("CONTAIN", CONTAIN);
+            calc.SetNameValue("POS", POSTION);
+            calc.SetNameValue("GET", GET_FROM_LIST);
+            calc.SetNameValue("GETI", GET_INC_FROM_LIST);
+            calc.SetNameValue("PUT", PUT_TO_LIST);
+            calc.SetNameValue("PUTI", PUT_INC_TO_LIST);
+            calc.SetNameValue(">LIST", TO_LIST);
+            calc.SetNameValue("LIST>", EXPLODE_LIST);
+            calc.SetNameValue("SIZE", SIZE);
+
+            calc.SetNameValue("TYPE", TYPE);
+            calc.SetNameValue(">STR", TO_STRING);
+            calc.SetNameValue("STR>", stack => FROM_STRING(calc, stack));
 
             calc.SetCollectionGenerator("[", "]", st => new ListItem(st));
             calc.SetCollectionGenerator("{", "}", st => new ProgramItem(st));
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
 
-            calc.SetName("END", _ => calc.StopProgram = true);
-        }
+            var zeroArray = Enumerable.Repeat(0, 20).Select(x => new RealNumberItem(x)).ToArray();
+            calc.SetNameValue(FLAGS_NAME, new ListItem(zeroArray), RPN.Namespace.Protected);
+            calc.SetNameValue("SF", stack => SET_FLAG(calc, stack, true), true);
+            calc.SetNameValue("CF", stack => SET_FLAG(calc, stack, false), true);
+            calc.SetNameValue("FS?", stack => READ_FLAG(calc, stack, true, false), true);
+            calc.SetNameValue("FC?", stack => READ_FLAG(calc, stack, false, false), true);
+            calc.SetNameValue("FS?C", stack => READ_FLAG(calc, stack, true, true), true);
+            calc.SetNameValue("FC?C", stack => READ_FLAG(calc, stack, false, true), true);
 
-        private static AItem[] CreateMacro(string expression) => RPNTools.TokensToItems(RPNTools.GetTokens(expression));
+            calc.SetNameValue(FLAG_STOP_LOOP, 19, RPN.Namespace.Protected);
+        }
 
         private static void EVAL(RPN calc, Stack<AItem> stack)
         {
@@ -185,7 +202,7 @@ namespace RPNCalc.Extensions
         {
             string name = stack.Pop();
             var value = stack.Pop();
-            calc.SetName(name, value, @namespace);
+            calc.SetNameValue(name, value, @namespace);
         }
 
         private static void RECALL(RPN calc, Stack<AItem> stack, RPN.Namespace @namespace)
@@ -233,12 +250,14 @@ namespace RPNCalc.Extensions
         /// </summary>
         private static void WHILE(RPN calc, Stack<AItem> stack)
         {
+            ClearStopLoopFlag(calc);
             var (x, y) = stack.Pop2();
             var program = x.GetProgram();
             var condition = y.GetProgram();
             while (evalCondition())
             {
                 calc.EvalItem(program, true);
+                if (StopLoopFlagIsSetAndClear(calc)) break;
             }
 
             bool evalCondition()
@@ -254,15 +273,17 @@ namespace RPNCalc.Extensions
         /// </summary>
         private static void FOR(RPN calc, Stack<AItem> stack)
         {
+            ClearStopLoopFlag(calc);
             var (x, y, z, t) = stack.Pop4();
             var programLoop = x.GetProgram();
             var stepProgram = y.GetProgram();
             var conditionProgram = z.GetProgram();
             string variableName = t;
-            calc.GetNameValue(variableName).GetRealNumber(); // to check type and/or throw exception
+            calc.GetNameValue(variableName).EnsureType<RealNumberItem>();
             for (; condition(); step())
             {
                 calc.EvalItem(programLoop, true);
+                if (StopLoopFlagIsSetAndClear(calc)) break;
             }
 
             bool condition()
@@ -275,7 +296,7 @@ namespace RPNCalc.Extensions
             {
                 ExpectedDepthEval<RealNumberItem>(calc, stepProgram, "step");
                 double varValue = calc.GetNameValue(variableName);
-                calc.SetName(variableName, varValue + stack.Pop());
+                calc.SetNameValue(variableName, varValue + stack.Pop());
             }
         }
 
@@ -285,6 +306,7 @@ namespace RPNCalc.Extensions
         /// </summary>
         private static void LOOP(RPN calc, Stack<AItem> stack)
         {
+            ClearStopLoopFlag(calc);
             var (x, y, z, t) = stack.Pop4();
             var programLoop = x.GetProgram();
             double stepValue = y;
@@ -294,6 +316,7 @@ namespace RPNCalc.Extensions
             for (; condition(); step())
             {
                 calc.EvalItem(programLoop, true);
+                if (StopLoopFlagIsSetAndClear(calc)) break;
             }
 
             bool condition()
@@ -306,7 +329,7 @@ namespace RPNCalc.Extensions
             void step()
             {
                 double varValue = calc.GetNameValue(variableName);
-                calc.SetName(variableName, varValue + stepValue);
+                calc.SetNameValue(variableName, varValue + stepValue);
             }
         }
 
@@ -513,6 +536,28 @@ namespace RPNCalc.Extensions
             calc.Eval(str);
         }
 
+        private static void SET_FLAG(RPN calc, Stack<AItem> stack, bool value)
+        {
+            int flagIndex = GetInteger(stack.Pop());
+            AItem[] flags = calc.GetNameValue(FLAGS_NAME, RPN.Namespace.Protected).GetArray();
+            EnsureListItemIndex(flags, flagIndex);
+            flags[flagIndex] = value;
+            calc.SetNameValue(FLAGS_NAME, flags, RPN.Namespace.Protected);
+        }
+
+        private static void READ_FLAG(RPN calc, Stack<AItem> stack, bool expectedValue, bool clearFlag)
+        {
+            int flagIndex = GetInteger(stack.Pop());
+            var flags = calc.GetNameValue(FLAGS_NAME, RPN.Namespace.Protected).GetArray();
+            EnsureListItemIndex(flags, flagIndex);
+            stack.Push(flags[flagIndex].GetBool() == expectedValue);
+            if (clearFlag)
+            {
+                flags[flagIndex] = false;
+                calc.SetNameValue(FLAGS_NAME, flags, RPN.Namespace.Protected);
+            }
+        }
+
         private static AItem CreateComplexNumber(Stack<AItem> stack)
         {
             if (stack.Count != 2) throw new RPNArgumentException("Invalid syntax of complex number");
@@ -538,6 +583,23 @@ namespace RPNCalc.Extensions
         private static int GetInteger(AItem item)
         {
             return (int)Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
+        }
+
+        private static void EnsureListItemIndex(Array array, int index)
+        {
+            if (array.Length <= index || index < 0) throw new RPNArgumentException($"List index is out of range {index}");
+        }
+
+        private static bool StopLoopFlagIsSetAndClear(RPN calc)
+        {
+            bool set = calc.EvalItems(CHECK_BREAK_LOOP_MACRO, false);
+            calc.EvalItems(DROP_VALUE_MACRO, false);
+            return set;
+        }
+
+        private static void ClearStopLoopFlag(RPN calc)
+        {
+            calc.EvalItems(CLEAR_STOP_LOOP_FLAG_MACRO, false);
         }
     }
 }
