@@ -1090,7 +1090,7 @@ namespace RPNCalc.Tests
         }
 
         [Test]
-        public void RunMacroWithoutCreatingNewNamespace()
+        public void RunMacroWithoutCreatingNewScope()
         {
             calc.SetNameValue("macro", new AItem[] { 999, new NameItem("END") });
             Assert.AreEqual(999, calc.Eval("{ macro 123 } eval"));

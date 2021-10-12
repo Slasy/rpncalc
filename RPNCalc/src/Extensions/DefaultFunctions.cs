@@ -45,12 +45,12 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("OVER", StackExtensions.Over);
             calc.SetNameValue("CLST", CLEAR_STACK);
             calc.SetNameValue("CLV", st => CLEAR_VAR(calc, st));
-            calc.SetNameValue("STO", st => STORE(calc, st, RPN.Namespace.Default));
-            calc.SetNameValue("RCL", st => RECALL(calc, st, RPN.Namespace.Default));
-            calc.SetNameValue("GSTO", st => STORE(calc, st, RPN.Namespace.Global));
-            calc.SetNameValue("GRCL", st => RECALL(calc, st, RPN.Namespace.Global));
-            calc.SetNameValue("LSTO", st => STORE(calc, st, RPN.Namespace.Local));
-            calc.SetNameValue("LRCL", st => RECALL(calc, st, RPN.Namespace.Local));
+            calc.SetNameValue("STO", st => STORE(calc, st, RPN.Scope.Default));
+            calc.SetNameValue("RCL", st => RECALL(calc, st, RPN.Scope.Default));
+            calc.SetNameValue("GSTO", st => STORE(calc, st, RPN.Scope.Global));
+            calc.SetNameValue("GRCL", st => RECALL(calc, st, RPN.Scope.Global));
+            calc.SetNameValue("LSTO", st => STORE(calc, st, RPN.Scope.Local));
+            calc.SetNameValue("LRCL", st => RECALL(calc, st, RPN.Scope.Local));
             calc.SetNameValue("RND", ROUND);
             calc.SetNameValue("RND0", RPNTools.CreateMacroInstructions("0 RND"));
 
@@ -91,7 +91,7 @@ namespace RPNCalc.Extensions
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
 
             var zeroArray = Enumerable.Repeat(0, 20).Select(x => new RealNumberItem(x)).ToArray();
-            calc.SetNameValue(FLAGS_NAME, new ListItem(zeroArray), RPN.Namespace.Protected);
+            calc.SetNameValue(FLAGS_NAME, new ListItem(zeroArray), RPN.Scope.Protected);
             calc.SetNameValue("SF", stack => SET_FLAG(calc, stack, true), true);
             calc.SetNameValue("CF", stack => SET_FLAG(calc, stack, false), true);
             calc.SetNameValue("FS?", stack => READ_FLAG(calc, stack, true, false), true);
@@ -99,7 +99,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("FS?C", stack => READ_FLAG(calc, stack, true, true), true);
             calc.SetNameValue("FC?C", stack => READ_FLAG(calc, stack, false, true), true);
 
-            calc.SetNameValue(FLAG_STOP_LOOP, 19, RPN.Namespace.Protected);
+            calc.SetNameValue(FLAG_STOP_LOOP, 19, RPN.Scope.Protected);
         }
 
         private static void EVAL(RPN calc, Stack<AItem> stack)
@@ -199,17 +199,17 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void STORE(RPN calc, Stack<AItem> stack, RPN.Namespace @namespace)
+        private static void STORE(RPN calc, Stack<AItem> stack, RPN.Scope scope)
         {
             string name = stack.Pop();
             var value = stack.Pop();
-            calc.SetNameValue(name, value, @namespace);
+            calc.SetNameValue(name, value, scope);
         }
 
-        private static void RECALL(RPN calc, Stack<AItem> stack, RPN.Namespace @namespace)
+        private static void RECALL(RPN calc, Stack<AItem> stack, RPN.Scope scope)
         {
             string name = stack.Pop();
-            AItem item = calc.GetNameValue(name, @namespace);
+            AItem item = calc.GetNameValue(name, scope);
             stack.Push(item);
         }
 
@@ -540,22 +540,22 @@ namespace RPNCalc.Extensions
         private static void SET_FLAG(RPN calc, Stack<AItem> stack, bool value)
         {
             int flagIndex = GetInteger(stack.Pop());
-            AItem[] flags = calc.GetNameValue(FLAGS_NAME, RPN.Namespace.Protected).GetArray();
+            AItem[] flags = calc.GetNameValue(FLAGS_NAME, RPN.Scope.Protected).GetArray();
             EnsureListItemIndex(flags, flagIndex);
             flags[flagIndex] = value;
-            calc.SetNameValue(FLAGS_NAME, flags, RPN.Namespace.Protected);
+            calc.SetNameValue(FLAGS_NAME, flags, RPN.Scope.Protected);
         }
 
         private static void READ_FLAG(RPN calc, Stack<AItem> stack, bool expectedValue, bool clearFlag)
         {
             int flagIndex = GetInteger(stack.Pop());
-            var flags = calc.GetNameValue(FLAGS_NAME, RPN.Namespace.Protected).GetArray();
+            var flags = calc.GetNameValue(FLAGS_NAME, RPN.Scope.Protected).GetArray();
             EnsureListItemIndex(flags, flagIndex);
             stack.Push(flags[flagIndex].GetBool() == expectedValue);
             if (clearFlag)
             {
                 flags[flagIndex] = false;
-                calc.SetNameValue(FLAGS_NAME, flags, RPN.Namespace.Protected);
+                calc.SetNameValue(FLAGS_NAME, flags, RPN.Scope.Protected);
             }
         }
 

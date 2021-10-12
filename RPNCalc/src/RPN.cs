@@ -31,15 +31,15 @@ namespace RPNCalc
         /// <summary>
         /// <para>Name resolution type.</para>
         /// </summary>
-        public enum Namespace
+        public enum Scope
         {
-            /// <summary>Traverse local namespaces from inside out with fallback to global namespace.</summary>
+            /// <summary>Traverse local scope from inside out with fallback to global scope.</summary>
             Default,
-            /// <summary>Access global namespace only.</summary>
+            /// <summary>Access global scope only.</summary>
             Global,
-            /// <summary>Access only current local namespace, or global if not running inside a program.</summary>
+            /// <summary>Access only current local scope, or global if not running inside a program.</summary>
             Local,
-            /// <summary>Global namespace but can't be overridden with different namespace option.</summary>
+            /// <summary>Global scope but can't be overridden with different scope option.</summary>
             Protected,
         }
 
@@ -210,25 +210,25 @@ namespace RPNCalc
         /// </summary>
         /// <param name="name">variable name</param>
         /// <param name="value">value</param>
-        /// <param name="namespaceType"></param>
-        public void SetNameValue(string name, AItem value, Namespace namespaceType = Namespace.Default)
+        /// <param name="scopeType"></param>
+        public void SetNameValue(string name, AItem value, Scope scopeType = Scope.Default)
         {
             EnsureValidName(name);
             if (value is null) throw new RPNArgumentException($"Can't set {name} to null");
-            EnsureNotProtected(name, namespaceType);
+            EnsureNotProtected(name, scopeType);
             name = GetKeyName(name);
-            if (namespaceType == Namespace.Default)
+            if (scopeType == Scope.Default)
             {
                 if (localNames.Count > 0)
                 {
-                    Dictionary<string, AItem> @namespace = GetNamespaceContainingName(name);
-                    if (@namespace is null || @namespace == globalNames)
+                    Dictionary<string, AItem> scope = GetScopeContainingName(name);
+                    if (scope is null || scope == globalNames)
                     {
                         localNames.Peek()[name] = value;
                     }
                     else
                     {
-                        @namespace[name] = value;
+                        scope[name] = value;
                     }
                 }
                 else
@@ -236,7 +236,7 @@ namespace RPNCalc
                     globalNames[name] = value;
                 }
             }
-            else if (namespaceType == Namespace.Local)
+            else if (scopeType == Scope.Local)
             {
                 if (localNames.Count > 0)
                 {
@@ -247,7 +247,7 @@ namespace RPNCalc
                     globalNames[name] = value;
                 }
             }
-            else if (namespaceType == Namespace.Protected)
+            else if (scopeType == Scope.Protected)
             {
                 protectedNames.Add(name);
                 globalNames[name] = value;
@@ -278,7 +278,7 @@ namespace RPNCalc
             if (instructions is null) throw new RPNArgumentException($"Can't set name {name} to null");
             else SetNameValue(name, macro, setProtected);
 
-            void macro(Stack<AItem> stack)
+            void macro(Stack<AItem> _)
             {
                 macroCounter++;
                 EvalItems(instructions, false);
@@ -287,24 +287,24 @@ namespace RPNCalc
 
         public void SetCollectionGenerator(string startSymbol, string endSymbol, Func<Stack<AItem>, AItem> collectionGenerator, bool setProtected = false)
         {
-            //if (startSymbol == endSymbol) throw new RPNArgumentException("Start and end symbols must be different");
+            if (startSymbol == endSymbol) throw new RPNArgumentException("Start and end symbols must be different");
             SetFunction(startSymbol, GenerateStartCollectionStack(startSymbol), true, setProtected);
             SetFunction(endSymbol, GenerateEndCollectionStack(startSymbol, endSymbol, collectionGenerator), true, setProtected);
         }
 
-        public void RemoveName(string name, Namespace namespaceType = Namespace.Default)
+        public void RemoveName(string name, Scope scopeType = Scope.Default)
         {
             EnsureValidName(name);
-            EnsureNotProtected(name, namespaceType);
+            EnsureNotProtected(name, scopeType);
             name = GetKeyName(name);
-            if (namespaceType == Namespace.Default)
+            if (scopeType == Scope.Default)
             {
-                Dictionary<string, AItem> @namespace = GetNamespaceContainingName(name);
-                if (@namespace is null) return;
-                @namespace.Remove(name);
-                if (@namespace == globalNames) functionWhiteList.Remove(name);
+                Dictionary<string, AItem> scope = GetScopeContainingName(name);
+                if (scope is null) return;
+                scope.Remove(name);
+                if (scope == globalNames) functionWhiteList.Remove(name);
             }
-            else if (namespaceType == Namespace.Global)
+            else if (scopeType == Scope.Global)
             {
                 globalNames.Remove(name);
                 functionWhiteList.Remove(name);
@@ -318,27 +318,27 @@ namespace RPNCalc
         /// <summary>
         /// Get item this name refers to.
         /// </summary>
-        public AItem GetNameValue(string name, Namespace namespaceType = Namespace.Default)
+        public AItem GetNameValue(string name, Scope scopeType = Scope.Default)
         {
             EnsureValidName(name);
             name = GetKeyName(name);
-            if (namespaceType is Namespace.Global or Namespace.Protected)
+            if (scopeType is Scope.Global or Scope.Protected)
             {
                 if (globalNames.TryGetValue(name, out var value)) return value;
             }
-            else if (namespaceType == Namespace.Default)
+            else if (scopeType == Scope.Default)
             {
-                Dictionary<string, AItem> @namespace = GetNamespaceContainingName(name);
-                if (@namespace is not null) return @namespace[name];
+                Dictionary<string, AItem> scope = GetScopeContainingName(name);
+                if (scope is not null) return scope[name];
             }
-            else if (namespaceType == Namespace.Local && localNames.Count > 0)
+            else if (scopeType == Scope.Local && localNames.Count > 0)
             {
                 if (localNames.Peek().TryGetValue(name, out var value)) return value;
             }
             throw new RPNUndefinedNameException($"Unknown name {name}");
         }
 
-        protected Dictionary<string, AItem> GetNamespaceContainingName(string name)
+        protected Dictionary<string, AItem> GetScopeContainingName(string name)
         {
             EnsureValidName(name);
             name = GetKeyName(name);
@@ -363,11 +363,11 @@ namespace RPNCalc
             if (alsoAddToProtected) protectedNames.Add(name);
         }
 
-        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetNamespaceContainingName(name) == globalNames;
+        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetScopeContainingName(name) == globalNames;
         protected bool IsProtectedName(string name) => protectedNames.Contains(GetKeyName(name));
-        protected void EnsureNotProtected(string name, Namespace namespaceType)
+        protected void EnsureNotProtected(string name, Scope scopeType)
         {
-            if (namespaceType != Namespace.Protected && IsProtectedName(name))
+            if (scopeType != Scope.Protected && IsProtectedName(name))
             {
                 throw new RPNArgumentException($"Name {name} is protected");
             }
