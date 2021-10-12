@@ -3,7 +3,7 @@ using RPNCalc.Items;
 
 namespace RPNCalc.Extensions
 {
-    public static class StackItemExtensions
+    public static class ItemExtensions
     {
         public static double GetRealNumber(this AItem item)
         {
