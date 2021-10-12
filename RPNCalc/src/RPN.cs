@@ -211,7 +211,8 @@ namespace RPNCalc
         /// <param name="name">variable name</param>
         /// <param name="value">value</param>
         /// <param name="scopeType"></param>
-        public void SetNameValue(string name, AItem value, Scope scopeType = Scope.Default)
+        /// <returns>name used to save value</returns>
+        public string SetNameValue(string name, AItem value, Scope scopeType = Scope.Default)
         {
             EnsureValidName(name);
             if (value is null) throw new RPNArgumentException($"Can't set {name} to null");
@@ -259,6 +260,7 @@ namespace RPNCalc
                 EnsureNotProtected(name, scopeType);
                 globalNames[name] = value;
             }
+            return name;
         }
 
         /// <summary>
@@ -267,7 +269,8 @@ namespace RPNCalc
         /// <param name="name">function name</param>
         /// <param name="function">C# function</param>
         /// <param name="setProtected">function will be protected against overriding and removing</param>
-        public void SetNameValue(string name, Function function, bool setProtected = false) => SetFunction(name, function, false, setProtected);
+        /// <returns>name used to save function</returns>
+        public string SetNameValue(string name, Function function, bool setProtected = false) => SetFunction(name, function, false, setProtected);
 
         /// <summary>
         /// Set custom macro-like function for this calculator instance.
@@ -275,11 +278,12 @@ namespace RPNCalc
         /// <param name="name">macro name</param>
         /// <param name="instructions">macro expression as a collection of instructions</param>
         /// <param name="setProtected">macro will be protected against overriding and removing</param>
-        public void SetNameValue(string name, AItem[] instructions, bool setProtected = false)
+        /// <returns>name used to save macro</returns>
+        public string SetNameValue(string name, AItem[] instructions, bool setProtected = false)
         {
             EnsureValidName(name);
             if (instructions is null) throw new RPNArgumentException($"Can't set name {name} to null");
-            else SetNameValue(name, macro, setProtected);
+            else return SetNameValue(name, macro, setProtected);
 
             void macro(Stack<AItem> _)
             {
@@ -295,27 +299,29 @@ namespace RPNCalc
             SetFunction(endSymbol, GenerateEndCollectionStack(startSymbol, endSymbol, collectionGenerator), true, setProtected);
         }
 
-        public void RemoveName(string name, Scope scopeType = Scope.Default)
+        public bool RemoveName(string name, Scope scopeType = Scope.Default)
         {
             EnsureValidName(name);
             EnsureNotProtected(name, scopeType);
             name = GetKeyName(name);
+            bool removed = false;
             if (scopeType == Scope.Default)
             {
                 Dictionary<string, AItem> scope = GetScopeContainingName(name);
-                if (scope is null) return;
-                scope.Remove(name);
+                if (scope is null) return false;
+                removed = scope.Remove(name);
                 if (scope == globalNames) functionWhiteList.Remove(name);
             }
             else if (scopeType == Scope.Global)
             {
-                globalNames.Remove(name);
+                removed = globalNames.Remove(name);
                 functionWhiteList.Remove(name);
             }
             else if (LocalNames.Count > 0)
             {
-                localNames.Peek().Remove(name);
+                removed = localNames.Peek().Remove(name);
             }
+            return removed;
         }
 
         /// <summary>
@@ -356,7 +362,7 @@ namespace RPNCalc
             return null;
         }
 
-        protected void SetFunction(string name, Function function, bool alsoAddToWhiteList, bool alsoAddToProtected)
+        protected string SetFunction(string name, Function function, bool alsoAddToWhiteList, bool alsoAddToProtected)
         {
             EnsureValidName(name);
             if (function is null) throw new RPNArgumentException($"Can't set function {name} to null");
@@ -364,6 +370,7 @@ namespace RPNCalc
             globalNames[name] = new FunctionItem(name, function);
             if (alsoAddToWhiteList) functionWhiteList.Add(name);
             if (alsoAddToProtected) protectedNames.Add(name);
+            return name;
         }
 
         protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetScopeContainingName(name) == globalNames;

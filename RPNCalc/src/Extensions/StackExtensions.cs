@@ -49,7 +49,6 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>no pops, 1x push</summary>
-        /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
         public static void Func<T>(this Stack<T> stack, Func<T> func)
         {
@@ -120,7 +119,6 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>no pops, 2x push</summary>
-        /// <exception cref="RPNEmptyStackException"/>
         /// <exception cref="RPNFunctionException"/>
         public static void Func<T>(this Stack<T> stack, Func<(T, T)> func)
         {

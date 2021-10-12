@@ -4,5 +4,5 @@ using System.Reflection;
 [assembly: AssemblyTitle("RPNCalc")]
 [assembly: AssemblyCopyright("Copyright (C) 2021 Marek Vitvar")]
 [assembly: AssemblyVersion("1.3.3.*")]
-[assembly: AssemblyFileVersion("1.3.3.0")]
+[assembly: AssemblyFileVersion("1.3.3.1")]
 [assembly: AssemblyInformationalVersion("1.3.3")]
