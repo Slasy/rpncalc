@@ -1190,5 +1190,16 @@ bf
             Assert.DoesNotThrow(() => calc.Eval(bfCodeRun));
             Assert.AreEqual("output: \nHello World!\n", bfOutput.ToString());
         }
+
+        [Test]
+        public void OverrideProtectedFunctionInLocalScope()
+        {
+            calc.SetNameValue("func", st => st.Push(123), true);
+            calc.Eval("{ func 999 'func' lsto func } eval func");
+            CollectionAssert.AreEqual(new[] { 123, 999, 123 }, calc.StackView);
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("999 'func' sto"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("999 'func' lsto"));
+            Assert.Throws<RPNArgumentException>(() => calc.Eval("999 'func' gsto"));
+        }
     }
 }

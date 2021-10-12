@@ -215,7 +215,6 @@ namespace RPNCalc
         {
             EnsureValidName(name);
             if (value is null) throw new RPNArgumentException($"Can't set {name} to null");
-            EnsureNotProtected(name, scopeType);
             name = GetKeyName(name);
             if (scopeType == Scope.Default)
             {
@@ -228,11 +227,13 @@ namespace RPNCalc
                     }
                     else
                     {
+                        if (scope == globalNames) EnsureNotProtected(name, scopeType);
                         scope[name] = value;
                     }
                 }
                 else
                 {
+                    EnsureNotProtected(name, scopeType);
                     globalNames[name] = value;
                 }
             }
@@ -244,6 +245,7 @@ namespace RPNCalc
                 }
                 else
                 {
+                    EnsureNotProtected(name, scopeType);
                     globalNames[name] = value;
                 }
             }
@@ -254,6 +256,7 @@ namespace RPNCalc
             }
             else
             {
+                EnsureNotProtected(name, scopeType);
                 globalNames[name] = value;
             }
         }
@@ -262,16 +265,16 @@ namespace RPNCalc
         /// Set custom C# function for this calculator instance.
         /// </summary>
         /// <param name="name">function name</param>
-        /// <param name="function">function or null to remove function</param>
-        /// <param name="setProtected">name of function will be protected against overriding and removing</param>
+        /// <param name="function">C# function</param>
+        /// <param name="setProtected">function will be protected against overriding and removing</param>
         public void SetNameValue(string name, Function function, bool setProtected = false) => SetFunction(name, function, false, setProtected);
 
         /// <summary>
-        /// Set custom macro as function for this calculator instance.
+        /// Set custom macro-like function for this calculator instance.
         /// </summary>
-        /// <param name="name">function name</param>
-        /// <param name="instructions">macro expression or null to remove function</param>
-        /// <param name="setProtected">name of function will be protected against overriding and removing</param>
+        /// <param name="name">macro name</param>
+        /// <param name="instructions">macro expression as a collection of instructions</param>
+        /// <param name="setProtected">macro will be protected against overriding and removing</param>
         public void SetNameValue(string name, AItem[] instructions, bool setProtected = false)
         {
             EnsureValidName(name);
