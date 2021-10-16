@@ -72,7 +72,7 @@ namespace RPNCalc.Tools
                 Match match;
                 if (!(match = matcher.Match(token)).Success) continue;
                 if (matcher == numberToken) return new RealNumberItem(NumberConvert(match.Groups[0].Value));
-                if (matcher == stringToken) return new StackStringItem(match.Groups[1].Value.Replace("\\'", "'"));
+                if (matcher == stringToken) return new StringItem(match.Groups[1].Value.Replace("\\'", "'"));
                 if (matcher == variableNameToken) return new NameItem(match.Groups[0].Value);
             }
             throw new RPNArgumentException("Invalid syntax, unknown token " + token);

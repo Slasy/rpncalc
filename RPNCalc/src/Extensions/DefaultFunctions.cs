@@ -105,7 +105,7 @@ namespace RPNCalc.Extensions
         private static void EVAL(RPN calc, Stack<AItem> stack)
         {
             AItem item = stack.Pop();
-            if (item is StackStringItem expression)
+            if (item is StringItem expression)
             {
                 var tokens = AlgebraicTools.GetTokens(expression.value);
                 tokens = AlgebraicTools.InfixToPostfix(tokens);
@@ -130,7 +130,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() + x.GetRealNumber());
-            else if (x is StackStringItem || y is StackStringItem) stack.Push(y.AsString() + x.AsString());
+            else if (x is StringItem || y is StringItem) stack.Push(y.AsString() + x.AsString());
             else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplex() + x.AsComplex());
             else throw UndefinedResult;
         }
@@ -341,7 +341,7 @@ namespace RPNCalc.Extensions
         private static void HEAD(Stack<AItem> stack)
         {
             AItem item = stack.Pop();
-            if (item is StackStringItem str)
+            if (item is StringItem str)
             {
                 if (str.value.Length == 0) throw new RPNArgumentException("Empty string");
                 stack.Push(str.value[0].ToString());
@@ -359,7 +359,7 @@ namespace RPNCalc.Extensions
         private static void TAIL(Stack<AItem> stack)
         {
             AItem item = stack.Pop();
-            if (item is StackStringItem str)
+            if (item is StringItem str)
             {
                 if (str.value.Length == 0)
                 {
@@ -397,7 +397,7 @@ namespace RPNCalc.Extensions
         private static int Position(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (y is StackStringItem str)
+            if (y is StringItem str)
             {
                 string subStr = x.GetString();
                 return str.value.IndexOf(subStr);
@@ -451,7 +451,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             int index = GetInteger(x);
-            if (y is StackStringItem str)
+            if (y is StringItem str)
             {
                 if (str.value.Length <= index || index < 0) throw IndexOutOfRange;
                 stack.Push(str.value[index].ToString());
@@ -469,7 +469,7 @@ namespace RPNCalc.Extensions
         {
             var index = GetInteger(stack.Pop());
             var y = stack.Peek();
-            if (y is StackStringItem str)
+            if (y is StringItem str)
             {
                 if (str.value.Length <= index || index < 0) throw IndexOutOfRange;
                 stack.Push((index + 1) % str.value.Length);
@@ -519,7 +519,7 @@ namespace RPNCalc.Extensions
             int size = stack.Pop() switch
             {
                 ListItem list => list.value.Length,
-                StackStringItem str => str.value.Length,
+                StringItem str => str.value.Length,
                 _ => 1,
             };
             stack.Push(size);

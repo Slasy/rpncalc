@@ -13,7 +13,7 @@ namespace RPNCalc.Extensions
 
         public static string GetString(this AItem item)
         {
-            EnsureType<StackStringItem>(item, out var str);
+            EnsureType<StringItem>(item, out var str);
             return str.value;
         }
 
@@ -22,7 +22,7 @@ namespace RPNCalc.Extensions
         /// </summary>
         public static string AsString(this AItem item)
         {
-            if (item is StackStringItem str) return str.value;
+            if (item is StringItem str) return str.value;
             return item.ToString();
         }
 

@@ -40,7 +40,7 @@ namespace RPNCalc.Items
         public static implicit operator AItem(uint number) => new RealNumberItem(number);
         public static implicit operator AItem(long number) => new RealNumberItem(number);
         public static implicit operator AItem(ulong number) => new RealNumberItem(number);
-        public static implicit operator AItem(string str) => new StackStringItem(str);
+        public static implicit operator AItem(string str) => new StringItem(str);
         public static implicit operator AItem(Complex complex) => new ComplexNumberItem(complex);
         public static implicit operator double(AItem item) => item.GetRealNumber();
         public static implicit operator float(AItem item) => (float)item.GetRealNumber();

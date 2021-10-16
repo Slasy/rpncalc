@@ -4,17 +4,15 @@ using System.Diagnostics;
 namespace RPNCalc.Items
 {
     [DebuggerDisplay("String({ToString()})")]
-    public class StackStringItem : AItem<string>, IEquatable<string>
+    public class StringItem : AItem<string>, IEquatable<string>
     {
-        public StackStringItem(string str) : base(Type.String, str) { }
+        public StringItem(string str) : base(Type.String, str) { }
 
-        public static implicit operator StackStringItem(string str) => new(str);
-        public static implicit operator string(StackStringItem str) => str.value;
+        public static implicit operator StringItem(string str) => new(str);
+        public static implicit operator string(StringItem str) => str.value;
 
         public bool Equals(string other) => value == other;
-
         public override string ToString() => $"'{value.Replace("'", "\\'")}'";
-
-        public override bool Equals(AItem other) => other is StackStringItem str && value == str.value;
+        public override bool Equals(AItem other) => other is StringItem str && value == str.value;
     }
 }

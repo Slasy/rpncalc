@@ -49,9 +49,9 @@ namespace RPNCalc.Tests
             RealNumberItem n1 = 1234.5;
             RealNumberItem n2 = 9999;
             RealNumberItem n3 = 1234.5;
-            StackStringItem s1 = "foo";
-            StackStringItem s2 = "bar";
-            StackStringItem s3 = "foo";
+            StringItem s1 = "foo";
+            StringItem s2 = "bar";
+            StringItem s3 = "foo";
             ProgramItem p1 = ProgramItem.From(new NameItem("foo"));
             ProgramItem p2 = ProgramItem.From(new NameItem("foo"));
             Assert.True(n1 != n2);
@@ -88,8 +88,8 @@ namespace RPNCalc.Tests
         public void EqualityOfVariables()
         {
             Assert.AreEqual(new NameItem("foobar"), new NameItem("foobar"));
-            Assert.AreNotEqual(new NameItem("foobar"), new StackStringItem("foobar"));
-            Assert.AreNotEqual(new StackStringItem("foobar"), new NameItem("foobar"));
+            Assert.AreNotEqual(new NameItem("foobar"), new StringItem("foobar"));
+            Assert.AreNotEqual(new StringItem("foobar"), new NameItem("foobar"));
         }
     }
 }

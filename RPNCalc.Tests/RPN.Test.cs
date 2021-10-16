@@ -586,7 +586,7 @@ namespace RPNCalc.Tests
         public void CreateAndCallProgramLikeFunction()
         {
             var x2 = ProgramItem.From(2, new NameItem("^"));
-            var top = calc.Eval(new AItem[] { x2, new StackStringItem("X2"), new NameItem("STO"), ProgramItem.From(10, new NameItem("X2")), new NameItem("EVAL") });
+            var top = calc.Eval(new AItem[] { x2, new StringItem("X2"), new NameItem("STO"), ProgramItem.From(10, new NameItem("X2")), new NameItem("EVAL") });
             Assert.IsInstanceOf<RealNumberItem>(top);
             Assert.AreEqual(100, top);
         }
