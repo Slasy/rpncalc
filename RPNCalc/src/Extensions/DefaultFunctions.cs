@@ -130,11 +130,11 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() + x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() + x.AsComplexNumber());
             else if (x is ListItem xList && y is ListItem yList) stack.Push(ListItem.Combine(yList, xList));
             else if (x is ListItem listX) stack.Push(ListItem.Combine(y, listX));
             else if (y is ListItem listY) stack.Push(ListItem.Combine(listY, x));
             else if (x is StringItem || y is StringItem) stack.Push(y.AsString() + x.AsString());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() + x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
