@@ -1227,5 +1227,18 @@ bf
             CollectionAssert.AreEqual(new AItem[] { "ipsum", 1, 2, 3, "foo", 42, new NameItem("bar") }, e.value);
             CollectionAssert.AreEqual(new AItem[] { 999, "ipsum", 1, 2, 3, "foo", 42, new NameItem("bar") }, f.value);
         }
+
+        [Test]
+        public void CombineStringsWithOtherObjects()
+        {
+            var a = new StringItem("foobar");
+            var b = a + 123;
+            var c = 456 + b;
+            Assert.AreEqual("foobar123", b);
+            Assert.AreEqual("456foobar123", c);
+            Assert.AreEqual("456foobar123", c);
+            var d = a + b;
+            Assert.AreEqual("foobarfoobar123", d);
+        }
     }
 }
