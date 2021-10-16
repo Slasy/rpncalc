@@ -1201,5 +1201,18 @@ bf
             Assert.Throws<RPNArgumentException>(() => calc.Eval("999 'func' lsto"));
             Assert.Throws<RPNArgumentException>(() => calc.Eval("999 'func' gsto"));
         }
+
+        [Test]
+        public void CombineItemsAndLists()
+        {
+            Assert.AreEqual(ListItem.From("a", 1, 2), calc.Eval("'a' [ 1 2 ] +"));
+            Assert.AreEqual(ListItem.From(3, 4, "b"), calc.Eval("[ 3 4 ] 'b' +"));
+            Assert.AreEqual(ListItem.From(10, 20, 80, 90), calc.Eval("[ 10 20 ] [ 80 90 ] +"));
+            Assert.AreEqual(ListItem.From(new Complex(1, 2), 1, 2), calc.Eval("( 1 2 ) [ 1 2 ] +"));
+            Assert.AreEqual(ListItem.From(1, 2, new Complex(1, 2)), calc.Eval("[ 1 2 ] ( 1 2 ) +"));
+            Assert.AreEqual(ListItem.From(3, 4, ProgramItem.From(new NameItem("dup"))), calc.Eval("[ 3 4 ] { dup } +"));
+            Assert.AreEqual(ListItem.From(ProgramItem.From(new NameItem("dup")), 3, 4), calc.Eval("{ dup } [ 3 4 ] +"));
+            Assert.AreEqual(ListItem.From(10, 20, 80, ListItem.From(69)), calc.Eval("[ 10 20 ] [ 80 [ 69 ] ] +"));
+        }
     }
 }
