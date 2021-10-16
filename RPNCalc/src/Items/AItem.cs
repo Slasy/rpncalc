@@ -52,7 +52,7 @@ namespace RPNCalc.Items
         public static implicit operator bool(AItem item) => item.GetBool();
         public static implicit operator AItem(bool condition) => (RealNumberItem)condition;
         public static implicit operator AItem(AItem[] list) => new ListItem(list);
-        public static implicit operator Complex(AItem item) => item.GetComplex();
+        public static implicit operator Complex(AItem item) => item.GetComplexNumber();
 
         public T EnsureType<T>() where T : AItem
         {

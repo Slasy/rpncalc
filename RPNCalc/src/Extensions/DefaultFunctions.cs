@@ -130,7 +130,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() + x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplex() + x.AsComplex());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() + x.AsComplexNumber());
             else if (x is ListItem xList && y is ListItem yList) stack.Push(ListItem.Combine(yList, xList));
             else if (x is ListItem listX) stack.Push(ListItem.Combine(y, listX));
             else if (y is ListItem listY) stack.Push(ListItem.Combine(listY, x));
@@ -142,7 +142,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() - x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplex() - x.AsComplex());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() - x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -150,7 +150,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() * x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplex() * x.AsComplex());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() * x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -158,7 +158,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() / x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplex() / x.AsComplex());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() / x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -166,7 +166,7 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(Math.Pow(y.GetRealNumber(), x.GetRealNumber()));
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(Complex.Pow(y.AsComplex(), x.AsComplex()));
+            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(Complex.Pow(y.AsComplexNumber(), x.AsComplexNumber()));
             else throw UndefinedResult;
         }
 
@@ -174,7 +174,7 @@ namespace RPNCalc.Extensions
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(-x.GetRealNumber());
-            else if (x is ComplexNumberItem) stack.Push(-x.AsComplex());
+            else if (x is ComplexNumberItem) stack.Push(-x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -182,7 +182,7 @@ namespace RPNCalc.Extensions
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(x.GetRealNumber() * x.GetRealNumber());
-            else if (x is ComplexNumberItem) stack.Push(x.AsComplex() * x.AsComplex());
+            else if (x is ComplexNumberItem) stack.Push(x.AsComplexNumber() * x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -190,7 +190,7 @@ namespace RPNCalc.Extensions
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(Math.Sqrt(x.GetRealNumber()));
-            else if (x is ComplexNumberItem) stack.Push(Complex.Sqrt(x.AsComplex()));
+            else if (x is ComplexNumberItem) stack.Push(Complex.Sqrt(x.AsComplexNumber()));
             else throw UndefinedResult;
         }
 
@@ -198,7 +198,7 @@ namespace RPNCalc.Extensions
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(1d / x.GetRealNumber());
-            else if (x is ComplexNumberItem) stack.Push(new Complex(1, 0) / x.GetComplex());
+            else if (x is ComplexNumberItem) stack.Push(new Complex(1, 0) / x.GetComplexNumber());
             else throw UndefinedResult;
         }
 

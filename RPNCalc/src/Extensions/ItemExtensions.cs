@@ -50,7 +50,7 @@ namespace RPNCalc.Extensions
             return list.value;
         }
 
-        public static Complex GetComplex(this AItem item)
+        public static Complex GetComplexNumber(this AItem item)
         {
             EnsureType<ComplexNumberItem>(item, out var complex);
             return complex.value;
@@ -59,7 +59,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// Returns complex number or converts real to complex number.
         /// </summary>
-        public static Complex AsComplex(this AItem item)
+        public static Complex AsComplexNumber(this AItem item)
         {
             EnsureNotNull(item);
             if (item is ComplexNumberItem complex) return complex.value;
