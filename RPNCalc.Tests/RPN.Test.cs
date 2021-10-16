@@ -1203,32 +1203,6 @@ bf
         }
 
         [Test]
-        public void CombineTwoLists()
-        {
-            var a = ListItem.From(1, 2, 3);
-            var b = ListItem.From("foo", "bar");
-            var c = a + b;
-            CollectionAssert.AreEqual(ListItem.From(1, 2, 3, "foo", "bar").value, c.value);
-        }
-
-        [Test]
-        public void AppendToList()
-        {
-            var a = ListItem.From(1, 2, 3);
-            var b = a + "foo";
-            var c = b + 42;
-            var d = c + new NameItem("bar");
-            var e = "ipsum" + d;
-            var f = 999 + e;
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, a.value);
-            CollectionAssert.AreEqual(new AItem[] { 1, 2, 3, "foo" }, b.value);
-            CollectionAssert.AreEqual(new AItem[] { 1, 2, 3, "foo", 42 }, c.value);
-            CollectionAssert.AreEqual(new AItem[] { 1, 2, 3, "foo", 42, new NameItem("bar") }, d.value);
-            CollectionAssert.AreEqual(new AItem[] { "ipsum", 1, 2, 3, "foo", 42, new NameItem("bar") }, e.value);
-            CollectionAssert.AreEqual(new AItem[] { 999, "ipsum", 1, 2, 3, "foo", 42, new NameItem("bar") }, f.value);
-        }
-
-        [Test]
         public void CombineStringsWithOtherObjects()
         {
             var a = new StringItem("foobar");
