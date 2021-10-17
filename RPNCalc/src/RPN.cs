@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RPNCalc.Extensions;
+using RPNCalc.Flags;
 using RPNCalc.Items;
 
 namespace RPNCalc
@@ -84,6 +84,8 @@ namespace RPNCalc
         /// </summary>
         public IReadOnlyList<AItem> StackView => mainStack;
 
+        public FlagCollection Flags { get; }
+
         /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
         public bool AlwaysClearStack { get; set; }
         /// <summary>Names (and function names) are case sensitive.</summary>
@@ -95,7 +97,6 @@ namespace RPNCalc
         public bool StopProgram { protected get; set; }
 
         protected readonly Stack<AItem> mainStack = new();
-        protected readonly StringBuilder buffer = new();
         /// <summary>Used to "buffer" multiple items to collection (list, program, whatever...)</summary>
         protected readonly Stack<Stack<AItem>> sideStack = new();
         /// <summary>Functions that are always called even when not using main stack</summary>
@@ -122,6 +123,7 @@ namespace RPNCalc
         /// </summary>
         public RPN(Options options = null)
         {
+            Flags = new();
             options ??= Options.Default;
             CaseSensitiveNames = options.CaseSensitiveNames;
             AlwaysClearStack = options.AlwaysClearStack;

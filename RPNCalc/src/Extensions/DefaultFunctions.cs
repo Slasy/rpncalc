@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Numerics;
 using RPNCalc.Items;
 using RPNCalc.Tools;
@@ -11,12 +10,7 @@ namespace RPNCalc.Extensions
         private static RPNFunctionException UndefinedResult => new("Undefined result");
         private static RPNArgumentException IndexOutOfRange => new("Index out of range");
 
-        private const string FLAGS_NAME = "_FLAGS";
-        private const string FLAG_STOP_LOOP = "_STOP_LOOP";
-        //private const string FLAG_
-        private static readonly AItem[] CHECK_BREAK_LOOP_MACRO = RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} FS?C");
-        private static readonly AItem[] DROP_VALUE_MACRO = RPNTools.CreateMacroInstructions("DROP");
-        private static readonly AItem[] CLEAR_STOP_LOOP_FLAG_MACRO = RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} CF");
+        private const string FLAG_STOP_LOOP = "STOP_LOOP";
 
         /// <summary>
         /// If you clear all names from calculator, you can use this extension to get default functions back.
@@ -91,9 +85,6 @@ namespace RPNCalc.Extensions
             calc.SetCollectionGenerator("{", "}", st => new ProgramItem(st));
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
 
-            var zeroArray = Enumerable.Repeat(0, 20).Select(x => new RealNumberItem(x)).ToArray();
-            new ListItem();
-            calc.SetNameValue(FLAGS_NAME, new ListItem(zeroArray), RPN.Scope.Protected);
             calc.SetNameValue("SF", stack => SET_FLAG(calc, stack, true), true);
             calc.SetNameValue("CF", stack => SET_FLAG(calc, stack, false), true);
             calc.SetNameValue("FS?", stack => READ_FLAG(calc, stack, true, false), true);
@@ -101,7 +92,8 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("FS?C", stack => READ_FLAG(calc, stack, true, true), true);
             calc.SetNameValue("FC?C", stack => READ_FLAG(calc, stack, false, true), true);
 
-            calc.SetNameValue(FLAG_STOP_LOOP, 19, RPN.Scope.Protected);
+            calc.Flags.AddIndexedFlags(10, true);
+            calc.SetNameValue(FLAG_STOP_LOOP, calc.Flags.AddNamedFlag(FLAG_STOP_LOOP, false), RPN.Scope.Protected);
         }
 
         private static void EVAL(RPN calc, Stack<AItem> stack)
@@ -136,7 +128,8 @@ namespace RPNCalc.Extensions
             else if (x is ListItem listX) stack.Push(ListItem.Combine(y, listX));
             else if (y is ListItem listY) stack.Push(ListItem.Combine(listY, x));
             else if (x is StringItem || y is StringItem) stack.Push(y.AsString() + x.AsString());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() + x.AsComplexNumber());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem)
+                stack.Push(y.AsComplexNumber() + x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -144,7 +137,8 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() - x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() - x.AsComplexNumber());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem)
+                stack.Push(y.AsComplexNumber() - x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -152,7 +146,8 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() * x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() * x.AsComplexNumber());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem)
+                stack.Push(y.AsComplexNumber() * x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -160,7 +155,8 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() / x.GetRealNumber());
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(y.AsComplexNumber() / x.AsComplexNumber());
+            else if (x is ComplexNumberItem || y is ComplexNumberItem)
+                stack.Push(y.AsComplexNumber() / x.AsComplexNumber());
             else throw UndefinedResult;
         }
 
@@ -168,7 +164,8 @@ namespace RPNCalc.Extensions
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(Math.Pow(y.GetRealNumber(), x.GetRealNumber()));
-            else if (x is ComplexNumberItem || y is ComplexNumberItem) stack.Push(Complex.Pow(y.AsComplexNumber(), x.AsComplexNumber()));
+            else if (x is ComplexNumberItem || y is ComplexNumberItem)
+                stack.Push(Complex.Pow(y.AsComplexNumber(), x.AsComplexNumber()));
             else throw UndefinedResult;
         }
 
@@ -516,7 +513,7 @@ namespace RPNCalc.Extensions
 
         private static void TYPE(Stack<AItem> stack)
         {
-            stack.Push((int)stack.Pop().type);
+            stack.Push((int) stack.Pop().type);
         }
 
         private static void SIZE(Stack<AItem> stack)
@@ -545,22 +542,16 @@ namespace RPNCalc.Extensions
         private static void SET_FLAG(RPN calc, Stack<AItem> stack, bool value)
         {
             int flagIndex = GetInteger(stack.Pop());
-            AItem[] flags = calc.GetNameValue(FLAGS_NAME, RPN.Scope.Protected).GetArray();
-            EnsureListItemIndex(flags, flagIndex);
-            flags[flagIndex] = value;
-            calc.SetNameValue(FLAGS_NAME, flags, RPN.Scope.Protected);
+            calc.Flags[flagIndex] = value;
         }
 
         private static void READ_FLAG(RPN calc, Stack<AItem> stack, bool expectedValue, bool clearFlag)
         {
             int flagIndex = GetInteger(stack.Pop());
-            var flags = calc.GetNameValue(FLAGS_NAME, RPN.Scope.Protected).GetArray();
-            EnsureListItemIndex(flags, flagIndex);
-            stack.Push(flags[flagIndex].GetBool() == expectedValue);
+            stack.Push(calc.Flags[flagIndex] == expectedValue);
             if (clearFlag)
             {
-                flags[flagIndex] = false;
-                calc.SetNameValue(FLAGS_NAME, flags, RPN.Scope.Protected);
+                calc.Flags[flagIndex] = false;
             }
         }
 
@@ -571,12 +562,15 @@ namespace RPNCalc.Extensions
             return new ComplexNumberItem(r, i);
         }
 
-        private static void ExpectedDepthEval<T>(RPN calc, ProgramItem programInstructions, string programName, int expectedDepth = 1) where T : AItem
+        private static void ExpectedDepthEval<T>(RPN calc, ProgramItem programInstructions, string programName,
+            int expectedDepth = 1) where T : AItem
         {
             expectedDepth = calc.StackView.Count + expectedDepth;
             calc.EvalItem(programInstructions, true);
-            if (expectedDepth != calc.StackView.Count) throw new RPNArgumentException($"Unexpected behavior of {programName} program");
-            if (expectedDepth > 0 && calc.StackView[0] is not T) throw new RPNArgumentException($"Unexpected type of return value of {programName} program");
+            if (expectedDepth != calc.StackView.Count)
+                throw new RPNArgumentException($"Unexpected behavior of {programName} program");
+            if (expectedDepth > 0 && calc.StackView[0] is not T)
+                throw new RPNArgumentException($"Unexpected type of return value of {programName} program");
         }
 
         private static void AddToVarOnStack(RPN calc, Stack<AItem> stack, double valueToAdd)
@@ -588,24 +582,25 @@ namespace RPNCalc.Extensions
 
         private static int GetInteger(AItem item)
         {
-            return (int)Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
+            return (int) Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
         }
 
         private static void EnsureListItemIndex(Array array, int index)
         {
-            if (array.Length <= index || index < 0) throw new RPNArgumentException($"List index is out of range {index}");
+            if (array.Length <= index || index < 0)
+                throw new RPNArgumentException($"List index is out of range {index}");
         }
 
         private static bool StopLoopFlagIsSetAndClear(RPN calc)
         {
-            bool set = calc.EvalItems(CHECK_BREAK_LOOP_MACRO, false);
-            calc.EvalItems(DROP_VALUE_MACRO, false);
+            bool set = calc.Flags[FLAG_STOP_LOOP];
+            calc.Flags[FLAG_STOP_LOOP] = false;
             return set;
         }
 
         private static void ClearStopLoopFlag(RPN calc)
         {
-            calc.EvalItems(CLEAR_STOP_LOOP_FLAG_MACRO, false);
+            calc.Flags[FLAG_STOP_LOOP] = false;
         }
     }
 }

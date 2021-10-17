@@ -1048,7 +1048,7 @@ namespace RPNCalc.Tests
         [Test]
         public void ReadFlags()
         {
-            calc.Eval("_stop_loop FS? _stop_loop FC?");
+            calc.Eval("stop_loop FS? stop_loop FC?");
             CollectionAssert.AreEqual(new[] { 1, 0 }, calc.StackView);
         }
 
@@ -1059,14 +1059,6 @@ namespace RPNCalc.Tests
             CollectionAssert.AreEqual(new[] { 0, 1 }, calc.StackView);
         }
 
-        [Test]
-        public void FailDestroyFlags()
-        {
-            Assert.Throws<RPNArgumentException>(() => calc.Eval("'_FLAGS' clv"));
-            Assert.Throws<RPNArgumentException>(() => calc.Eval("1234 '_FLAGS' sto"));
-            Assert.Throws<RPNArgumentException>(() => calc.Eval("1234 '_FLAGS' lsto"));
-            Assert.Throws<RPNArgumentException>(() => calc.Eval("1234 '_FLAGS' gsto"));
-        }
 
         [Test, Timeout(100)]
         public void BreakWhile()

@@ -11,9 +11,10 @@ namespace RPNCalc.Flags
         private readonly SortedList<int, bool> indexedFlags = new();
         private readonly SortedList<int, string> indexToName = new();
 
+        private int negativeCount;
+        private int positiveCount;
+
         public int Count => indexedFlags.Count + namedFlags.Count;
-        public int NegativeCount { get; private set; }
-        public int PositiveCount { get; private set; }
 
         public bool this[int index]
         {
@@ -63,13 +64,13 @@ namespace RPNCalc.Flags
         /// <param name="flagCount">how many flags to add</param>
         /// <param name="positiveIndexes">select on which end append new flags</param>
         /// <returns>index of last new flag</returns>
-        public int AddIndexedFlags(int flagCount, bool positiveIndexes = true)
+        public int AddIndexedFlags(int flagCount, bool positiveIndexes)
         {
             for (int i = 0; i < flagCount; i++)
             {
                 AddIndexedFlag(positiveIndexes);
             }
-            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
+            return positiveIndexes ? positiveCount - 1 : negativeCount;
         }
 
         /// <summary>
@@ -78,14 +79,14 @@ namespace RPNCalc.Flags
         /// <param name="flagNames">flag names in order</param>
         /// <param name="positiveIndexes">select on which end append new flags</param>
         /// <returns>index of last new flag</returns>
-        public int AddNamedFlags(IEnumerable<string> flagNames, bool positiveIndexes = true)
+        public int AddNamedFlags(IEnumerable<string> flagNames, bool positiveIndexes)
         {
             int firstNewIndex = Count;
             foreach (string name in flagNames)
             {
                 AddNamedFlag(name, positiveIndexes);
             }
-            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
+            return positiveIndexes ? positiveCount - 1 : negativeCount;
         }
 
         /// <summary>
@@ -93,10 +94,10 @@ namespace RPNCalc.Flags
         /// <param name="positiveIndexes">select on which end append new flags</param>
         /// </summary>
         /// <returns>index of new flag</returns>
-        public int AddIndexedFlag(bool positiveIndexes = true)
+        public int AddIndexedFlag(bool positiveIndexes)
         {
-            indexedFlags.Add(positiveIndexes ? PositiveCount++ : --NegativeCount, false);
-            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
+            indexedFlags.Add(positiveIndexes ? positiveCount++ : --negativeCount, false);
+            return positiveIndexes ? positiveCount - 1 : negativeCount;
         }
 
         /// <summary>
@@ -105,14 +106,14 @@ namespace RPNCalc.Flags
         /// <param name="positiveIndexes">select on which end append new flags</param>
         /// </summary>
         /// <returns>index of new flag</returns>
-        public int AddNamedFlag(string name, bool positiveIndexes = true)
+        public int AddNamedFlag(string name, bool positiveIndexes)
         {
             if (!namedFlags.ContainsKey(name))
             {
-                indexToName.Add(positiveIndexes ? PositiveCount++ : --NegativeCount, name);
+                indexToName.Add(positiveIndexes ? positiveCount++ : --negativeCount, name);
                 namedFlags.Add(name, false);
             }
-            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
+            return positiveIndexes ? positiveCount - 1 : negativeCount;
         }
 
         public bool TryGetFlagName(int index, out string name)

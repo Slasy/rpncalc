@@ -16,7 +16,7 @@ namespace RPNCalc.Tests
         [Test]
         public void AddIndexedFlags()
         {
-            Assert.AreEqual(3, flags.AddIndexedFlags(4));
+            Assert.AreEqual(3, flags.AddIndexedFlags(4, true));
             Assert.AreEqual(4, flags.Count);
             Assert.DoesNotThrow(() => flags[0] = true);
             Assert.DoesNotThrow(() => flags[1] = false);
@@ -32,7 +32,7 @@ namespace RPNCalc.Tests
         [Test]
         public void AddNamedFlags()
         {
-            Assert.AreEqual(2, flags.AddNamedFlags(new[] {"foo", "bar", "baz"}));
+            Assert.AreEqual(2, flags.AddNamedFlags(new[] {"foo", "bar", "baz"}, true));
             Assert.AreEqual(3, flags.Count);
             Assert.DoesNotThrow(() => flags["foo"] = true);
             Assert.DoesNotThrow(() => flags["bar"] = false);
@@ -49,10 +49,10 @@ namespace RPNCalc.Tests
         [Test]
         public void AddIndexedAndNamedFlags()
         {
-            Assert.AreEqual(1, flags.AddIndexedFlags(2));
-            Assert.AreEqual(3, flags.AddNamedFlags(new[] {"foo", "bar"}));
-            Assert.AreEqual(4, flags.AddIndexedFlags(1));
-            Assert.AreEqual(5, flags.AddNamedFlags(new[] {"baz"}));
+            Assert.AreEqual(1, flags.AddIndexedFlags(2, true));
+            Assert.AreEqual(3, flags.AddNamedFlags(new[] {"foo", "bar"}, true));
+            Assert.AreEqual(4, flags.AddIndexedFlags(1, true));
+            Assert.AreEqual(5, flags.AddNamedFlags(new[] {"baz"}, true));
             Assert.AreEqual(6, flags.Count);
             Assert.DoesNotThrow(() => flags[1] = true);
             Assert.DoesNotThrow(() => flags[2] = true);
@@ -63,8 +63,8 @@ namespace RPNCalc.Tests
         [Test]
         public void GetFlagNames()
         {
-            flags.AddNamedFlags(new[] {"foo", "bar"});
-            flags.AddIndexedFlags(4);
+            flags.AddNamedFlags(new[] {"foo", "bar"}, true);
+            flags.AddIndexedFlags(4, true);
             Assert.True(flags.TryGetFlagName(1, out var name));
             Assert.AreEqual("bar", name);
             Assert.False(flags.TryGetFlagName(2, out _));
@@ -81,6 +81,7 @@ namespace RPNCalc.Tests
             Assert.AreEqual(1, flags.AddIndexedFlag(true));
             Assert.AreEqual(4, flags.Count);
             Assert.DoesNotThrow(() => flags[-2] = true);
+            Assert.AreEqual(-4, flags.AddNamedFlags(new[] {"foo", "bar"}, false));
         }
     }
 }
