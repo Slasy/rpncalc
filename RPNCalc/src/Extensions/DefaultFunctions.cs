@@ -541,17 +541,43 @@ namespace RPNCalc.Extensions
 
         private static void SET_FLAG(RPN calc, Stack<AItem> stack, bool value)
         {
-            int flagIndex = GetInteger(stack.Pop());
-            calc.Flags[flagIndex] = value;
+            var x = stack.Pop();
+            if (x is RealNumberItem real)
+            {
+                int flagIndex = GetInteger(real);
+                calc.Flags[flagIndex] = value;
+                return;
+            }
+            if (x is StringItem str)
+            {
+                string flagName = str.GetString();
+                calc.Flags[flagName] = value;
+                return;
+            }
+            throw new RPNArgumentException("Invalid flag type");
         }
 
         private static void READ_FLAG(RPN calc, Stack<AItem> stack, bool expectedValue, bool clearFlag)
         {
-            int flagIndex = GetInteger(stack.Pop());
-            stack.Push(calc.Flags[flagIndex] == expectedValue);
-            if (clearFlag)
+            var x = stack.Pop();
+            if (x is RealNumberItem real)
             {
-                calc.Flags[flagIndex] = false;
+                int flagIndex = GetInteger(real);
+                stack.Push(calc.Flags[flagIndex] == expectedValue);
+                if (clearFlag)
+                {
+                    calc.Flags[flagIndex] = false;
+                }
+                return;
+            }
+            if (x is StringItem str)
+            {
+                string flagName = str.GetString();
+                stack.Push(calc.Flags[flagName] == expectedValue);
+                if (clearFlag)
+                {
+                    calc.Flags[flagName] = false;
+                }
             }
         }
 

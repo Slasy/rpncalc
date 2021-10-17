@@ -13,8 +13,14 @@ namespace RPNCalc.Flags
 
         private int negativeCount;
         private int positiveCount;
+        private readonly bool isCaseSensitive;
 
         public int Count => indexedFlags.Count + namedFlags.Count;
+
+        public FlagCollection(bool isCaseSensitive)
+        {
+            this.isCaseSensitive = isCaseSensitive;
+        }
 
         public bool this[int index]
         {
@@ -44,11 +50,13 @@ namespace RPNCalc.Flags
         {
             get
             {
+                name = GetName(name);
                 if (namedFlags.TryGetValue(name, out bool flag)) return flag;
                 throw new FlagException();
             }
             set
             {
+                name = GetName(name);
                 if (namedFlags.ContainsKey(name))
                 {
                     namedFlags[name] = value;
@@ -108,6 +116,7 @@ namespace RPNCalc.Flags
         /// <returns>index of new flag</returns>
         public int AddNamedFlag(string name, bool positiveIndexes)
         {
+            name = GetName(name);
             if (!namedFlags.ContainsKey(name))
             {
                 indexToName.Add(positiveIndexes ? positiveCount++ : --negativeCount, name);
@@ -120,5 +129,7 @@ namespace RPNCalc.Flags
         {
             return indexToName.TryGetValue(index, out name);
         }
+
+        private string GetName(string name) => isCaseSensitive ? name : name.ToLowerInvariant();
     }
 }

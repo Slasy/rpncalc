@@ -184,7 +184,11 @@ namespace RPNCalc.Tests
         [Test]
         public void RotRollOver()
         {
-            calc.SetNameValue("eq", st => { var (x, y) = st.Peek2(); st.Push(x == y ? 1 : 0); });
+            calc.SetNameValue("eq", st =>
+            {
+                var (x, y) = st.Peek2();
+                st.Push(x == y ? 1 : 0);
+            });
             calc.Eval("5 20 over / 4 eq roll drop drop +");
             CollectionAssert.AreEqual(new[] { 6 }, calc.StackView);
             calc.Eval("1 2 3 clst 10 20 30 rot + eq");
@@ -444,43 +448,25 @@ namespace RPNCalc.Tests
         [Test]
         public void ForLoopInvalidVariable()
         {
-            ThrowsMessage<RPNUndefinedNameException>(
-                "'i' { } { } { } for",
-                "Unknown name i");
-            ThrowsMessage<RPNArgumentException>(
-                "'foo' 'i' sto 'i' { } { } { } for",
-                "Bad argument type");
-            ThrowsMessage<RPNArgumentException>(
-                "{ } 'i' sto 'i' { } { } { } for",
-                "Bad argument type");
+            ThrowsMessage<RPNUndefinedNameException>("'i' { } { } { } for", "Unknown name i");
+            ThrowsMessage<RPNArgumentException>("'foo' 'i' sto 'i' { } { } { } for", "Bad argument type");
+            ThrowsMessage<RPNArgumentException>("{ } 'i' sto 'i' { } { } { } for", "Bad argument type");
         }
 
         [Test]
         public void ForLoopInvalidCondition()
         {
-            ThrowsMessage<RPNArgumentException>(
-                "0 'i' sto 'i' { 1 2 3 } { } { } for",
-                "Unexpected behavior of condition program");
-            ThrowsMessage<RPNArgumentException>(
-                "0 'i' sto 'i' { } { } { } for",
-                "Unexpected behavior of condition program");
+            ThrowsMessage<RPNArgumentException>("0 'i' sto 'i' { 1 2 3 } { } { } for", "Unexpected behavior of condition program");
+            ThrowsMessage<RPNArgumentException>("0 'i' sto 'i' { } { } { } for", "Unexpected behavior of condition program");
         }
 
         [Test]
         public void ForLoopInvalidStep()
         {
-            ThrowsMessage<RPNArgumentException>(
-                "0 'i' sto 'i' { i 10 < } { 1 2 3 } { } for",
-                "Unexpected behavior of step program");
-            ThrowsMessage<RPNArgumentException>(
-                "0 'i' sto 'i' { i 10 < } { } { } for",
-                "Unexpected behavior of step program");
-            ThrowsMessage<RPNArgumentException>(
-                "0 'i' sto 'i' { i 10 < } { 'foo' } { } for",
-                "Unexpected type of return value of step program");
-            ThrowsMessage<RPNArgumentException>(
-                "0 'i' sto 'i' { i 10 < } { { } } { } for",
-                "Unexpected type of return value of step program");
+            ThrowsMessage<RPNArgumentException>("0 'i' sto 'i' { i 10 < } { 1 2 3 } { } for", "Unexpected behavior of step program");
+            ThrowsMessage<RPNArgumentException>("0 'i' sto 'i' { i 10 < } { } { } for", "Unexpected behavior of step program");
+            ThrowsMessage<RPNArgumentException>("0 'i' sto 'i' { i 10 < } { 'foo' } { } for", "Unexpected type of return value of step program");
+            ThrowsMessage<RPNArgumentException>("0 'i' sto 'i' { i 10 < } { { } } { } for", "Unexpected type of return value of step program");
         }
 
         private void ThrowsMessage<E>(string program, string expectedMessage) where E : Exception
@@ -661,7 +647,11 @@ namespace RPNCalc.Tests
         public void MinimalCalc()
         {
             calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, LoadDefaultFunctions = false });
-            calc.SetNameValue("add2numbers", st => { var (x, y) = st.Pop2(); st.Push(x.GetRealNumber() + y); });
+            calc.SetNameValue("add2numbers", st =>
+            {
+                var (x, y) = st.Pop2();
+                st.Push(x.GetRealNumber() + y);
+            });
             calc.SetNameValue("giv4pls", st => st.Push(4)); // https://xkcd.com/221/
             calc.EvalAlgebraic("add2numbers(giv4pls(),giv4pls())");
             CollectionAssert.AreEqual(new[] { 8 }, calc.StackView);
@@ -710,13 +700,15 @@ namespace RPNCalc.Tests
         public void ConnectAsStrings()
         {
             Assert.AreEqual("1FOO2BAR", calc.Eval("1 'FOO' + 2 + 'BAR' +"));
-            Assert.AreEqual("{ 10 20 + }123", calc.Eval(new AItem[] {
+            Assert.AreEqual("{ 10 20 + }123", calc.Eval(new AItem[]
+            {
                 string.Empty,
                 ProgramItem.From(10, 20, new NameItem("+")),
                 new NameItem("+"),
                 1, new NameItem("+"),
                 2, new NameItem("+"),
-                3, new NameItem("+") }));
+                3, new NameItem("+")
+            }));
         }
 
         [Test]
@@ -1059,7 +1051,6 @@ namespace RPNCalc.Tests
             CollectionAssert.AreEqual(new[] { 0, 1 }, calc.StackView);
         }
 
-
         [Test, Timeout(100)]
         public void BreakWhile()
         {
@@ -1205,6 +1196,23 @@ bf
             Assert.AreEqual(ListItem.From(3, 4, ProgramItem.From(new NameItem("dup"))), calc.Eval("[ 3 4 ] { dup } +"));
             Assert.AreEqual(ListItem.From(ProgramItem.From(new NameItem("dup")), 3, 4), calc.Eval("{ dup } [ 3 4 ] +"));
             Assert.AreEqual(ListItem.From(10, 20, 80, ListItem.From(69)), calc.Eval("[ 10 20 ] [ 80 [ 69 ] ] +"));
+        }
+
+        [Test]
+        public void CaseSensitiveSetClearStringFlag()
+        {
+            calc = new(new() { CaseSensitiveNames = true, AlwaysClearStack = false });
+            calc.Eval("'STOP_LOOP' SF");
+            Assert.True(calc.Eval("'STOP_LOOP' FS?C"));
+            Assert.False(calc.Eval("'STOP_LOOP' FS?"));
+        }
+
+        [Test]
+        public void CaseInsensitiveSetClearStringFlag()
+        {
+            calc.Eval("'stop_loop' sf");
+            Assert.True(calc.Eval("'StOp_LooP' fs?c"));
+            Assert.False(calc.Eval("'Stop_Loop' fs?"));
         }
     }
 }

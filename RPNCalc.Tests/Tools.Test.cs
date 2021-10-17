@@ -95,9 +95,7 @@ namespace RPNCalc.Tests
         [Test]
         public void TokenizeFunctionCallWithInnerFormula()
         {
-            CollectionAssert.AreEqual(
-                new[] { "(", "(", "1", ")", "(", "(", "10", "+", "x", "*", "2", "^", "2", ")", ")", "Random", ")" },
-                AlgebraicTools.GetTokens("Random(1,(10+x*2^2))"));
+            CollectionAssert.AreEqual(new[] { "(", "(", "1", ")", "(", "(", "10", "+", "x", "*", "2", "^", "2", ")", ")", "Random", ")" }, AlgebraicTools.GetTokens("Random(1,(10+x*2^2))"));
         }
 
         [Test]
@@ -279,12 +277,13 @@ namespace RPNCalc.Tests
         public void ComplexFunction()
         {
             var tokens = AlgebraicTools.GetTokens("42^Random(foo, bar, baz, ((lorem+ipsum)*10), 1* 20) ^ 30+(1+2)");
-            CollectionAssert.AreEqual(
-                new[] { "42", "^",
-                    "(", "(", "foo", ")", "(", "bar", ")", "(", "baz", ")",
-                    "(", "(", "(", "lorem", "+", "ipsum", ")", "*", "10", ")", ")", "(", "1", "*", "20", ")", "Random", ")",
-                    "^", "30", "+", "(", "1", "+", "2", ")" },
-                tokens);
+            CollectionAssert.AreEqual(new[]
+            {
+                "42", "^",
+                "(", "(", "foo", ")", "(", "bar", ")", "(", "baz", ")",
+                "(", "(", "(", "lorem", "+", "ipsum", ")", "*", "10", ")", ")", "(", "1", "*", "20", ")", "Random", ")",
+                "^", "30", "+", "(", "1", "+", "2", ")"
+            }, tokens);
         }
 
         [Test]
@@ -349,10 +348,12 @@ namespace RPNCalc.Tests
         public void TokenizeEqualsSigns()
         {
             var tokens = AlgebraicTools.GetTokens("(10 == 20) * (10 != 20) + (1 = 2) ^ (1 >= 0) / ( 2 <  3e-10)");
-            CollectionAssert.AreEqual(new[] {
+            CollectionAssert.AreEqual(new[]
+            {
                 "(", "10", "==", "20", ")", "*", "(", "10", "!=", "20", ")", "+",
                 "(", "1", "=", "2", ")", "^", "(", "1", ">=", "0", ")", "/",
-                "(", "2", "<", "3e-10", ")" }, tokens);
+                "(", "2", "<", "3e-10", ")"
+            }, tokens);
         }
 
         [Test]
@@ -405,15 +406,15 @@ namespace RPNCalc.Tests
         public void TokenizeStringTokens_VariableNames()
         {
             var tokens = RPNTools.TokensToItems("foo", "bar", "one234", "{", "STO!", "~!>>");
-            CollectionAssert.AreEqual(
-                new AItem[] {
-                    new NameItem("foo"),
-                    new NameItem("bar"),
-                    new NameItem("one234"),
-                    new NameItem("{"),
-                    new NameItem("STO!"),
-                    new NameItem("~!>>")
-                }, tokens);
+            CollectionAssert.AreEqual(new AItem[]
+            {
+                new NameItem("foo"),
+                new NameItem("bar"),
+                new NameItem("one234"),
+                new NameItem("{"),
+                new NameItem("STO!"),
+                new NameItem("~!>>")
+            }, tokens);
         }
 
         [Test]

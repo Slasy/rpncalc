@@ -10,7 +10,7 @@ namespace RPNCalc.Tests
         [SetUp]
         public void Setup()
         {
-            flags = new();
+            flags = new(false);
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace RPNCalc.Tests
         [Test]
         public void AddNamedFlags()
         {
-            Assert.AreEqual(2, flags.AddNamedFlags(new[] {"foo", "bar", "baz"}, true));
+            Assert.AreEqual(2, flags.AddNamedFlags(new[] { "foo", "bar", "baz" }, true));
             Assert.AreEqual(3, flags.Count);
             Assert.DoesNotThrow(() => flags["foo"] = true);
             Assert.DoesNotThrow(() => flags["bar"] = false);
@@ -50,9 +50,9 @@ namespace RPNCalc.Tests
         public void AddIndexedAndNamedFlags()
         {
             Assert.AreEqual(1, flags.AddIndexedFlags(2, true));
-            Assert.AreEqual(3, flags.AddNamedFlags(new[] {"foo", "bar"}, true));
+            Assert.AreEqual(3, flags.AddNamedFlags(new[] { "foo", "bar" }, true));
             Assert.AreEqual(4, flags.AddIndexedFlags(1, true));
-            Assert.AreEqual(5, flags.AddNamedFlags(new[] {"baz"}, true));
+            Assert.AreEqual(5, flags.AddNamedFlags(new[] { "baz" }, true));
             Assert.AreEqual(6, flags.Count);
             Assert.DoesNotThrow(() => flags[1] = true);
             Assert.DoesNotThrow(() => flags[2] = true);
@@ -63,7 +63,7 @@ namespace RPNCalc.Tests
         [Test]
         public void GetFlagNames()
         {
-            flags.AddNamedFlags(new[] {"foo", "bar"}, true);
+            flags.AddNamedFlags(new[] { "foo", "bar" }, true);
             flags.AddIndexedFlags(4, true);
             Assert.True(flags.TryGetFlagName(1, out var name));
             Assert.AreEqual("bar", name);
@@ -81,7 +81,16 @@ namespace RPNCalc.Tests
             Assert.AreEqual(1, flags.AddIndexedFlag(true));
             Assert.AreEqual(4, flags.Count);
             Assert.DoesNotThrow(() => flags[-2] = true);
-            Assert.AreEqual(-4, flags.AddNamedFlags(new[] {"foo", "bar"}, false));
+            Assert.AreEqual(-4, flags.AddNamedFlags(new[] { "foo", "bar" }, false));
+        }
+
+        [Test]
+        public void CaseInsensitiveFlags()
+        {
+            flags = new(false);
+            flags.AddNamedFlag("FOObar", true);
+            Assert.DoesNotThrow(() => flags["foobar"] = true);
+            Assert.True(flags["fooBar"]);
         }
     }
 }

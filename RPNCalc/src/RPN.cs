@@ -123,8 +123,8 @@ namespace RPNCalc
         /// </summary>
         public RPN(Options options = null)
         {
-            Flags = new();
             options ??= Options.Default;
+            Flags = new(options.CaseSensitiveNames);
             CaseSensitiveNames = options.CaseSensitiveNames;
             AlwaysClearStack = options.AlwaysClearStack;
             currentStackInUse = mainStack;
