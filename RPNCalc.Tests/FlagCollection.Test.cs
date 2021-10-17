@@ -71,5 +71,16 @@ namespace RPNCalc.Tests
             Assert.False(flags.TryGetFlagName(3, out _));
             Assert.False(flags.TryGetFlagName(42, out _));
         }
+
+        [Test]
+        public void AddingNegativeFlags()
+        {
+            Assert.AreEqual(-1, flags.AddIndexedFlag(false));
+            Assert.AreEqual(0, flags.AddIndexedFlag(true));
+            Assert.AreEqual(-2, flags.AddIndexedFlag(false));
+            Assert.AreEqual(1, flags.AddIndexedFlag(true));
+            Assert.AreEqual(4, flags.Count);
+            Assert.DoesNotThrow(() => flags[-2] = true);
+        }
     }
 }

@@ -1,18 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace RPNCalc.Flags
 {
-    [Serializable]
-    public class FlagException : Exception
-    {
-        public FlagException() { }
-        public FlagException(string message) : base(message) { }
-        public FlagException(string message, Exception inner) : base(message, inner) { }
-        protected FlagException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-    }
-
     public class FlagCollection
     {
         private const string UNKNOWN_INDEX = "Unknown flag index ";
@@ -23,6 +12,8 @@ namespace RPNCalc.Flags
         private readonly SortedList<int, string> indexToName = new();
 
         public int Count => indexedFlags.Count + namedFlags.Count;
+        public int NegativeCount { get; private set; }
+        public int PositiveCount { get; private set; }
 
         public bool this[int index]
         {
@@ -70,44 +61,58 @@ namespace RPNCalc.Flags
         /// Adds set of new unnamed flags.
         /// </summary>
         /// <param name="flagCount">how many flags to add</param>
+        /// <param name="positiveIndexes">select on which end append new flags</param>
         /// <returns>index of last new flag</returns>
-        public int AddIndexedFlags(int flagCount)
+        public int AddIndexedFlags(int flagCount, bool positiveIndexes = true)
         {
-            int firstNewIndex = Count;
             for (int i = 0; i < flagCount; i++)
             {
-                indexedFlags.Add(firstNewIndex + i, false);
+                AddIndexedFlag(positiveIndexes);
             }
-            return Count - 1;
+            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
         }
 
         /// <summary>
         /// Adds set of new named flags
         /// </summary>
         /// <param name="flagNames">flag names in order</param>
+        /// <param name="positiveIndexes">select on which end append new flags</param>
         /// <returns>index of last new flag</returns>
-        public int AddNamedFlags(IEnumerable<string> flagNames)
+        public int AddNamedFlags(IEnumerable<string> flagNames, bool positiveIndexes = true)
         {
             int firstNewIndex = Count;
             foreach (string name in flagNames)
             {
-                AddNamedFlag(name);
+                AddNamedFlag(name, positiveIndexes);
             }
-            return Count - 1;
+            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
         }
 
-        public void AddIndexedFlag()
+        /// <summary>
+        /// Add one flag without name
+        /// <param name="positiveIndexes">select on which end append new flags</param>
+        /// </summary>
+        /// <returns>index of new flag</returns>
+        public int AddIndexedFlag(bool positiveIndexes = true)
         {
-            indexedFlags.Add(Count, false);
+            indexedFlags.Add(positiveIndexes ? PositiveCount++ : --NegativeCount, false);
+            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
         }
 
-        public void AddNamedFlag(string name)
+        /// <summary>
+        /// Add one flag with name
+        /// <param name="name">flag name</param>
+        /// <param name="positiveIndexes">select on which end append new flags</param>
+        /// </summary>
+        /// <returns>index of new flag</returns>
+        public int AddNamedFlag(string name, bool positiveIndexes = true)
         {
             if (!namedFlags.ContainsKey(name))
             {
-                indexToName.Add(Count, name);
+                indexToName.Add(positiveIndexes ? PositiveCount++ : --NegativeCount, name);
                 namedFlags.Add(name, false);
             }
+            return positiveIndexes ? PositiveCount - 1 : NegativeCount;
         }
 
         public bool TryGetFlagName(int index, out string name)
