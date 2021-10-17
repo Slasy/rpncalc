@@ -13,12 +13,13 @@ namespace RPNCalc.Extensions
 
         private const string FLAGS_NAME = "_FLAGS";
         private const string FLAG_STOP_LOOP = "_STOP_LOOP";
+        //private const string FLAG_
         private static readonly AItem[] CHECK_BREAK_LOOP_MACRO = RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} FS?C");
         private static readonly AItem[] DROP_VALUE_MACRO = RPNTools.CreateMacroInstructions("DROP");
         private static readonly AItem[] CLEAR_STOP_LOOP_FLAG_MACRO = RPNTools.CreateMacroInstructions($"{FLAG_STOP_LOOP} CF");
 
         /// <summary>
-        /// If you clear all names from calclulator, you can use this extension to get default functions back.
+        /// If you clear all names from calculator, you can use this extension to get default functions back.
         /// </summary>
         public static void LoadDefaultFunctions(this RPN calc)
         {
@@ -91,6 +92,7 @@ namespace RPNCalc.Extensions
             calc.SetCollectionGenerator("(", ")", CreateComplexNumber);
 
             var zeroArray = Enumerable.Repeat(0, 20).Select(x => new RealNumberItem(x)).ToArray();
+            new ListItem();
             calc.SetNameValue(FLAGS_NAME, new ListItem(zeroArray), RPN.Scope.Protected);
             calc.SetNameValue("SF", stack => SET_FLAG(calc, stack, true), true);
             calc.SetNameValue("CF", stack => SET_FLAG(calc, stack, false), true);
@@ -189,8 +191,8 @@ namespace RPNCalc.Extensions
         private static void SQUARE_ROOT(Stack<AItem> stack)
         {
             AItem x = stack.Pop();
-            if (x is RealNumberItem) stack.Push(Math.Sqrt(x.GetRealNumber()));
-            else if (x is ComplexNumberItem) stack.Push(Complex.Sqrt(x.AsComplexNumber()));
+            if (x is RealNumberItem xReal) stack.Push(Math.Sqrt(xReal));
+            else if (x is ComplexNumberItem xComplex) stack.Push(Complex.Sqrt(xComplex));
             else throw UndefinedResult;
         }
 

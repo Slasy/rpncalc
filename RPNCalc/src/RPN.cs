@@ -85,7 +85,7 @@ namespace RPNCalc
         public IReadOnlyList<AItem> StackView => mainStack;
 
         /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
-        public bool AlwaysClearStack { get; set; } = true;
+        public bool AlwaysClearStack { get; set; }
         /// <summary>Names (and function names) are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
