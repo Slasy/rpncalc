@@ -1214,5 +1214,33 @@ bf
             Assert.True(calc.Eval("'StOp_LooP' fs?c"));
             Assert.False(calc.Eval("'Stop_Loop' fs?"));
         }
+
+        [Test]
+        public void ThrowErrorOnNonRealRoot()
+        {
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("-9 .5 ^"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("-9 sqrt"));
+            Assert.Throws<RPNFunctionException>(() => calc.Eval("-9 1 3 / ^"));
+            Assert.DoesNotThrow(() => calc.Eval("9 1 3 / ^"));
+            Assert.DoesNotThrow(() => calc.Eval("9 -1 ^"));
+            Assert.DoesNotThrow(() => calc.Eval("-9 2 ^"));
+        }
+
+        [Test]
+        public void NonRealRootWithCpxFlag()
+        {
+            calc.Eval("CPX_ROOT sf"); // set the flag
+            AItem result = null;
+            Assert.DoesNotThrow(() => result = calc.Eval("-9 .5 ^"));
+            var cpx = result.GetComplexNumber();
+            Assert.AreEqual(0, cpx.Real, 0.00001);
+            Assert.AreEqual(3, cpx.Imaginary, 0.00001);
+            Assert.DoesNotThrow(() => result = calc.Eval("-9 sqrt"));
+            Assert.AreEqual(new Complex(0, 3), result);
+            Assert.DoesNotThrow(() => result = calc.Eval("-27 1 3 / ^"));
+            cpx = result.GetComplexNumber();
+            Assert.AreEqual(1.5, cpx.Real, 0.00001);
+            Assert.AreEqual(2.59807621135, cpx.Imaginary, 0.00001);
+        }
     }
 }

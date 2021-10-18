@@ -9,8 +9,10 @@ namespace RPNCalc.Extensions
     {
         private static RPNFunctionException UndefinedResult => new("Undefined result");
         private static RPNArgumentException IndexOutOfRange => new("Index out of range");
+        private static RPNFunctionException UndefinedRoot => new("Undefined root of negative number");
 
         private const string FLAG_STOP_LOOP = "STOP_LOOP";
+        private const string FLAG_COMPLEX_ROOT = "CPX_ROOT";
 
         /// <summary>
         /// If you clear all names from calculator, you can use this extension to get default functions back.
@@ -21,7 +23,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("-", MINUS);
             calc.SetNameValue("*", MUL);
             calc.SetNameValue("/", DIV);
-            calc.SetNameValue("^", POW);
+            calc.SetNameValue("^", stack => POW(calc, stack));
             calc.SetNameValue("+-", NEG);
             calc.SetNameValue("++", stack => AddToVarOnStack(calc, stack, 1));
             calc.SetNameValue("--", stack => AddToVarOnStack(calc, stack, -1));
@@ -30,7 +32,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("EVAL", st => EVAL(calc, st));
 
             calc.SetNameValue("SQ", SQUARE);
-            calc.SetNameValue("SQRT", SQUARE_ROOT);
+            calc.SetNameValue("SQRT", stack => SQUARE_ROOT(calc, stack));
             calc.SetNameValue("DROP", StackExtensions.Drop);
             calc.SetNameValue("DUP", StackExtensions.Dup);
             calc.SetNameValue("SWAP", stack => stack.Swap());
@@ -92,8 +94,9 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("FS?C", stack => READ_FLAG(calc, stack, true, true), true);
             calc.SetNameValue("FC?C", stack => READ_FLAG(calc, stack, false, true), true);
 
-            calc.Flags.AddIndexedFlags(10, true);
+            calc.Flags.AddIndexedFlags(10, true); // 10 user flags
             calc.SetNameValue(FLAG_STOP_LOOP, calc.Flags.AddNamedFlag(FLAG_STOP_LOOP, false), RPN.Scope.Protected);
+            calc.SetNameValue(FLAG_COMPLEX_ROOT, calc.Flags.AddNamedFlag(FLAG_COMPLEX_ROOT, false), RPN.Scope.Protected);
         }
 
         private static void EVAL(RPN calc, Stack<AItem> stack)
@@ -160,13 +163,25 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void POW(Stack<AItem> stack)
+        private static void POW(RPN calc, Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
-            if (x is RealNumberItem && y is RealNumberItem) stack.Push(Math.Pow(y.GetRealNumber(), x.GetRealNumber()));
+            if (x is RealNumberItem && y is RealNumberItem)
+            {
+                double yReal = y.GetRealNumber();
+                double xReal = x.GetRealNumber();
+                if (yReal >=0 || xReal >= 1) stack.Push(Math.Pow(yReal, xReal));
+                else if (calc.Flags[FLAG_COMPLEX_ROOT]) stack.Push(Complex.Pow(yReal, xReal));
+                else throw UndefinedRoot;
+            }
             else if (x is ComplexNumberItem || y is ComplexNumberItem)
+            {
                 stack.Push(Complex.Pow(y.AsComplexNumber(), x.AsComplexNumber()));
-            else throw UndefinedResult;
+            }
+            else
+            {
+                throw UndefinedResult;
+            }
         }
 
         private static void NEG(Stack<AItem> stack)
@@ -185,10 +200,16 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void SQUARE_ROOT(Stack<AItem> stack)
+        private static void SQUARE_ROOT(RPN calc, Stack<AItem> stack)
         {
             AItem x = stack.Pop();
-            if (x is RealNumberItem xReal) stack.Push(Math.Sqrt(xReal));
+            if (x is RealNumberItem xReal)
+            {
+                double number = xReal.GetRealNumber();
+                if (number >= 0) stack.Push(Math.Sqrt(xReal));
+                else if (calc.Flags[FLAG_COMPLEX_ROOT]) stack.Push(Complex.Sqrt(number));
+                else throw UndefinedRoot;
+            }
             else if (x is ComplexNumberItem xComplex) stack.Push(Complex.Sqrt(xComplex));
             else throw UndefinedResult;
         }
@@ -513,7 +534,7 @@ namespace RPNCalc.Extensions
 
         private static void TYPE(Stack<AItem> stack)
         {
-            stack.Push((int) stack.Pop().type);
+            stack.Push((int)stack.Pop().type);
         }
 
         private static void SIZE(Stack<AItem> stack)
@@ -588,8 +609,7 @@ namespace RPNCalc.Extensions
             return new ComplexNumberItem(r, i);
         }
 
-        private static void ExpectedDepthEval<T>(RPN calc, ProgramItem programInstructions, string programName,
-            int expectedDepth = 1) where T : AItem
+        private static void ExpectedDepthEval<T>(RPN calc, ProgramItem programInstructions, string programName, int expectedDepth = 1) where T : AItem
         {
             expectedDepth = calc.StackView.Count + expectedDepth;
             calc.EvalItem(programInstructions, true);
@@ -608,7 +628,7 @@ namespace RPNCalc.Extensions
 
         private static int GetInteger(AItem item)
         {
-            return (int) Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
+            return (int)Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
         }
 
         private static void EnsureListItemIndex(Array array, int index)
