@@ -69,8 +69,12 @@ namespace RPNCalc.Tools
                 sb.Append(functionExpression[i]);
                 switch (functionExpression[i])
                 {
-                    case '(': bracketCounter++; break;
-                    case ')': bracketCounter--; break;
+                    case '(':
+                        bracketCounter++;
+                        break;
+                    case ')':
+                        bracketCounter--;
+                        break;
                     case ',':
                         sb.Length--;
                         sb.Append(")(");

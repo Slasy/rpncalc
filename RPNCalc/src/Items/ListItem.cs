@@ -11,12 +11,13 @@ namespace RPNCalc.Items
     {
         /// <summary>Empty list.</summary>
         public ListItem() : base(Type.List, Array.Empty<AItem>()) { }
+
         /// <summary>Items in list will be in revers order - bottom/last item in stack will be first.</summary>
         public ListItem(Stack<AItem> stack) : this(stack.ToReverseArray()) { }
+
         public ListItem(AItem[] array) : base(Type.List, array) { }
 
         public static implicit operator ListItem(AItem[] array) => new(array);
-        //public static implicit operator AStackItem[](StackList item) => item.value;
 
         public static ListItem From(params AItem[] array) => new(array);
 

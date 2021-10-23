@@ -19,8 +19,10 @@ namespace RPNCalc
         {
             /// <summary>Set true if you want variable and function names to be case sensitive.</summary>
             public bool CaseSensitiveNames { get; set; } = false;
+
             /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
             public bool AlwaysClearStack { get; set; } = true;
+
             /// <summary>Load a set of function to new calc instance,
             /// calculator knows very little without any functions.</summary>
             public bool LoadDefaultFunctions { get; set; } = true;
@@ -84,10 +86,14 @@ namespace RPNCalc
         /// </summary>
         public IReadOnlyList<AItem> StackView => mainStack;
 
+        /// <summary>
+        /// General purpose collection of flags
+        /// </summary>
         public FlagCollection Flags { get; }
 
         /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
         public bool AlwaysClearStack { get; set; }
+
         /// <summary>Names (and function names) are case sensitive.</summary>
         public bool CaseSensitiveNames { get; }
 
@@ -97,12 +103,16 @@ namespace RPNCalc
         public bool StopProgram { protected get; set; }
 
         protected readonly Stack<AItem> mainStack = new();
+
         /// <summary>Used to "buffer" multiple items to collection (list, program, whatever...)</summary>
         protected readonly Stack<Stack<AItem>> sideStack = new();
+
         /// <summary>Functions that are always called even when not using main stack</summary>
         protected readonly HashSet<string> functionWhiteList = new();
+
         /// <summary>Pointer to current stack that is used to push items to</summary>
         protected Stack<AItem> currentStackInUse;
+
         protected readonly Dictionary<string, AItem> globalNames = new();
         protected readonly Stack<Dictionary<string, AItem>> localNames = new();
         protected readonly HashSet<string> protectedNames = new();
@@ -377,6 +387,7 @@ namespace RPNCalc
 
         protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetScopeContainingName(name) == globalNames;
         protected bool IsProtectedName(string name) => protectedNames.Contains(GetKeyName(name));
+
         protected void EnsureNotProtected(string name, Scope scopeType)
         {
             if (scopeType != Scope.Protected && IsProtectedName(name))
@@ -384,17 +395,20 @@ namespace RPNCalc
                 throw new RPNArgumentException($"Name {name} is protected");
             }
         }
+
         protected void EnsureValidName(string name)
         {
             if (name is null) throw new RPNArgumentException("Name is null");
             if (!IsValidName(name)) throw new RPNArgumentException($"Invalid name {name}");
         }
+
         protected string GetKeyName(string name) => CaseSensitiveNames ? name : name.ToLowerInvariant();
+
         protected bool IsValidName(string name)
         {
             foreach (char ch in name)
             {
-                if (ch == ' ' || ch == '\'') return false;
+                if (ch is ' ' or '\'') return false;
             }
             return true;
         }

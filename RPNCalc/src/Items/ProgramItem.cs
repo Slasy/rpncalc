@@ -13,7 +13,7 @@ namespace RPNCalc.Items
 
         public static ProgramItem From(params AItem[] array) => new(array);
 
-        public override bool Equals(AItem other)=>other is ProgramItem program && value.SequenceEqual(program.value);
+        public override bool Equals(AItem other) => other is ProgramItem program && value.SequenceEqual(program.value);
 
         public override string ToString()
         {
