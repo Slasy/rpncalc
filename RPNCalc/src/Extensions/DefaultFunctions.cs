@@ -11,8 +11,8 @@ namespace RPNCalc.Extensions
         private static RPNArgumentException IndexOutOfRange => new("Index out of range");
         private static RPNFunctionException UndefinedRoot => new("Undefined root of negative number");
 
-        private const string FLAG_STOP_LOOP = "STOP_LOOP";
-        private const string FLAG_COMPLEX_ROOT = "CPX_ROOT";
+        public const string FLAG_STOP_LOOP = "STOP_LOOP";
+        public const string FLAG_COMPLEX_ROOT = "CPX_ROOT";
 
         /// <summary>
         /// If you clear all names from calculator, you can use this extension to get default functions back.
@@ -170,9 +170,30 @@ namespace RPNCalc.Extensions
             {
                 double yReal = y.GetRealNumber();
                 double xReal = x.GetRealNumber();
-                if (yReal >=0 || xReal >= 1) stack.Push(Math.Pow(yReal, xReal));
-                else if (calc.Flags[FLAG_COMPLEX_ROOT]) stack.Push(Complex.Pow(yReal, xReal));
-                else throw UndefinedRoot;
+                if (yReal >= 0 || xReal >= 1)
+                {
+                    stack.Push(Math.Pow(yReal, xReal));
+                }
+                else if (calc.Flags[FLAG_COMPLEX_ROOT])
+                {
+                    if (Math.Abs(xReal) == .5)
+                    {
+                        var realResult = Math.Sqrt(Math.Abs(yReal));
+                        Complex complexResult;
+                        complexResult = Math.Sign(xReal) < 0
+                            ? new Complex(0, 1 / realResult)
+                            : new Complex(0, realResult);
+                        stack.Push(complexResult);
+                    }
+                    else
+                    {
+                        stack.Push(Complex.Pow(yReal, xReal));
+                    }
+                }
+                else
+                {
+                    throw UndefinedRoot;
+                }
             }
             else if (x is ComplexNumberItem || y is ComplexNumberItem)
             {

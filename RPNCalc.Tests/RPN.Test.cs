@@ -1218,6 +1218,7 @@ bf
         [Test]
         public void ThrowErrorOnNonRealRoot()
         {
+            calc.Flags[DefaultFunctions.FLAG_COMPLEX_ROOT] = false;
             Assert.Throws<RPNFunctionException>(() => calc.Eval("-9 .5 ^"));
             Assert.Throws<RPNFunctionException>(() => calc.Eval("-9 sqrt"));
             Assert.Throws<RPNFunctionException>(() => calc.Eval("-9 1 3 / ^"));
@@ -1229,7 +1230,7 @@ bf
         [Test]
         public void NonRealRootWithCpxFlag()
         {
-            calc.Eval("CPX_ROOT sf"); // set the flag
+            calc.Eval(DefaultFunctions.FLAG_COMPLEX_ROOT + " sf"); // set the flag
             AItem result = null;
             Assert.DoesNotThrow(() => result = calc.Eval("-9 .5 ^"));
             var cpx = result.GetComplexNumber();
@@ -1241,6 +1242,22 @@ bf
             cpx = result.GetComplexNumber();
             Assert.AreEqual(1.5, cpx.Real, 0.00001);
             Assert.AreEqual(2.59807621135, cpx.Imaginary, 0.00001);
+        }
+
+        [Test]
+        public void PreciseNegativeSquareRoot()
+        {
+            calc.Flags[DefaultFunctions.FLAG_COMPLEX_ROOT] = true;
+            Assert.AreEqual(3, calc.Eval("9 .5 ^").GetRealNumber(), 0);
+            Assert.AreEqual(.333333333333333333333333, calc.Eval("9 -.5 ^").GetRealNumber(), 0);
+            Assert.IsTrue(calc.Eval("10 sqrt 10 .5 ^ ==").GetBool());
+            Assert.IsTrue(calc.Eval("-10 sqrt -10 .5 ^ ==").GetBool());
+
+            Assert.AreEqual(new Complex(0, 3), calc.Eval("-9 .5 ^").GetComplexNumber());
+            Assert.IsTrue(calc.Eval("-9 sqrt -9 .5 ^ ==").GetBool());
+            Assert.AreEqual(new Complex(0, .333333333333333333333333), calc.Eval("-9 -.5 ^").GetComplexNumber());
+            Assert.AreEqual(Math.Pow(9, -.5), calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
+            Assert.AreEqual(calc.Eval("9 -.5 ^").GetRealNumber(), calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
         }
     }
 }
