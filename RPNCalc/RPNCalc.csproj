@@ -1,16 +1,43 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
-    <OutputType>Library</OutputType>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>CS1591</NoWarn>
-    <LangVersion>9</LangVersion>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Deterministic>false</Deterministic>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetBuildVersion">
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+        <OutputType>Library</OutputType>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>CS1591</NoWarn>
+        <LangVersion>9</LangVersion>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <Deterministic>true</Deterministic>
+        <Copyright>Copyright (C) 2021 Marek Vitvar</Copyright>
+        <Product>RPNCalc</Product>
+        <Title>RPNCalc</Title>
+        <InformationalVersion>1.4.1</InformationalVersion>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <!--<PackageReference Include="Nito.Collections.Deque" Version="1.1.0" />-->
-  </ItemGroup>
+    <Target Name="GetBuildVersion" BeforeTargets="Clean;Restore;Build">
+        <Message Text="Building with $(Configuration) config" Importance="high" />
+        <Exec ConsoleToMSBuild="true" Command="git rev-parse --short HEAD">
+            <Output TaskParameter="ConsoleOutput" PropertyName="CommitNumber" />
+        </Exec>
+        <Message Text="commit: $(CommitNumber)" Importance="high" />
+        <Exec ConsoleToMSBuild="true" EchoOff="true" Command="git status --short">
+            <Output TaskParameter="ConsoleOutput" PropertyName="GitStatus" />
+        </Exec>
+    </Target>
+    <Target Name="SetVersion" AfterTargets="GetBuildVersion">
+        <PropertyGroup Condition="'$(GitStatus)'==''">
+            <!--<AssemblyVersion>$(CommitNumber)</AssemblyVersion>
+            <FileVersion>$(CommitNumber)</FileVersion>-->
+            <InformationalVersion>$(InformationalVersion)-$(CommitNumber)</InformationalVersion>
+        </PropertyGroup>
+        <PropertyGroup Condition="'$(GitStatus)'!=''">
+            <!--<AssemblyVersion>$(CommitNumber)-dirty</AssemblyVersion>
+            <FileVersion>$(CommitNumber)-dirty</FileVersion>-->
+            <InformationalVersion>$(InformationalVersion)-$(CommitNumber)-dirty</InformationalVersion>
+        </PropertyGroup>
+    </Target>
+
+    <ItemGroup>
+        <!--<PackageReference Include="Nito.Collections.Deque" Version="1.1.0" />-->
+    </ItemGroup>
 
 </Project>
