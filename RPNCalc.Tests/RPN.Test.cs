@@ -1255,9 +1255,9 @@ bf
 
             Assert.AreEqual(new Complex(0, 3), calc.Eval("-9 .5 ^").GetComplexNumber());
             Assert.IsTrue(calc.Eval("-9 sqrt -9 .5 ^ ==").GetBool());
-            Assert.AreEqual(new Complex(0, .333333333333333333333333), calc.Eval("-9 -.5 ^").GetComplexNumber());
-            Assert.AreEqual(Math.Pow(9, -.5), calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
-            Assert.AreEqual(calc.Eval("9 -.5 ^").GetRealNumber(), calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
+            Assert.AreEqual((1 / Complex.Sqrt(-9)).Imaginary, calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
+            Assert.AreEqual(new Complex(0, -.333333333333333333333333), calc.Eval("-9 -.5 ^").GetComplexNumber());
+            Assert.AreEqual(calc.Eval("9 -.5 ^ +-").GetRealNumber(), calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
         }
     }
 }

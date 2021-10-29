@@ -181,7 +181,7 @@ namespace RPNCalc.Extensions
                         var realResult = Math.Sqrt(Math.Abs(yReal));
                         Complex complexResult;
                         complexResult = Math.Sign(xReal) < 0
-                            ? new Complex(0, 1 / realResult)
+                            ? new Complex(0, 1 / realResult * Math.Sign(yReal))
                             : new Complex(0, realResult);
                         stack.Push(complexResult);
                     }
