@@ -50,8 +50,8 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("LRCL", st => RECALL(calc, st, RPN.Scope.Local));
             calc.SetNameValue("RND", ROUND);
             calc.SetNameValue("RND0", RPNTools.CreateMacroInstructions("0 RND"));
-            calc.SetNameValue("IP", IntegerPart);
-            calc.SetNameValue("FP", FloatingPart);
+            calc.SetNameValue("IP", INTEGER_PART);
+            calc.SetNameValue("FP", FLOATING_PART);
             calc.SetNameValue("FLOOR", stack => stack.Func(x => Math.Floor(x.GetRealNumber())));
             calc.SetNameValue("CEIL", stack => stack.Func(x => Math.Ceiling(x.GetRealNumber())));
 
@@ -674,14 +674,14 @@ namespace RPNCalc.Extensions
             calc.Flags[FLAG_STOP_LOOP] = false;
         }
 
-        private static void IntegerPart(Stack<AItem> stack)
+        private static void INTEGER_PART(Stack<AItem> stack)
         {
             double number = stack.Pop().GetRealNumber();
             number = Math.Truncate(number);
             stack.Push(number);
         }
 
-        private static void FloatingPart(Stack<AItem> stack)
+        private static void FLOATING_PART(Stack<AItem> stack)
         {
             double number = stack.Pop().GetRealNumber();
             number = number - Math.Truncate(number);

@@ -126,7 +126,7 @@ namespace RPNCalc
         /// <para>+- ++ -- change sign, +1 to variable, -1 from variable</para>
         /// <para>SQ, SQRT : square, square root</para>
         /// <para>DROP, DUP, SWAP : drop, duplicate, swap values on stack</para>
-        /// <para>ROT, ROLL : rottate top 3 values, roll/rotate whole stack</para>
+        /// <para>ROT, ROLL : rotate top 3 values, roll/rotate whole stack</para>
         /// <para>DEPTH, CLV, CLST : number of values on stack, clear variable, clear stack</para>
         /// <para>STO, RCL, EVAL : store variable, recall variable, evaluate/execute program on stack</para>
         /// <para>IFT, IFTE, WHILE : if then, if then else, while loop</para>
