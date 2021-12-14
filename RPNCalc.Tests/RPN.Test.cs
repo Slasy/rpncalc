@@ -1259,5 +1259,31 @@ bf
             Assert.AreEqual(new Complex(0, -.333333333333333333333333), calc.Eval("-9 -.5 ^").GetComplexNumber());
             Assert.AreEqual(calc.Eval("9 -.5 ^ +-").GetRealNumber(), calc.Eval("-9 -.5 ^").GetComplexNumber().Imaginary);
         }
+
+        [Test]
+        public void IntegerFloatingParts()
+        {
+            Assert.AreEqual(5, calc.Eval("5.55 ip").GetRealNumber(), 0);
+            Assert.AreEqual(-5, calc.Eval("5.55 +- ip").GetRealNumber(), 0);
+            Assert.AreEqual(.55, calc.Eval("5.55 fp").GetRealNumber(), 0.0001);
+            Assert.AreEqual(-.55, calc.Eval("5.55 +- fp").GetRealNumber(), 0.0001);
+            Assert.AreEqual(5, calc.Eval("5.1 ip").GetRealNumber(), 0);
+            Assert.AreEqual(-5, calc.Eval("5.1 +- ip").GetRealNumber(), 0);
+            Assert.AreEqual(.1, calc.Eval("5.1 fp").GetRealNumber(), 0.0001);
+            Assert.AreEqual(-.1, calc.Eval("5.1 +- fp").GetRealNumber(), 0.0001);
+        }
+
+        [Test]
+        public void FloorCeil()
+        {
+            Assert.AreEqual(5, calc.Eval("5.99 floor").GetRealNumber(), 0);
+            Assert.AreEqual(-6, calc.Eval("5.99 +- floor").GetRealNumber(), 0);
+            Assert.AreEqual(5, calc.Eval("5.11 floor").GetRealNumber(), 0);
+            Assert.AreEqual(-6, calc.Eval("5.11 +- floor").GetRealNumber(), 0);
+            Assert.AreEqual(6, calc.Eval("5.99 ceil").GetRealNumber(), 0);
+            Assert.AreEqual(-5, calc.Eval("5.99 +- ceil").GetRealNumber(), 0);
+            Assert.AreEqual(6, calc.Eval("5.11 ceil").GetRealNumber(), 0);
+            Assert.AreEqual(-5, calc.Eval("5.11 +- ceil").GetRealNumber(), 0);
+        }
     }
 }
