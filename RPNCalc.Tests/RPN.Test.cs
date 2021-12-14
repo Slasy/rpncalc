@@ -1284,6 +1284,8 @@ bf
             Assert.AreEqual(-5, calc.Eval("5.99 +- ceil").GetRealNumber(), 0);
             Assert.AreEqual(6, calc.Eval("5.11 ceil").GetRealNumber(), 0);
             Assert.AreEqual(-5, calc.Eval("5.11 +- ceil").GetRealNumber(), 0);
+            Assert.AreEqual(42, calc.EvalAlgebraic("floor(42.666)").GetRealNumber(), 0);
+            Assert.AreEqual(42, calc.EvalAlgebraic("ceil(41.666)").GetRealNumber(), 0);
         }
     }
 }
