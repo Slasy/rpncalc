@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RPNCalc.Flags
 {
@@ -8,8 +9,8 @@ namespace RPNCalc.Flags
         private const string UNKNOWN_NAME = "Unknown flag name ";
 
         private readonly Dictionary<string, bool> namedFlags = new();
-        private readonly SortedList<int, bool> indexedFlags = new();
-        private readonly SortedList<int, string> indexToName = new();
+        private readonly Dictionary<int, bool> indexedFlags = new();
+        private readonly Dictionary<int, string> indexToName = new();
 
         private int negativeCount;
         private int positiveCount;
@@ -89,12 +90,12 @@ namespace RPNCalc.Flags
         /// <returns>index of last new flag</returns>
         public int AddNamedFlags(IEnumerable<string> flagNames, bool positiveIndexes)
         {
-            int firstNewIndex = Count;
+            int lastIndex = 0;
             foreach (string name in flagNames)
             {
-                AddNamedFlag(name, positiveIndexes);
+                lastIndex = AddNamedFlag(name, positiveIndexes);
             }
-            return positiveIndexes ? positiveCount - 1 : negativeCount;
+            return lastIndex;
         }
 
         /// <summary>
@@ -104,7 +105,8 @@ namespace RPNCalc.Flags
         /// <returns>index of new flag</returns>
         public int AddIndexedFlag(bool positiveIndexes)
         {
-            indexedFlags.Add(positiveIndexes ? positiveCount++ : --negativeCount, false);
+            int newIndex = positiveIndexes ? positiveCount++ : --negativeCount;
+            indexedFlags.Add(newIndex, false);
             return positiveIndexes ? positiveCount - 1 : negativeCount;
         }
 
@@ -119,10 +121,12 @@ namespace RPNCalc.Flags
             name = GetName(name);
             if (!namedFlags.ContainsKey(name))
             {
-                indexToName.Add(positiveIndexes ? positiveCount++ : --negativeCount, name);
+                int newIndex = positiveIndexes ? positiveCount++ : --negativeCount;
+                indexToName.Add(newIndex, name);
                 namedFlags.Add(name, false);
+                return newIndex;
             }
-            return positiveIndexes ? positiveCount - 1 : negativeCount;
+            return indexToName.Single(x => x.Value == name).Key;
         }
 
         public bool TryGetFlagName(int index, out string name)

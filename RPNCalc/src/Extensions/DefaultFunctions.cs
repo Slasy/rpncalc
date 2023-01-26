@@ -51,7 +51,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("RND", ROUND);
             calc.SetNameValue("RND0", RPNTools.CreateMacroInstructions("0 RND"));
             calc.SetNameValue("IP", INTEGER_PART);
-            calc.SetNameValue("FP", FLOATING_PART);
+            calc.SetNameValue("FP", FRACTION_PART);
             calc.SetNameValue("FLOOR", stack => stack.Func(x => Math.Floor(x.GetRealNumber())));
             calc.SetNameValue("CEIL", stack => stack.Func(x => Math.Ceiling(x.GetRealNumber())));
 
@@ -235,8 +235,14 @@ namespace RPNCalc.Extensions
                 else if (calc.Flags[FLAG_COMPLEX_ROOT]) stack.Push(Complex.Sqrt(number));
                 else throw UndefinedRoot;
             }
-            else if (x is ComplexNumberItem xComplex) stack.Push(Complex.Sqrt(xComplex));
-            else throw UndefinedResult;
+            else if (x is ComplexNumberItem xComplex)
+            {
+                stack.Push(Complex.Sqrt(xComplex));
+            }
+            else
+            {
+                throw UndefinedResult;
+            }
         }
 
         private static void ONE_OVER_X(Stack<AItem> stack)
@@ -681,7 +687,7 @@ namespace RPNCalc.Extensions
             stack.Push(number);
         }
 
-        private static void FLOATING_PART(Stack<AItem> stack)
+        private static void FRACTION_PART(Stack<AItem> stack)
         {
             double number = stack.Pop().GetRealNumber();
             number = number - Math.Truncate(number);

@@ -36,14 +36,14 @@ namespace RPNCalc.Items
         public static implicit operator ulong(RealNumberItem number) => (ulong)number.value;
         public static implicit operator bool(RealNumberItem number) => number.GetBool();
 
-        public bool Equals(double other) => value == other;
-        public bool Equals(float other) => value == other;
-        public bool Equals(long other) => value == other;
-        public bool Equals(ulong other) => value == other;
-        public bool Equals(int other) => value == other;
-        public bool Equals(uint other) => value == other;
+        public bool Equals(double other) => value.Equals(other);
+        public bool Equals(float other) => value.Equals(other);
+        public bool Equals(long other) => value.Equals(other);
+        public bool Equals(ulong other) => value.Equals(other);
+        public bool Equals(int other) => value.Equals(other);
+        public bool Equals(uint other) => value.Equals(other);
 
-        public override bool Equals(AItem other) => (other is RealNumberItem number && number.value == value) || (other is ComplexNumberItem complex && complex.value == value);
+        public override bool Equals(AItem other) => (other is RealNumberItem number && number.value.Equals(value)) || (other is ComplexNumberItem { value.Imaginary: 0 } complex && complex.value.Real.Equals(value));
 
         public override string ToString() => value.ToString(CultureInfo.InvariantCulture);
     }

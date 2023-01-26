@@ -14,7 +14,7 @@ namespace RPNCalc.Tools
         private static readonly Regex func = new(@"^((?:\w+)|(?:\(\-\w+))\(");
         private static readonly Regex variable = new(@"^[_a-zA-Z][\w\.]*");
         private static readonly Regex text = new("^'.*?'");
-        private static readonly Regex[] matchers = new[] { negNumberVariable, number, func, op, variable, text };
+        private static readonly Regex[] matchers = { negNumberVariable, number, func, op, variable, text };
 
         /// <summary>
         /// Divide algebraic expression to individual elements.
@@ -24,7 +24,7 @@ namespace RPNCalc.Tools
             var tokens = new List<string>();
             while (expression.Length > 0)
             {
-                Match match = null;
+                Match match = null!;
                 foreach (var regex in matchers)
                 {
                     match = regex.Match(expression);
@@ -33,28 +33,21 @@ namespace RPNCalc.Tools
                         if (regex == func)
                         {
                             string name = match.Groups[1].Value;
-                            string arguments = MatchFunctionArguments(name, expression.Substring(name.Length), out int matchLen);
+                            string arguments = MatchFunctionArguments(name, expression[name.Length..], out int matchLen);
                             tokens.Add("(");
                             bool isNegative = name.StartsWith("(-");
-                            tokens.AddRange(GetTokens(arguments.Substring(1, arguments.Length - 2)));
-                            tokens.Add(isNegative ? name.Substring(1) : name);
+                            tokens.AddRange(GetTokens(arguments[1..^1]));
+                            tokens.Add(isNegative ? name[1..] : name);
                             tokens.Add(")");
-                            expression = expression.Substring(name.Length + matchLen + (isNegative ? 1 : 0));
+                            expression = expression[(name.Length + matchLen + (isNegative ? 1 : 0))..];
                             break;
                         }
-                        else if (match.Groups.Count == 2)
-                        {
-                            tokens.Add(match.Groups[1].Value);
-                        }
-                        else
-                        {
-                            tokens.Add(match.Value);
-                        }
-                        expression = expression.Substring(match.Length);
+                        tokens.Add(match.Groups.Count == 2 ? match.Groups[1].Value : match.Value);
+                        expression = expression[match.Length..];
                         break;
                     }
                 }
-                if (!match.Success) expression = expression.Substring(1);
+                if (!match.Success) expression = expression[1..];
             }
             return tokens.ToArray();
         }
@@ -81,18 +74,16 @@ namespace RPNCalc.Tools
                         break;
                     case '[':
                         sb.Length--;
-                        sb.Append(ListCreator(functionExpression.Substring(i), out int len));
+                        sb.Append(ListCreator(functionExpression[i..], out int len));
                         i += len;
                         break;
                 }
-                if (bracketCounter == 0)
-                {
-                    matchLength = i + 1;
-                    sb.Append(')');
-                    return sb.ToString();
-                }
+                if (bracketCounter != 0) continue;
+                matchLength = i + 1;
+                sb.Append(')');
+                return sb.ToString();
             }
-            if (functionName.StartsWith("(-")) functionName = functionName.Substring(2);
+            if (functionName.StartsWith("(-")) functionName = functionName[2..];
             throw new RPNArgumentException($"Function is missing ending bracket: {functionName}");
         }
 
@@ -121,12 +112,10 @@ namespace RPNCalc.Tools
                         break;
                 }
 
-                if (bracketCounter == 0)
-                {
-                    strLength = i;
-                    sb.Append(')');
-                    return sb.ToString();
-                }
+                if (bracketCounter != 0) continue;
+                strLength = i;
+                sb.Append(')');
+                return sb.ToString();
             }
             throw new RPNArgumentException("List is missing ending bracket");
         }
@@ -153,7 +142,7 @@ namespace RPNCalc.Tools
                     // handle negative numbers/variables/functions
                     if (token.Length > 1 && token.StartsWith("-"))
                     {
-                        postfix.Push(token.Substring(1));
+                        postfix.Push(token[1..]);
                         postfix.Push("+-");
                     }
                     else
@@ -178,7 +167,7 @@ namespace RPNCalc.Tools
                         continue; // ignore too many closing brackets
                     }
                     st = stack.Pop();
-                    string bracketToFind = null;
+                    string? bracketToFind = null;
                     if (tokenArray[i] == ")") bracketToFind = "(";
                     else if (tokenArray[i] == "]") bracketToFind = "[";
                     while (st != bracketToFind)
@@ -222,11 +211,11 @@ namespace RPNCalc.Tools
         {
             return c switch
             {
-                "^" => 4,
-                "*" or "/" => 3,
-                "+" or "-" => 2,
+                "^"                                               => 4,
+                "*" or "/"                                        => 3,
+                "+" or "-"                                        => 2,
                 "=" or "==" or "!=" or ">" or "<" or ">=" or "<=" => 1,
-                _ => 0,
+                _                                                 => 0,
             };
         }
     }

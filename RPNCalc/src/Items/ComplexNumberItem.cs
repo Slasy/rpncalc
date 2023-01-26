@@ -19,7 +19,10 @@ namespace RPNCalc.Items
         public static implicit operator ComplexNumberItem(double number) => new(number, 0);
         public static implicit operator ComplexNumberItem(float number) => new(number, 0);
 
-        public override bool Equals(AItem other) => (other is ComplexNumberItem complex && complex.value == value) || (other is RealNumberItem number && number.value == value);
+        public override bool Equals(AItem other) =>
+            (other is ComplexNumberItem complex && complex.value.Equals(value))
+            || (value.Imaginary == 0 && other is RealNumberItem number && number.value.Equals(value.Real));
+
         public bool Equals(Complex other) => value.Equals(other);
 
         public override string ToString() => $"( {value.Real.ToString(CultureInfo.InvariantCulture)} {value.Imaginary.ToString(CultureInfo.InvariantCulture)} )";

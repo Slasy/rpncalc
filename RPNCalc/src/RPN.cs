@@ -294,8 +294,8 @@ namespace RPNCalc
         public string SetNameValue(string name, AItem[] instructions, bool setProtected = false)
         {
             EnsureValidName(name);
-            if (instructions is null) throw new RPNArgumentException($"Can't set name {name} to null");
-            else return SetNameValue(name, macro, setProtected);
+            if (instructions is null) throw new RPNArgumentException("Instructions are null");
+            return SetNameValue(name, macro, setProtected);
 
             void macro(Stack<AItem> _)
             {
