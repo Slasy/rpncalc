@@ -26,12 +26,12 @@
     </Target>
     <Target Name="SetVersion" AfterTargets="GetBuildVersion">
         <PropertyGroup Condition="'$(GitStatus)'==''">
-            <FileVersion>$(AssemblyVersion)</FileVersion>
-            <InformationalVersion>$(AssemblyVersion).$(CommitNumber)</InformationalVersion>
+            <FileVersion>$(Version)</FileVersion>
+            <InformationalVersion>$(Version).$(CommitNumber)</InformationalVersion>
         </PropertyGroup>
         <PropertyGroup Condition="'$(GitStatus)'!=''">
-            <FileVersion>$(AssemblyVersion)</FileVersion>
-            <InformationalVersion>$(AssemblyVersion).$(CommitNumber) RC</InformationalVersion>
+            <FileVersion>$(Version)</FileVersion>
+            <InformationalVersion>$(Version).$(CommitNumber) RC</InformationalVersion>
         </PropertyGroup>
     </Target>
 
