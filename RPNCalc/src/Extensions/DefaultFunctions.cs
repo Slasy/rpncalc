@@ -1,7 +1,11 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using RPNCalc.Flags;
 using RPNCalc.Items;
 using RPNCalc.Tools;
+
+[assembly: InternalsVisibleTo("RPNCalc.Tests")]
 
 namespace RPNCalc.Extensions
 {
@@ -23,7 +27,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("-", MINUS);
             calc.SetNameValue("*", MUL);
             calc.SetNameValue("/", DIV);
-            calc.SetNameValue("^", stack => POW(calc, stack));
+            calc.SetNameValue("^", stack => POW(calc.Flags, stack));
             calc.SetNameValue("+-", NEG);
             calc.SetNameValue("++", stack => AddToVarOnStack(calc, stack, 1));
             calc.SetNameValue("--", stack => AddToVarOnStack(calc, stack, -1));
@@ -103,7 +107,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue(FLAG_COMPLEX_ROOT, calc.Flags.AddNamedFlag(FLAG_COMPLEX_ROOT, false), RPN.Scope.Protected);
         }
 
-        private static void EVAL(RPN calc, Stack<AItem> stack)
+        internal static void EVAL(RPN calc, Stack<AItem> stack)
         {
             AItem item = stack.Pop();
             if (item is StringItem expression)
@@ -127,7 +131,7 @@ namespace RPNCalc.Extensions
             }
         }
 
-        private static void PLUS(Stack<AItem> stack)
+        internal static void PLUS(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() + x.GetRealNumber());
@@ -140,7 +144,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void MINUS(Stack<AItem> stack)
+        internal static void MINUS(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() - x.GetRealNumber());
@@ -149,7 +153,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void MUL(Stack<AItem> stack)
+        internal static void MUL(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() * x.GetRealNumber());
@@ -158,7 +162,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void DIV(Stack<AItem> stack)
+        internal static void DIV(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem) stack.Push(y.GetRealNumber() / x.GetRealNumber());
@@ -167,7 +171,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void POW(RPN calc, Stack<AItem> stack)
+        internal static void POW(FlagCollection flags, Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             if (x is RealNumberItem && y is RealNumberItem)
@@ -178,13 +182,12 @@ namespace RPNCalc.Extensions
                 {
                     stack.Push(Math.Pow(yReal, xReal));
                 }
-                else if (calc.Flags[FLAG_COMPLEX_ROOT])
+                else if (flags[FLAG_COMPLEX_ROOT])
                 {
-                    if (Math.Abs(xReal) == .5)
+                    if (Math.Abs(xReal).Equals(.5))
                     {
-                        var realResult = Math.Sqrt(Math.Abs(yReal));
-                        Complex complexResult;
-                        complexResult = Math.Sign(xReal) < 0
+                        double realResult = Math.Sqrt(Math.Abs(yReal));
+                        Complex complexResult = Math.Sign(xReal) < 0
                             ? new Complex(0, 1 / realResult * Math.Sign(yReal))
                             : new Complex(0, realResult);
                         stack.Push(complexResult);
@@ -209,7 +212,7 @@ namespace RPNCalc.Extensions
             }
         }
 
-        private static void NEG(Stack<AItem> stack)
+        internal static void NEG(Stack<AItem> stack)
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(-x.GetRealNumber());
@@ -217,7 +220,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void SQUARE(Stack<AItem> stack)
+        internal static void SQUARE(Stack<AItem> stack)
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(x.GetRealNumber() * x.GetRealNumber());
@@ -225,7 +228,7 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void SQUARE_ROOT(RPN calc, Stack<AItem> stack)
+        internal static void SQUARE_ROOT(RPN calc, Stack<AItem> stack)
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem xReal)
@@ -245,7 +248,7 @@ namespace RPNCalc.Extensions
             }
         }
 
-        private static void ONE_OVER_X(Stack<AItem> stack)
+        internal static void ONE_OVER_X(Stack<AItem> stack)
         {
             AItem x = stack.Pop();
             if (x is RealNumberItem) stack.Push(1d / x.GetRealNumber());
@@ -253,23 +256,23 @@ namespace RPNCalc.Extensions
             else throw UndefinedResult;
         }
 
-        private static void STORE(RPN calc, Stack<AItem> stack, RPN.Scope scope)
+        internal static void STORE(RPN calc, Stack<AItem> stack, RPN.Scope scope)
         {
             string name = stack.Pop();
             var value = stack.Pop();
             calc.SetNameValue(name, value, scope);
         }
 
-        private static void RECALL(RPN calc, Stack<AItem> stack, RPN.Scope scope)
+        internal static void RECALL(RPN calc, Stack<AItem> stack, RPN.Scope scope)
         {
             string name = stack.Pop();
             AItem item = calc.GetNameValue(name, scope);
             stack.Push(item);
         }
 
-        private static void CLEAR_STACK(Stack<AItem> stack) => stack.Clear();
+        internal static void CLEAR_STACK(Stack<AItem> stack) => stack.Clear();
 
-        private static void CLEAR_VAR(RPN calc, Stack<AItem> stack)
+        internal static void CLEAR_VAR(RPN calc, Stack<AItem> stack)
         {
             string name = stack.Pop();
             //EnsureValidName(name);
@@ -279,7 +282,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// number { nonzero branch } IFT
         /// </summary>
-        private static void IF_THEN(RPN calc, Stack<AItem> stack)
+        internal static void IF_THEN(RPN calc, Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             bool predicate = y;
@@ -290,7 +293,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// number { nonzero branch } { zerobranch } IFTE
         /// </summary>
-        private static void IF_THEN_ELSE(RPN calc, Stack<AItem> stack)
+        internal static void IF_THEN_ELSE(RPN calc, Stack<AItem> stack)
         {
             var (x, y, z) = stack.Pop3();
             bool condition = z;
@@ -303,7 +306,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// { condition } { program loop } WHILE
         /// </summary>
-        private static void WHILE(RPN calc, Stack<AItem> stack)
+        internal static void WHILE(RPN calc, Stack<AItem> stack)
         {
             ClearStopLoopFlag(calc);
             var (x, y) = stack.Pop2();
@@ -326,7 +329,7 @@ namespace RPNCalc.Extensions
         /// <para>more complex 'for' loop</para>
         /// <para>'variable' { condition } { step } { program loop } FOR</para>
         /// </summary>
-        private static void FOR(RPN calc, Stack<AItem> stack)
+        internal static void FOR(RPN calc, Stack<AItem> stack)
         {
             ClearStopLoopFlag(calc);
             var (x, y, z, t) = stack.Pop4();
@@ -359,7 +362,7 @@ namespace RPNCalc.Extensions
         /// <para>simple 'for' loop</para>
         /// <para>'variable' end_num step_num { program loop } LOOP</para>
         /// </summary>
-        private static void LOOP(RPN calc, Stack<AItem> stack)
+        internal static void LOOP(RPN calc, Stack<AItem> stack)
         {
             ClearStopLoopFlag(calc);
             var (x, y, z, t) = stack.Pop4();
@@ -392,7 +395,7 @@ namespace RPNCalc.Extensions
         /// <para>[ a b c d ] -> a</para>
         /// <para>'string' -> 's'</para>
         /// </summary>
-        private static void HEAD(Stack<AItem> stack)
+        internal static void HEAD(Stack<AItem> stack)
         {
             AItem item = stack.Pop();
             if (item is StringItem str)
@@ -410,7 +413,7 @@ namespace RPNCalc.Extensions
         /// <para>[ a b c d ] -> [ b c d]</para>
         /// <para>'string' -> 'tring'</para>
         /// </summary>
-        private static void TAIL(Stack<AItem> stack)
+        internal static void TAIL(Stack<AItem> stack)
         {
             AItem item = stack.Pop();
             if (item is StringItem str)
@@ -438,12 +441,12 @@ namespace RPNCalc.Extensions
         /// <para>[ list ] item CONTAIN</para>
         /// <para>'string' 'string' CONTAIN</para>
         /// </summary>
-        private static void CONTAIN(Stack<AItem> stack)
+        internal static void CONTAIN(Stack<AItem> stack)
         {
             stack.Push(Position(stack) >= 0);
         }
 
-        private static void POSTION(Stack<AItem> stack)
+        internal static void POSTION(Stack<AItem> stack)
         {
             stack.Push(Position(stack));
         }
@@ -454,7 +457,7 @@ namespace RPNCalc.Extensions
             if (y is StringItem str)
             {
                 string subStr = x.GetString();
-                return str.value.IndexOf(subStr);
+                return str.value.IndexOf(subStr, StringComparison.InvariantCulture);
             }
             AItem[] array = y.GetArray();
             return Array.IndexOf(array, x);
@@ -463,7 +466,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// a b c d 2 -> a b [ c d ]
         /// </summary>
-        private static void TO_LIST(Stack<AItem> stack)
+        internal static void TO_LIST(Stack<AItem> stack)
         {
             int count = GetInteger(stack.Pop());
             AItem[] array = new AItem[count];
@@ -477,7 +480,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// [ a b c ] -> a b c 3
         /// </summary>
-        private static void EXPLODE_LIST(Stack<AItem> stack)
+        internal static void EXPLODE_LIST(Stack<AItem> stack)
         {
             AItem[] array = stack.Pop().GetArray();
             foreach (AItem item in array)
@@ -490,7 +493,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// 0.6789 2 -> 0.68
         /// </summary>
-        private static void ROUND(Stack<AItem> stack)
+        internal static void ROUND(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             int digits = GetInteger(x);
@@ -501,7 +504,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// [ a b c d ] 2 -> c
         /// </summary>
-        private static void GET_FROM_LIST(Stack<AItem> stack)
+        internal static void GET_FROM_LIST(Stack<AItem> stack)
         {
             var (x, y) = stack.Pop2();
             int index = GetInteger(x);
@@ -519,7 +522,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// [ a b c d ] 2 -> [ a b c d ] 3 c
         /// </summary>
-        private static void GET_INC_FROM_LIST(Stack<AItem> stack)
+        internal static void GET_INC_FROM_LIST(Stack<AItem> stack)
         {
             var index = GetInteger(stack.Pop());
             var y = stack.Peek();
@@ -539,7 +542,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// [ a b c d ] 1 X -> [ a X c d ]
         /// </summary>
-        private static void PUT_TO_LIST(Stack<AItem> stack)
+        internal static void PUT_TO_LIST(Stack<AItem> stack)
         {
             var (x, y, z) = stack.Pop3();
             int index = GetInteger(y);
@@ -552,7 +555,7 @@ namespace RPNCalc.Extensions
         /// <summary>
         /// [ a b c d ] 1 X -> [ a X c d ] 2
         /// </summary>
-        private static void PUT_INC_TO_LIST(Stack<AItem> stack)
+        internal static void PUT_INC_TO_LIST(Stack<AItem> stack)
         {
             var (x, y, z) = stack.Pop3();
             int index = GetInteger(y);
@@ -563,35 +566,35 @@ namespace RPNCalc.Extensions
             stack.Push((index + 1) % array.Length);
         }
 
-        private static void TYPE(Stack<AItem> stack)
+        internal static void TYPE(Stack<AItem> stack)
         {
             stack.Push((int)stack.Pop().type);
         }
 
-        private static void SIZE(Stack<AItem> stack)
+        internal static void SIZE(Stack<AItem> stack)
         {
             int size = stack.Pop() switch
             {
-                ListItem list => list.value.Length,
+                ListItem list  => list.value.Length,
                 StringItem str => str.value.Length,
-                _ => 1,
+                _              => 1,
             };
             stack.Push(size);
         }
 
-        private static void TO_STRING(Stack<AItem> stack)
+        internal static void TO_STRING(Stack<AItem> stack)
         {
             AItem item = stack.Pop();
             stack.Push(item.AsString());
         }
 
-        private static void FROM_STRING(RPN calc, Stack<AItem> stack)
+        internal static void FROM_STRING(RPN calc, Stack<AItem> stack)
         {
             string str = stack.Pop().GetString();
             calc.Eval(str);
         }
 
-        private static void SET_FLAG(RPN calc, Stack<AItem> stack, bool value)
+        internal static void SET_FLAG(RPN calc, Stack<AItem> stack, bool value)
         {
             var x = stack.Pop();
             if (x is RealNumberItem real)
@@ -609,7 +612,7 @@ namespace RPNCalc.Extensions
             throw new RPNArgumentException("Invalid flag type");
         }
 
-        private static void READ_FLAG(RPN calc, Stack<AItem> stack, bool expectedValue, bool clearFlag)
+        internal static void READ_FLAG(RPN calc, Stack<AItem> stack, bool expectedValue, bool clearFlag)
         {
             var x = stack.Pop();
             if (x is RealNumberItem real)
@@ -662,12 +665,6 @@ namespace RPNCalc.Extensions
             return (int)Math.Round(item.GetRealNumber(), MidpointRounding.AwayFromZero);
         }
 
-        private static void EnsureListItemIndex(Array array, int index)
-        {
-            if (array.Length <= index || index < 0)
-                throw new RPNArgumentException($"List index is out of range {index}");
-        }
-
         private static bool StopLoopFlagIsSetAndClear(RPN calc)
         {
             bool set = calc.Flags[FLAG_STOP_LOOP];
@@ -680,14 +677,14 @@ namespace RPNCalc.Extensions
             calc.Flags[FLAG_STOP_LOOP] = false;
         }
 
-        private static void INTEGER_PART(Stack<AItem> stack)
+        internal static void INTEGER_PART(Stack<AItem> stack)
         {
             double number = stack.Pop().GetRealNumber();
             number = Math.Truncate(number);
             stack.Push(number);
         }
 
-        private static void FRACTION_PART(Stack<AItem> stack)
+        internal static void FRACTION_PART(Stack<AItem> stack)
         {
             double number = stack.Pop().GetRealNumber();
             number = number - Math.Truncate(number);

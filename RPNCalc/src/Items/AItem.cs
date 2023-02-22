@@ -66,7 +66,7 @@ namespace RPNCalc.Items
             else throw new RPNArgumentException("Bad argument type");
         }
 
-        public override bool Equals(object obj) => throw new InvalidOperationException($"Use generic {nameof(AItem)}");
+        public override bool Equals(object? obj) => throw new InvalidOperationException($"Use generic {nameof(AItem)}");
         public override int GetHashCode() => throw new InvalidOperationException($"Use generic {nameof(AItem)}");
     }
 
@@ -77,17 +77,16 @@ namespace RPNCalc.Items
     {
         public T value;
 
-        protected AItem(Type type) : base(type) { }
         protected AItem(Type type, T value) : base(type) => this.value = value;
 
-        public abstract bool Equals(AItem other);
+        public abstract bool Equals(AItem? other);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is not AItem item) return false;
             return Equals(item);
         }
 
-        public override int GetHashCode() => value.GetHashCode();
+        public override int GetHashCode() => base.GetHashCode();
     }
 }

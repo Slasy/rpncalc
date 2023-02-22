@@ -10,7 +10,8 @@ namespace RPNCalc
     /// <summary>
     /// Extensible RPN calculator
     /// </summary>
-    public class RPN
+    // ReSharper disable once InconsistentNaming
+    public sealed class RPN
     {
         /// <summary>
         /// Calculator options.
@@ -18,7 +19,7 @@ namespace RPNCalc
         public class Options
         {
             /// <summary>Set true if you want variable and function names to be case sensitive.</summary>
-            public bool CaseSensitiveNames { get; set; } = false;
+            public bool CaseSensitiveNames { get; set; }
 
             /// <summary>Automatically clear stack before each <see cref="Eval(AItem[])"/> call.</summary>
             public bool AlwaysClearStack { get; set; } = true;
@@ -53,12 +54,12 @@ namespace RPNCalc
         /// <summary>
         /// Called before each evaluated instruction.
         /// </summary>
-        public event Action<RPN, AItem> ProgramStepBefore;
+        public event Action<RPN, AItem>? ProgramStepBefore;
 
         /// <summary>
         /// Called after each evaluated instruction.
         /// </summary>
-        public event Action<RPN, AItem> ProgramStepAfter;
+        public event Action<RPN, AItem>? ProgramStepAfter;
 
         public IReadOnlyCollection<string> ProtectedNames => protectedNames;
 
@@ -100,25 +101,25 @@ namespace RPNCalc
         /// <summary>
         /// Set to stop currently running calculator program.
         /// </summary>
-        public bool StopProgram { protected get; set; }
+        public bool StopProgram { private get; set; }
 
-        protected readonly Stack<AItem> mainStack = new();
+        private readonly Stack<AItem> mainStack = new();
 
         /// <summary>Used to "buffer" multiple items to collection (list, program, whatever...)</summary>
-        protected readonly Stack<Stack<AItem>> sideStack = new();
+        private readonly Stack<Stack<AItem>> sideStack = new();
 
         /// <summary>Functions that are always called even when not using main stack</summary>
-        protected readonly HashSet<string> functionWhiteList = new();
+        private readonly HashSet<string> functionWhiteList = new();
 
         /// <summary>Pointer to current stack that is used to push items to</summary>
-        protected Stack<AItem> currentStackInUse;
+        private Stack<AItem> currentStackInUse;
 
-        protected readonly Dictionary<string, AItem> globalNames = new();
-        protected readonly Stack<Dictionary<string, AItem>> localNames = new();
-        protected readonly HashSet<string> protectedNames = new();
+        private readonly Dictionary<string, AItem> globalNames = new();
+        private readonly Stack<Dictionary<string, AItem>> localNames = new();
+        private readonly HashSet<string> protectedNames = new();
 
-        protected bool IsUsingMainStack => currentStackInUse == mainStack;
-        protected int macroCounter;
+        private bool IsUsingMainStack => currentStackInUse == mainStack;
+        private int macroCounter;
 
         /// <summary>
         /// <para>RPN calculator, some of default functions:</para>
@@ -131,7 +132,7 @@ namespace RPNCalc
         /// <para>STO, RCL, EVAL : store variable, recall variable, evaluate/execute program on stack</para>
         /// <para>IFT, IFTE, WHILE : if then, if then else, while loop</para>
         /// </summary>
-        public RPN(Options options = null)
+        public RPN(Options? options = null)
         {
             options ??= Options.Default;
             Flags = new(options.CaseSensitiveNames);
@@ -146,11 +147,11 @@ namespace RPNCalc
         /// </summary>
         /// <param name="instruction">one or more instructions</param>
         /// <returns>top value on stack or null if stack is empty</returns>
-        public AItem Eval(AItem[] instruction)
+        public AItem? Eval(AItem[] instruction)
         {
             if (AlwaysClearStack) ClearStack();
             // this is already processing a "program" so inner programs will be just pushed to stack
-            AItem top = EvalItems(instruction, false);
+            AItem? top = EvalItems(instruction, false);
             if (AlwaysClearStack && sideStack.Count != 0) throw new RPNFunctionException("A collection-creating function didn't finished buffering items");
             return top;
         }
@@ -160,7 +161,7 @@ namespace RPNCalc
         /// </summary>
         /// <param name="items">Set of instructions/items for evaluation</param>
         /// <param name="evalPrograms">Set to false to just push a program or name to stack without evaluating</param>
-        public AItem EvalItems(AItem[] items, bool evalPrograms)
+        public AItem? EvalItems(AItem[] items, bool evalPrograms)
         {
             foreach (AItem item in items)
             {
@@ -233,7 +234,7 @@ namespace RPNCalc
             {
                 if (localNames.Count > 0)
                 {
-                    Dictionary<string, AItem> scope = GetScopeContainingName(name);
+                    Dictionary<string, AItem>? scope = GetScopeContainingName(name);
                     if (scope is null || scope == globalNames)
                     {
                         localNames.Peek()[name] = value;
@@ -319,7 +320,7 @@ namespace RPNCalc
             bool removed = false;
             if (scopeType == Scope.Default)
             {
-                Dictionary<string, AItem> scope = GetScopeContainingName(name);
+                Dictionary<string, AItem>? scope = GetScopeContainingName(name);
                 if (scope is null) return false;
                 removed = scope.Remove(name);
                 if (scope == globalNames) functionWhiteList.Remove(name);
@@ -349,7 +350,7 @@ namespace RPNCalc
             }
             else if (scopeType == Scope.Default)
             {
-                Dictionary<string, AItem> scope = GetScopeContainingName(name);
+                Dictionary<string, AItem>? scope = GetScopeContainingName(name);
                 if (scope is not null) return scope[name];
             }
             else if (scopeType == Scope.Local && localNames.Count > 0)
@@ -359,7 +360,7 @@ namespace RPNCalc
             throw new RPNUndefinedNameException($"Unknown name {name}");
         }
 
-        protected Dictionary<string, AItem> GetScopeContainingName(string name)
+        private Dictionary<string, AItem>? GetScopeContainingName(string name)
         {
             EnsureValidName(name);
             name = GetKeyName(name);
@@ -374,7 +375,7 @@ namespace RPNCalc
             return null;
         }
 
-        protected string SetFunction(string name, Function function, bool alsoAddToWhiteList, bool alsoAddToProtected)
+        private string SetFunction(string name, Function function, bool alsoAddToWhiteList, bool alsoAddToProtected)
         {
             EnsureValidName(name);
             if (function is null) throw new RPNArgumentException($"Can't set function {name} to null");
@@ -385,10 +386,10 @@ namespace RPNCalc
             return name;
         }
 
-        protected bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetScopeContainingName(name) == globalNames;
-        protected bool IsProtectedName(string name) => protectedNames.Contains(GetKeyName(name));
+        private bool IsWhiteListFunction(string name) => functionWhiteList.Contains(GetKeyName(name)) && GetScopeContainingName(name) == globalNames;
+        private bool IsProtectedName(string name) => protectedNames.Contains(GetKeyName(name));
 
-        protected void EnsureNotProtected(string name, Scope scopeType)
+        private void EnsureNotProtected(string name, Scope scopeType)
         {
             if (scopeType != Scope.Protected && IsProtectedName(name))
             {
@@ -396,15 +397,15 @@ namespace RPNCalc
             }
         }
 
-        protected void EnsureValidName(string name)
+        private void EnsureValidName(string name)
         {
             if (name is null) throw new RPNArgumentException("Name is null");
             if (!IsValidName(name)) throw new RPNArgumentException($"Invalid name {name}");
         }
 
-        protected string GetKeyName(string name) => CaseSensitiveNames ? name : name.ToLowerInvariant();
+        private string GetKeyName(string name) => CaseSensitiveNames ? name : name.ToLowerInvariant();
 
-        protected bool IsValidName(string name)
+        private bool IsValidName(string name)
         {
             foreach (char ch in name)
             {
@@ -413,7 +414,7 @@ namespace RPNCalc
             return true;
         }
 
-        protected Function GenerateStartCollectionStack(string startSymbol)
+        private Function GenerateStartCollectionStack(string startSymbol)
         {
             return _ =>
             {
@@ -422,7 +423,7 @@ namespace RPNCalc
             };
         }
 
-        protected Function GenerateEndCollectionStack(string startSymbol, string endSymbol, Func<Stack<AItem>, AItem> collectionConstructor)
+        private Function GenerateEndCollectionStack(string startSymbol, string endSymbol, Func<Stack<AItem>, AItem> collectionConstructor)
         {
             return _ =>
             {

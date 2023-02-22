@@ -6,7 +6,7 @@ using RPNCalc.Extensions;
 namespace RPNCalc.Items
 {
     [DebuggerDisplay("RealNumber({value})")]
-    public class RealNumberItem : AItem<double>,
+    public sealed class RealNumberItem : AItem<double>,
         IEquatable<double>,
         IEquatable<float>,
         IEquatable<long>,
@@ -43,7 +43,8 @@ namespace RPNCalc.Items
         public bool Equals(int other) => value.Equals(other);
         public bool Equals(uint other) => value.Equals(other);
 
-        public override bool Equals(AItem other) => (other is RealNumberItem number && number.value.Equals(value)) || (other is ComplexNumberItem { value.Imaginary: 0 } complex && complex.value.Real.Equals(value));
+        public override bool Equals(AItem? other) => (other is RealNumberItem number && number.value.Equals(value))
+            || (other is ComplexNumberItem { value.Imaginary: 0 } complex && complex.value.Real.Equals(value));
 
         public override string ToString() => value.ToString(CultureInfo.InvariantCulture);
     }

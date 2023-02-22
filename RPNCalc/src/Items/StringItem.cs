@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace RPNCalc.Items
 {
     [DebuggerDisplay("String({ToString()})")]
-    public class StringItem : AItem<string>, IEquatable<string>
+    public sealed class StringItem : AItem<string>, IEquatable<string>
     {
         public StringItem(string str) : base(Type.String, str) { }
 
@@ -13,6 +13,6 @@ namespace RPNCalc.Items
 
         public bool Equals(string other) => value == other;
         public override string ToString() => $"'{value.Replace("'", "\\'")}'";
-        public override bool Equals(AItem other) => other is StringItem str && value == str.value;
+        public override bool Equals(AItem? other) => other is StringItem str && value == str.value;
     }
 }

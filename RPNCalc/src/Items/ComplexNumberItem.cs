@@ -6,7 +6,7 @@ using System.Numerics;
 namespace RPNCalc.Items
 {
     [DebuggerDisplay("ComplexNumber({value.Real}, {value.Imaginary}i)")]
-    public class ComplexNumberItem : AItem<Complex>, IEquatable<Complex>
+    public sealed class ComplexNumberItem : AItem<Complex>, IEquatable<Complex>
     {
         public ComplexNumberItem(Complex value) : base(Type.ComplexNumber, value) { }
         public ComplexNumberItem(double real, double imaginary) : base(Type.ComplexNumber, new(real, imaginary)) { }
@@ -19,7 +19,7 @@ namespace RPNCalc.Items
         public static implicit operator ComplexNumberItem(double number) => new(number, 0);
         public static implicit operator ComplexNumberItem(float number) => new(number, 0);
 
-        public override bool Equals(AItem other) =>
+        public override bool Equals(AItem? other) =>
             (other is ComplexNumberItem complex && complex.value.Equals(value))
             || (value.Imaginary == 0 && other is RealNumberItem number && number.value.Equals(value.Real));
 

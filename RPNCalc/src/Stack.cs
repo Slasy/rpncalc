@@ -5,7 +5,7 @@ using Nito.Collections;
 
 namespace RPNCalc
 {
-    public class Stack<T> : IReadOnlyList<T>
+    public sealed class Stack<T> : IReadOnlyList<T>
     {
         private readonly Deque<T> queue;
 
@@ -61,7 +61,7 @@ namespace RPNCalc
         }
 
         /// <summary>
-        /// Return last value from stack without poping it.
+        /// Return last value from stack without popping it.
         /// </summary>
         /// <exception cref="RPNEmptyStackException"/>
         public T Peek()
@@ -71,7 +71,7 @@ namespace RPNCalc
         }
 
         /// <summary>
-        /// Return last two values from stack without poping them.
+        /// Return last two values from stack without popping them.
         /// </summary>
         /// <exception cref="RPNEmptyStackException"/>
         public (T x, T y) Peek2()
@@ -81,7 +81,7 @@ namespace RPNCalc
         }
 
         /// <summary>
-        /// Return last three values from stack without poping them.
+        /// Return last three values from stack without popping them.
         /// </summary>
         /// <exception cref="RPNEmptyStackException"/>
         public (T x, T y, T z) Peek3()
@@ -95,9 +95,7 @@ namespace RPNCalc
         public void Swap()
         {
             ThrowIfTooSmall(2);
-            T x = queue[0];
-            queue[0] = queue[1];
-            queue[1] = x;
+            (queue[0], queue[1]) = (queue[1], queue[0]);
         }
 
         /// <summary>
@@ -138,7 +136,7 @@ namespace RPNCalc
         /// </summary>
         /// <param name="n">positive number moves top values to bottom,
         /// negative moves back values from bottom to top</param>
-        public void Roll(int n = 1)
+        public void Roll(int n)
         {
             if (n == 0) return;
             if (Count == Math.Abs(n)) return;

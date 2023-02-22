@@ -201,7 +201,7 @@ namespace RPNCalc.Extensions
         public static void RotateUp<T>(this Stack<T> stack) => stack.Roll(-1);
 
         /// <summary>
-        /// Returns stack as formated string for easy view of stack content.
+        /// Returns stack as formatted string for easy view of stack content.
         /// </summary>
         public static string DumpStack<T>(this Stack<T> stack) => DumpStack(stack as IReadOnlyList<T>);
 
@@ -217,12 +217,16 @@ namespace RPNCalc.Extensions
 
         internal static string DumpStack<T>(this IReadOnlyList<T> stackCollection)
         {
-            var sb = new StringBuilder();
+            var stackString = new StringBuilder();
             for (int i = stackCollection.Count - 1; i >= 0; i--)
             {
-                sb.AppendFormat("{0:000}", i + 1).Append(": ").Append(stackCollection[i].ToString()).Append('\n');
+                stackString
+                    .AppendFormat("{0:000}", i + 1)
+                    .Append(": ")
+                    .Append(stackCollection[i])
+                    .Append('\n');
             }
-            return sb.ToString();
+            return stackString.ToString();
         }
     }
 }

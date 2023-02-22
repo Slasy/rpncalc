@@ -1,10 +1,10 @@
-using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using RPNCalc.Items;
 
 namespace RPNCalc.Tools
 {
+    // ReSharper disable once InconsistentNaming
     public static class RPNTools
     {
         private static readonly Regex numberToken = new(@"^\-?\.?\d+?(?:\.\d+)?(?:e\-?\d+)?$");

@@ -3,6 +3,7 @@ using RPNCalc.Tools;
 
 namespace RPNCalc.Extensions
 {
+    // ReSharper disable once InconsistentNaming
     public static class RPNExtensions
     {
         /// <summary>
@@ -11,7 +12,7 @@ namespace RPNCalc.Extensions
         /// <param name="calc">RPN calculator instance</param>
         /// <param name="rpnExpression">whole RPN expression as one string</param>
         /// <returns>top value on stack or null if stack is empty</returns>
-        public static AItem Eval(this RPN calc, string rpnExpression)
+        public static AItem? Eval(this RPN calc, string rpnExpression)
         {
             string[] tokens = RPNTools.GetTokens(rpnExpression);
             AItem[] instructions = RPNTools.TokensToItems(tokens);
@@ -24,7 +25,7 @@ namespace RPNCalc.Extensions
         /// <param name="calc">RPN calculator instance</param>
         /// <param name="algebraicExpression">one or more instructions</param>
         /// <returns>top value on stack or null if stack is empty</returns>
-        public static AItem EvalAlgebraic(this RPN calc, string algebraicExpression)
+        public static AItem? EvalAlgebraic(this RPN calc, string algebraicExpression)
         {
             string[] tokens = AlgebraicTools.GetTokens(algebraicExpression);
             tokens = AlgebraicTools.InfixToPostfix(tokens);
@@ -33,7 +34,7 @@ namespace RPNCalc.Extensions
         }
 
         /// <summary>
-        /// Returns stack as formated string for easy view of stack content.
+        /// Returns stack as formatted string for easy view of stack content.
         /// </summary>
         public static string DumpStack(this RPN calc) => calc.StackView.DumpStack();
     }

@@ -23,7 +23,7 @@ namespace RPNCalc.Extensions
         public static string AsString(this AItem item)
         {
             if (item is StringItem str) return str.value;
-            return item.ToString();
+            return item.ToString() ?? string.Empty;
         }
 
         public static ProgramItem GetProgram(this AItem item)

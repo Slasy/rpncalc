@@ -7,7 +7,7 @@ using RPNCalc.Extensions;
 namespace RPNCalc.Items
 {
     [DebuggerDisplay("List({ToString()})")]
-    public class ListItem : AItem<AItem[]>
+    public sealed class ListItem : AItem<AItem[]>
     {
         /// <summary>Empty list.</summary>
         public ListItem() : base(Type.List, Array.Empty<AItem>()) { }
@@ -47,7 +47,7 @@ namespace RPNCalc.Items
 
         public bool Equals(AItem[] other) => value.SequenceEqual(other);
 
-        public override bool Equals(AItem other) => other is ListItem list && value.SequenceEqual(list.value);
+        public override bool Equals(AItem? other) => other is ListItem list && value.SequenceEqual(list.value);
 
         public override string ToString()
         {
