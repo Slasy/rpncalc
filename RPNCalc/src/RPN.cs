@@ -18,6 +18,16 @@ namespace RPNCalc
         /// </summary>
         public class Options
         {
+            public enum DefaultFunction
+            {
+                /// <summary>Nothing, avoid overhead with loading default functions</summary>
+                None,
+                /// <summary>Just basic math functions for simple algebraic expressions</summary>
+                MinimalDefaults,
+                /// <summary>Full set of built-in functions</summary>
+                FullDefaults,
+            }
+
             /// <summary>Set true if you want variable and function names to be case sensitive.</summary>
             public bool CaseSensitiveNames { get; set; }
 
@@ -26,7 +36,7 @@ namespace RPNCalc
 
             /// <summary>Load a set of function to new calc instance,
             /// calculator knows very little without any functions.</summary>
-            public bool LoadDefaultFunctions { get; set; } = true;
+            public DefaultFunction DefaultFunctions { get; set; } = DefaultFunction.FullDefaults;
 
             public static Options Default => new();
         }
@@ -139,7 +149,15 @@ namespace RPNCalc
             CaseSensitiveNames = options.CaseSensitiveNames;
             AlwaysClearStack = options.AlwaysClearStack;
             currentStackInUse = mainStack;
-            if (options.LoadDefaultFunctions) this.LoadDefaultFunctions();
+            switch (options.DefaultFunctions)
+            {
+                case Options.DefaultFunction.MinimalDefaults:
+                    this.LoadMinimalFunctions();
+                    break;
+                case Options.DefaultFunction.FullDefaults:
+                    this.LoadDefaultFunctions();
+                    break;
+            }
         }
 
         /// <summary>

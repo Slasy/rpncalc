@@ -11,7 +11,7 @@
         <Copyright>Copyright (C) 2021 Marek Vitvar</Copyright>
         <Product>RPNCalc</Product>
         <Title>RPNCalc</Title>
-        <Version>1.5.0</Version>
+        <Version>1.6.0</Version>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Nito.Collections.Deque" Version="1.1.1" />

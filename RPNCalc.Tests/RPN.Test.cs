@@ -124,13 +124,15 @@ namespace RPNCalc.Tests
             calc.SetNameValue("a", 3);
             calc.SetNameValue("b", 4);
             calc.SetNameValue("c", 5);
-            calc.SetNameValue("=", st =>
-            {
-                var (x, y) = st.Pop2();
-                st.Push(y);
-                st.Push(x);
-                st.Push(x == y ? 1 : 0);
-            });
+            calc.SetNameValue(
+                "=",
+                st =>
+                {
+                    var (x, y) = st.Pop2();
+                    st.Push(y, x);
+                    st.Push(x == y ? 1 : 0);
+                }
+            );
             Assert.AreEqual(1, calc.Eval("a sq b sq + sqrt c sq sqrt ="));
             CollectionAssert.AreEqual(new[] { 1, 5, 5 }, calc.StackView);
         }
@@ -184,11 +186,14 @@ namespace RPNCalc.Tests
         [Test]
         public void RotRollOver()
         {
-            calc.SetNameValue("eq", st =>
-            {
-                var (x, y) = st.Peek2();
-                st.Push(x == y ? 1 : 0);
-            });
+            calc.SetNameValue(
+                "eq",
+                st =>
+                {
+                    var (x, y) = st.Peek2();
+                    st.Push(x == y ? 1 : 0);
+                }
+            );
             calc.Eval("5 20 over / 4 eq roll drop drop +");
             CollectionAssert.AreEqual(new[] { 6 }, calc.StackView);
             calc.Eval("1 2 3 clst 10 20 30 rot + eq");
@@ -627,7 +632,7 @@ namespace RPNCalc.Tests
         [Test]
         public void SqueakyCleanCalc()
         {
-            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, LoadDefaultFunctions = false });
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, DefaultFunctions = RPN.Options.DefaultFunction.None });
             calc.Eval("10 20 3.14");
             CollectionAssert.AreEqual(new[] { 3.14, 20, 10 }, calc.StackView);
             calc.Eval("'foo bar'");
@@ -646,12 +651,15 @@ namespace RPNCalc.Tests
         [Test]
         public void MinimalCalc()
         {
-            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, LoadDefaultFunctions = false });
-            calc.SetNameValue("add2numbers", st =>
-            {
-                var (x, y) = st.Pop2();
-                st.Push(x.GetRealNumber() + y);
-            });
+            calc = new RPN(new RPN.Options { AlwaysClearStack = false, CaseSensitiveNames = false, DefaultFunctions = RPN.Options.DefaultFunction.None });
+            calc.SetNameValue(
+                "add2numbers",
+                st =>
+                {
+                    var (x, y) = st.Pop2();
+                    st.Push(x.GetRealNumber() + y);
+                }
+            );
             calc.SetNameValue("giv4pls", st => st.Push(4)); // https://xkcd.com/221/
             calc.EvalAlgebraic("add2numbers(giv4pls(),giv4pls())");
             CollectionAssert.AreEqual(new[] { 8 }, calc.StackView);
@@ -682,7 +690,6 @@ namespace RPNCalc.Tests
         [Test]
         public void ExceptionOnUnknownNameInAlgString()
         {
-            Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'sin(pi)' eval"));
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'foo' eval"));
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'random()' eval"));
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'random(1,10)' eval"));
@@ -700,15 +707,20 @@ namespace RPNCalc.Tests
         public void ConnectAsStrings()
         {
             Assert.AreEqual("1FOO2BAR", calc.Eval("1 'FOO' + 2 + 'BAR' +"));
-            Assert.AreEqual("{ 10 20 + }123", calc.Eval(new AItem[]
-            {
-                string.Empty,
-                ProgramItem.From(10, 20, new NameItem("+")),
-                new NameItem("+"),
-                1, new NameItem("+"),
-                2, new NameItem("+"),
-                3, new NameItem("+")
-            }));
+            Assert.AreEqual(
+                "{ 10 20 + }123",
+                calc.Eval(
+                    new AItem[]
+                    {
+                        string.Empty,
+                        ProgramItem.From(10, 20, new NameItem("+")),
+                        new NameItem("+"),
+                        1, new NameItem("+"),
+                        2, new NameItem("+"),
+                        3, new NameItem("+")
+                    }
+                )
+            );
         }
 
         [Test]
@@ -1019,7 +1031,8 @@ namespace RPNCalc.Tests
         [Test]
         public void MultiLayerLocalNames()
         {
-            calc.Eval(@"
+            calc.Eval(
+                @"
                 111 'var' sto
                 {
                     222 'var' lsto
@@ -1032,7 +1045,8 @@ namespace RPNCalc.Tests
                     _DBG_
                     var
                     'var' grcl
-                } eval");
+                } eval"
+            );
             CollectionAssert.AreEqual(new[] { 111, 222 + 0 + 1 + 2 + 3 + 4 }, calc.StackView);
             Assert.Throws<RPNUndefinedNameException>(() => calc.Eval("'i' rcl"));
         }
@@ -1095,16 +1109,19 @@ namespace RPNCalc.Tests
         {
             var bfOutput = new StringBuilder();
             calc.SetNameValue("ORD", st => st.Func(x => (int)x.GetString()[0]));
-            calc.SetNameValue("_MSG", st =>
-            {
-                string r = st.Pop() switch
+            calc.SetNameValue(
+                "_MSG",
+                st =>
                 {
-                    RealNumberItem real => ((char)(int)real.value).ToString(),
-                    AItem other => other.AsString() + "\n",
-                };
-                //Console.Write(r);
-                bfOutput.Append(r);
-            });
+                    string r = st.Pop() switch
+                    {
+                        RealNumberItem real => ((char)(int)real.value).ToString(),
+                        AItem other         => other.AsString() + "\n",
+                    };
+                    //Console.Write(r);
+                    bfOutput.Append(r);
+                }
+            );
             calc.SetNameValue("bf_input", string.Empty);
             const string bfCodeImplement = @"
 {
@@ -1286,6 +1303,44 @@ bf
             Assert.AreEqual(-5, calc.Eval("5.11 +- ceil").GetRealNumber(), 0);
             Assert.AreEqual(42, calc.EvalAlgebraic("floor(42.666)").GetRealNumber(), 0);
             Assert.AreEqual(42, calc.EvalAlgebraic("ceil(41.666)").GetRealNumber(), 0);
+        }
+
+        [Test]
+        public void MinimalDefaultFunctionsForAlgebraExpressions()
+        {
+            calc = new RPN(new() { AlwaysClearStack = true, CaseSensitiveNames = false, DefaultFunctions = RPN.Options.DefaultFunction.MinimalDefaults });
+            Assert.AreEqual(10 + 2 * 10, calc.EvalAlgebraic("10+2*10").GetRealNumber(), 0);
+            Assert.AreEqual((10 + 2) * 10, calc.EvalAlgebraic("(10+2)*10").GetRealNumber(), 0);
+            Assert.AreEqual((10 + 2) * 10 * Math.Sqrt(9), calc.EvalAlgebraic("(10+2)*10*sqrt(9)").GetRealNumber(), 0);
+            Assert.AreEqual(3.14d / (10 + 2) * 10 * Math.Sqrt(9), calc.EvalAlgebraic("3.14/(10+2)*10*sqrt(9)").GetRealNumber(), 0);
+        }
+
+        [Test]
+        public void Trigonometry()
+        {
+            Assert.AreEqual(Math.Sin(1234), calc.EvalAlgebraic("sin(1234)").GetRealNumber(), 0);
+            Assert.AreEqual(Math.Cos(1234), calc.EvalAlgebraic("cos(1234)").GetRealNumber(), 0);
+            Assert.AreEqual(Math.Tan(1234), calc.EvalAlgebraic("tan(1234)").GetRealNumber(), 0);
+
+            Assert.AreEqual(Complex.Sin(new(1234, 3)), calc.Eval("( 1234 3 ) sin").GetComplexNumber());
+            Assert.AreEqual(Complex.Cos(new(1234, 3)), calc.Eval("( 1234 3 ) cos").GetComplexNumber());
+            Assert.AreEqual(Complex.Tan(new(1234, 3)), calc.Eval("( 1234 3 ) tan").GetComplexNumber());
+        }
+
+        [Test]
+        public void Logarithms()
+        {
+            Assert.AreEqual(Math.Log(999), calc.EvalAlgebraic("ln(999)").GetRealNumber(), 0);
+            Assert.AreEqual(Math.Log(999, 2), calc.EvalAlgebraic("log(999, 2)").GetRealNumber(), 0);
+            Assert.AreEqual(Math.Log(999, 10), calc.EvalAlgebraic("log(999, 10)").GetRealNumber(), 0);
+            Assert.AreEqual(Complex.Log(new(999, 3)), calc.Eval("( 999 3 ) ln").GetComplexNumber());
+            Assert.AreEqual(Complex.Log(new(999, 3), 2), calc.Eval("( 999 3 ) 2 log").GetComplexNumber());
+
+            Assert.AreEqual(Math.Exp(12345), calc.EvalAlgebraic("exp(12345)").GetRealNumber(), 0);
+            Assert.AreEqual(Math.Exp(3.1415), calc.EvalAlgebraic("exp(3.1415)").GetRealNumber(), 0);
+            Assert.AreEqual(Complex.Exp(new(3.1415, 123)), calc.Eval("( 3.1415 123 ) exp").GetComplexNumber());
+
+            Assert.AreEqual(Math.Log(Math.Exp(Math.PI * Math.E)), calc.EvalAlgebraic("ln(exp(pi*e))").GetRealNumber(), 0);
         }
     }
 }

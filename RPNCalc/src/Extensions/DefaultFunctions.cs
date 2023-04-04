@@ -18,11 +18,13 @@ namespace RPNCalc.Extensions
         public const string FLAG_STOP_LOOP = "STOP_LOOP";
         public const string FLAG_COMPLEX_ROOT = "CPX_ROOT";
 
-        /// <summary>
-        /// If you clear all names from calculator, you can use this extension to get default functions back.
-        /// </summary>
-        public static void LoadDefaultFunctions(this RPN calc)
+        public static void LoadMinimalFunctions(this RPN calc)
         {
+            calc.SetNameValue("EVAL", st => EVAL(calc, st));
+
+            calc.SetNameValue("PI", Math.PI);
+            calc.SetNameValue("E", Math.E);
+
             calc.SetNameValue("+", PLUS);
             calc.SetNameValue("-", MINUS);
             calc.SetNameValue("*", MUL);
@@ -33,10 +35,28 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("--", stack => AddToVarOnStack(calc, stack, -1));
             calc.SetNameValue("1/X", ONE_OVER_X);
 
-            calc.SetNameValue("EVAL", st => EVAL(calc, st));
-
             calc.SetNameValue("SQ", SQUARE);
             calc.SetNameValue("SQRT", stack => SQUARE_ROOT(calc, stack));
+
+            calc.SetNameValue("SIN", SIN);
+            calc.SetNameValue("COS", COS);
+            calc.SetNameValue("TAN", TAN);
+
+            calc.SetNameValue("LOG", LOG);
+            calc.SetNameValue("LN", LN);
+            calc.SetNameValue("EXP", EXP);
+
+            calc.SetNameValue("RND", ROUND);
+            calc.SetNameValue("RND0", RPNTools.CreateMacroInstructions("0 RND"));
+        }
+
+        /// <summary>
+        /// If you clear all names from calculator, you can use this extension to get default functions back.
+        /// </summary>
+        public static void LoadDefaultFunctions(this RPN calc)
+        {
+            LoadMinimalFunctions(calc);
+
             calc.SetNameValue("DROP", StackExtensions.Drop);
             calc.SetNameValue("DUP", StackExtensions.Dup);
             calc.SetNameValue("SWAP", stack => stack.Swap());
@@ -52,8 +72,7 @@ namespace RPNCalc.Extensions
             calc.SetNameValue("GRCL", st => RECALL(calc, st, RPN.Scope.Global));
             calc.SetNameValue("LSTO", st => STORE(calc, st, RPN.Scope.Local));
             calc.SetNameValue("LRCL", st => RECALL(calc, st, RPN.Scope.Local));
-            calc.SetNameValue("RND", ROUND);
-            calc.SetNameValue("RND0", RPNTools.CreateMacroInstructions("0 RND"));
+
             calc.SetNameValue("IP", INTEGER_PART);
             calc.SetNameValue("FP", FRACTION_PART);
             calc.SetNameValue("FLOOR", stack => stack.Func(x => Math.Floor(x.GetRealNumber())));
@@ -214,18 +233,20 @@ namespace RPNCalc.Extensions
 
         internal static void NEG(Stack<AItem> stack)
         {
-            AItem x = stack.Pop();
-            if (x is RealNumberItem) stack.Push(-x.GetRealNumber());
-            else if (x is ComplexNumberItem) stack.Push(-x.AsComplexNumber());
-            else throw UndefinedResult;
+            NumberOperation(
+                stack,
+                x => -x.GetRealNumber(),
+                x => -x.GetComplexNumber()
+            );
         }
 
         internal static void SQUARE(Stack<AItem> stack)
         {
-            AItem x = stack.Pop();
-            if (x is RealNumberItem) stack.Push(x.GetRealNumber() * x.GetRealNumber());
-            else if (x is ComplexNumberItem) stack.Push(x.AsComplexNumber() * x.AsComplexNumber());
-            else throw UndefinedResult;
+            NumberOperation(
+                stack,
+                x => x.GetRealNumber() * x.GetRealNumber(),
+                x => x.GetComplexNumber() * x.GetComplexNumber()
+            );
         }
 
         internal static void SQUARE_ROOT(RPN calc, Stack<AItem> stack)
@@ -250,10 +271,11 @@ namespace RPNCalc.Extensions
 
         internal static void ONE_OVER_X(Stack<AItem> stack)
         {
-            AItem x = stack.Pop();
-            if (x is RealNumberItem) stack.Push(1d / x.GetRealNumber());
-            else if (x is ComplexNumberItem) stack.Push(new Complex(1, 0) / x.GetComplexNumber());
-            else throw UndefinedResult;
+            NumberOperation(
+                stack,
+                x => 1d / x.GetRealNumber(),
+                x => new Complex(1, 0) / x.GetComplexNumber()
+            );
         }
 
         internal static void STORE(RPN calc, Stack<AItem> stack, RPN.Scope scope)
@@ -689,6 +711,79 @@ namespace RPNCalc.Extensions
             double number = stack.Pop().GetRealNumber();
             number = number - Math.Truncate(number);
             stack.Push(number);
+        }
+
+        internal static void SIN(Stack<AItem> stack) => NumberOperation(stack, Math.Sin, Complex.Sin);
+
+        internal static void COS(Stack<AItem> stack) => NumberOperation(stack, Math.Cos, Complex.Cos);
+
+        internal static void TAN(Stack<AItem> stack) => NumberOperation(stack, Math.Tan, Complex.Tan);
+
+        internal static void LOG(Stack<AItem> stack)
+        {
+            var (x, y) = stack.Pop2();
+            if (x is not RealNumberItem logBase)
+            {
+                throw UndefinedResult;
+            }
+            if (y is RealNumberItem number)
+            {
+                stack.Push(Math.Log(number.GetRealNumber(), logBase.GetRealNumber()));
+            }
+            else if (y is ComplexNumberItem complex)
+            {
+                stack.Push(Complex.Log(complex.GetComplexNumber(), logBase.GetRealNumber()));
+            }
+            else
+            {
+                throw UndefinedResult;
+            }
+        }
+
+        internal static void LN(Stack<AItem> stack) => NumberOperation(stack, Math.Log, Complex.Log);
+
+        internal static void EXP(Stack<AItem> stack) => NumberOperation(stack, Math.Exp, Complex.Exp);
+
+        internal static void NumberOperation(
+            Stack<AItem> stack,
+            Func<RealNumberItem, RealNumberItem> numberOperation,
+            Func<ComplexNumberItem, ComplexNumberItem> complexOperation
+        )
+        {
+            var item = stack.Pop();
+            if (item is RealNumberItem number)
+            {
+                stack.Push(numberOperation(number));
+            }
+            else if (item is ComplexNumberItem complex)
+            {
+                stack.Push(complexOperation(complex));
+            }
+            else
+            {
+                throw UndefinedResult;
+            }
+        }
+
+        internal static void NumberOperation(
+            Stack<AItem> stack,
+            Func<double, double> numberOperation,
+            Func<Complex, Complex> complexOperation
+        )
+        {
+            var item = stack.Pop();
+            if (item is RealNumberItem number)
+            {
+                stack.Push(numberOperation(number.GetRealNumber()));
+            }
+            else if (item is ComplexNumberItem complex)
+            {
+                stack.Push(complexOperation(complex.GetComplexNumber()));
+            }
+            else
+            {
+                throw UndefinedResult;
+            }
         }
     }
 }
