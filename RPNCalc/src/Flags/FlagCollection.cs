@@ -27,18 +27,18 @@ namespace RPNCalc.Flags
         {
             get
             {
-                if (indexToName.TryGetValue(index, out string key)) return namedFlags[key];
+                if (indexToName.TryGetValue(index, out string? key)) return namedFlags[key];
                 if (indexedFlags.TryGetValue(index, out bool value)) return value;
                 throw new FlagException();
             }
             set
             {
-                if (indexToName.TryGetValue(index, out string key))
+                if (indexToName.TryGetValue(index, out string? key))
                 {
                     namedFlags[key] = value;
                     return;
                 }
-                else if (indexedFlags.ContainsKey(index))
+                if (indexedFlags.ContainsKey(index))
                 {
                     indexedFlags[index] = value;
                     return;
@@ -129,7 +129,7 @@ namespace RPNCalc.Flags
             return indexToName.Single(x => x.Value == name).Key;
         }
 
-        public bool TryGetFlagName(int index, out string name)
+        public bool TryGetFlagName(int index, out string? name)
         {
             return indexToName.TryGetValue(index, out name);
         }

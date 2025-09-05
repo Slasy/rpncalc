@@ -13,7 +13,6 @@ namespace RPNCalc
         public RPNException() { }
         public RPNException(string message) : base(message) { }
         public RPNException(string message, Exception inner) : base(message, inner) { }
-        protected RPNException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
@@ -25,7 +24,6 @@ namespace RPNCalc
         public RPNUndefinedNameException() { }
         public RPNUndefinedNameException(string message) : base(message) { }
         public RPNUndefinedNameException(string message, Exception inner) : base(message, inner) { }
-        protected RPNUndefinedNameException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
@@ -37,7 +35,6 @@ namespace RPNCalc
         public RPNEmptyStackException() { }
         public RPNEmptyStackException(string message) : base(message) { }
         public RPNEmptyStackException(string message, Exception inner) : base(message, inner) { }
-        protected RPNEmptyStackException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
@@ -49,7 +46,6 @@ namespace RPNCalc
         public RPNFunctionException() { }
         public RPNFunctionException(string message) : base(message) { }
         public RPNFunctionException(string message, Exception inner) : base(message, inner) { }
-        protected RPNFunctionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
@@ -61,6 +57,5 @@ namespace RPNCalc
         public RPNArgumentException() { }
         public RPNArgumentException(string message) : base(message) { }
         public RPNArgumentException(string message, Exception inner) : base(message, inner) { }
-        protected RPNArgumentException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }
