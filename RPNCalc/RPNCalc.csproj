@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetBuildVersion">
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net6.0;net7.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.1;net7.0;net8.0;net9.0</TargetFrameworks>
         <OutputType>Library</OutputType>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>CS1591</NoWarn>
@@ -14,7 +14,7 @@
         <Version>1.6.0</Version>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="Nito.Collections.Deque" Version="1.1.1" />
+      <PackageReference Include="Nito.Collections.Deque" Version="1.2.1" />
     </ItemGroup>
 
     <Target Name="GetBuildVersion" BeforeTargets="Build">
