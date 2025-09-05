@@ -216,7 +216,7 @@ namespace RPNCalc
                     break;
                 case NameItem name:
                     if (IsUsingMainStack || IsWhiteListFunction(name.value)) EvalItem(GetNameValue(name.value), true);
-                    else currentStackInUse.Push(name);
+                    else goto default;
                     break;
                 // everything else goes to stack
                 default:
@@ -382,11 +382,11 @@ namespace RPNCalc
         {
             EnsureValidName(name);
             name = GetKeyName(name);
-            for (int i = 0; i < localNames.Count; i++)
+            foreach (var scopedLocalNames in localNames)
             {
-                if (localNames[i].ContainsKey(name))
+                if (scopedLocalNames.ContainsKey(name))
                 {
-                    return localNames[i];
+                    return scopedLocalNames;
                 }
             }
             if (globalNames.ContainsKey(name)) return globalNames;

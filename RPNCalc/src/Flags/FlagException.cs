@@ -9,6 +9,5 @@ namespace RPNCalc.Flags
         public FlagException() { }
         public FlagException(string message) : base(message) { }
         public FlagException(string message, Exception inner) : base(message, inner) { }
-        protected FlagException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }
